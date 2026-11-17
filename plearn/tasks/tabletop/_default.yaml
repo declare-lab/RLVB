@@ -1,0 +1,37 @@
+# The tabletop environment (teacher.py, scene.py): reading the state of objects in 3D pictures of ManiSkill3's table scene (two
+# cameras, 512 x 512), through helpers that move objects exactly; lamps (which button lights which lamp), cups (which cup hides the
+# named object) and blocks (which block slides farther). The episode is the teacher's own (plearn/tasks/domain.py). Splits: test
+# (seeds 20000 + i, and colours that training never shows), validation (seeds 10000 + i); training draws seeds from 10^6 up.
+# Needs mani_skill (pip install -e ".[tabletop]") and Vulkan on the host.
+dataset: tabletop
+env: plearn.tasks.domain:DomainEpisode
+test_split: test
+num_episodes: 100
+teacher: teacher:Domain
+generation_kwargs:
+  max_think: 8192
+metric_list:
+  - {metric: success, aggregation: mean, higher_is_better: true}
+  - {metric: premature, aggregation: mean, higher_is_better: false}    # answered before the pictures identified the answer
+  - {metric: submitted, aggregation: mean, higher_is_better: true}
+  - {metric: looks, aggregation: mean}
+  - {metric: turns, aggregation: mean}
+  - {metric: invalid_turns, aggregation: mean, higher_is_better: false}
+  - {metric: thought_cut, aggregation: mean}
+  - {metric: open_line, aggregation: mean, higher_is_better: false}    # lines that keep every option open after the evidence excludes some
+  # the reading: each belief line after an action against the pictures so far (teacher.py Domain.reading),
+  # as shares of the lines: exact, wider (every answer the evidence allows, and more), misread (the exact set of another
+  # picture: a visual recognition error), reasoning (fits no picture: a belief reasoning error), unreadable
+  - {metric: read_exact, aggregation: mean, higher_is_better: true}
+  - {metric: read_wider, aggregation: mean}
+  - {metric: read_misread, aggregation: mean, higher_is_better: false}
+  - {metric: read_reasoning, aggregation: mean, higher_is_better: false}
+  - {metric: read_unreadable, aggregation: mean, higher_is_better: false}
+  - {metric: read_miss, aggregation: mean, higher_is_better: false}      # the line leaves out the true answer
+  - {metric: read_width, aggregation: mean}                              # answers the line keeps ...
+  - {metric: read_width_exact, aggregation: mean}                        # ... and those the evidence keeps
+  - {metric: act_error, aggregation: mean, higher_is_better: false}      # an exact line, and not the teacher's decision
+requires:
+  modules: [mani_skill]
+metadata:
+  version: 1

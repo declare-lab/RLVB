@@ -1,0 +1,4 @@
+include: _text.yaml
+task: roboquest_text_stamps
+description: "Stamp Composition: the 50 eval50 scenes (benchmarks/roboquest/suite/v1/eval50/stamps.txt), text version."
+env_args: {task: stamps}

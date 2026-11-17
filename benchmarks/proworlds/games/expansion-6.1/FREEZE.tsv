@@ -1,0 +1,16 @@
+k	game	file	sha8	sha8 of this copy (comments cleaned)	cell root (sha8 of its ROOT-FILES.sha256)
+1	face	g-face.js	e3aa28da	c567ba18	root N 292417d7
+2	jigsaw	g-jigsaw.js	d7afad4f	a597125a	root N 292417d7
+3	kaleido	g-kaleido.js	1abf38bb	7d0644e4	root N 292417d7
+4	bird	g-bird.js	f77d4876	f60d8d09	root N2 11cec144
+5	fish	g-fish.js	0b7ea821	d046703d	root N2 11cec144
+6	recipe	g-recipe.js	6bcd2257	13c48d8a	root R71 b83e60be
+7	turtle	g-turtle.js	f8d3dde8	3ee1e0f7	root S1 de363719
+8	balloon	g-balloon.js	ce8bb559	2b7524a9	root F3 9524fcfa
+9	rocket	g-rocket.js	38ea3dd8	ea2533cf	root F2 34d3a13e
+10	bell	g-bell.js	8d74f7a6	3ccb79d8	root F4 22ef7cf5
+11	bee	g-bee.js	16030907	06505731	root F4 22ef7cf5
+12	candle	g-candle.js	207a812c	a30a8853	root F4 22ef7cf5
+13	sailboat	g-sailboat.js	9d6a6ab0	63512802	root F6 42787872
+14	barn	g-barn.js	be7ddbec	59e4a24e	root F5c c9645f49
+15	lantern	g-lantern.js	d7db443e	95dc4892	root F7 c7e9aa77

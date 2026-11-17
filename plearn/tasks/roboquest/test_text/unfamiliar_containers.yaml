@@ -1,0 +1,4 @@
+include: _text.yaml
+task: roboquest_text_unfamiliar_containers
+description: "Unfamiliar Containers: the 50 eval50 scenes (benchmarks/roboquest/suite/v1/eval50/unfamiliar_containers.txt), text version."
+env_args: {task: unfamiliar_containers}

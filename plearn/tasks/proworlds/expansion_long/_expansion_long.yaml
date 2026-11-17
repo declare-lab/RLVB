@@ -1,0 +1,5 @@
+# Pro-Worlds on the LONG board (expansion_env.py, env_args board: long; engine budget 65): one of the 15 visual games of the
+# frozen expansion v6.1 set, the same 20 test plays (seeds) as the normal board. Test only: no teacher. Thinking is capped at
+# 8,192 tokens (from ../expansion/_expansion.yaml).
+include: ../expansion/_expansion.yaml
+env_args: {board: long}

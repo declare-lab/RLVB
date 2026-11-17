@@ -1,0 +1,10 @@
+# HiddenGames: 7 tasks on their test split = 756 games. minesweeper_easy, minigrid_keycorridor, tabletop_lamps, tabletop_cups,
+# tabletop_blocks: 100 each; frozenlake_hidden_goal, sokoban_hidden_target: 128 each. train_suite has these 7 tasks and 1
+# training-only task (see plearn/tasks/suites/train_suite.yaml).
+group: test_suite/hidden_games
+task:
+  - minesweeper_easy
+  - minigrid_keycorridor
+  - frozenlake_hidden_goal
+  - sokoban_hidden_target
+  - tabletop                     # 3D pictures (ManiSkill3): lamps, cups, blocks

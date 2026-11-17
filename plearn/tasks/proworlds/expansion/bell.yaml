@@ -1,0 +1,4 @@
+include: _expansion.yaml
+task: proworlds_expansion_bell
+description: "Pro-Worlds, bell (game 10 of TEST-ORDER.txt): 20 test plays, seeds 50191300 + 0..19, normal board, budget 35."
+env_args: {game: bell}

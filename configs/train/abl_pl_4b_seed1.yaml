@@ -1,0 +1,9 @@
+# Ablation study (abl_pl_4b.yaml): the full method with seed 1.
+# All the runs of the study have the same prompt, so only abl_pl_4b makes the update-0 evaluation.
+include: abl_pl_4b.yaml
+train: abl_pl_4b_seed1
+output: ${PL_RUNS:-runs}/abl_pl_4b_seed1
+gpus: {actor: "1", learner: "1"}
+server: {PL_SKIP_EVAL0: 1}
+method:
+  seed: 1

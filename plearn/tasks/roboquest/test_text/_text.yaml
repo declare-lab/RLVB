@@ -1,0 +1,6 @@
+# The RoboQuest test, text version (bench_env.py, version text): one task's 50 eval50 instances, each action's pictures replaced
+# by one sentence. Thinking is capped at 8,192 tokens.
+include: ../_bench.yaml
+env_args: {version: text}
+generation_kwargs:
+  max_think: 8192                    # 8,192 for every test task

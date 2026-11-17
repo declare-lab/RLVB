@@ -1,0 +1,10 @@
+include: _vllm.yaml
+model: qwen3.5-4b
+description: Qwen3.5-4B; unified text-and-vision model with a hybrid gated-delta-net / attention stack, thinking on by default.
+pretrained: Qwen/Qwen3.5-4B
+revision: main
+path: ${QWEN35_4B_PATH:-}          # the weights folder when set; not set: local_dir under $PL_MODELS
+local_dir: Qwen3.5-4B
+local_dir_alt: [Qwen35-4B]         # another folder name under $PL_MODELS, used when local_dir is not there
+serve: {enable_auto_tool_choice: true, tool_call_parser: hermes, reasoning_parser: qwen3}
+generation: {top_k: 20}

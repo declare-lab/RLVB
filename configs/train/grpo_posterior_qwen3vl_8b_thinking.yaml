@@ -1,0 +1,50 @@
+# RLVB (GRPO) with Qwen3-VL-8B-Thinking: RLVB (EM)'s rewards with a group-relative update rule. Everything else is the RLVB (EM) 8B run file's
+# (configs/train/suite_qwen3vl_8b_thinking.yaml: train_suite; line_wide; line_target 0.1; score_presence 1; thinking cap 8,192;
+# temperature 1.0; presence penalty 1.5; 50 updates): the same sample sets and histories (a history with no acceptable own turn
+# is left out, as RLVB (EM) leaves it out), the same 8 x 4 own turns per history and the same teacher scores R. The test, as RLVB (EM)'s:
+# adapter_50 on test_suite, two-line turn (scripts/grpo_posterior_qwen3vl_8b_thinking.sh).
+# Only the M-step's weights change (plearn/method/trainer.py, --update grpo; plearn/method/README.md 'RLVB (GRPO)'): each own
+# turn gets its group-relative advantage, R minus the mean of its history's other turns (scores raised to at least the group's
+# best minus 20 and advantages in [-20, 20]; a turn the teacher rejects is never positive), over the group's size, times one
+# factor that gives the batch RLVB (EM)'s total weight; each item stops by PPO's clip rule (eps 0.2) against the phase prior. RLVB (EM)
+# (--update em) gives the accepted turns the weights softmax(R) instead. The sample sets do not depend on --update, so
+# PL_SET_FROM can start this run from an RLVB (EM) run's first set. tests/method/test_grpo_posterior.py checks that the flags equal the
+# RLVB (EM) run's except these four (and attn).
+train: grpo_posterior_qwen3vl_8b_thinking
+model: qwen3-vl-8b-thinking
+train_tasks: train_suite              # HiddenGames, the 8 games (train split)
+eval_tasks: [train_suite]             # the validation split of the training tasks (deferred: PL_EVAL_DEFER)
+eval_n: 0
+output: ${PL_RUNS:-runs}/grpo_posterior_qwen3vl_8b_thinking
+env_sh: ${PL_ENV_SH:-/dev/null}
+gpus: {actor: "${PL_GPUS:-0,1,2,3}", learner: "${PL_GPUS:-0,1,2,3}", colocate: true}
+server:
+  PL_PRESENCE_PENALTY: "1.5"
+  PL_EVAL_DEFER: "1"
+  PL_SKIP_EVAL0: "1"
+  PL_GPUS_PER_SERVER: "1"
+  PL_MAX_NUM_SEQS: "${PL_SEQS:-96}"
+  PL_M_SPLIT: item
+  PL_ROUTE_SPILL: "2"
+  PL_ROUTE_SPILL_MIN: "96"
+method:
+  update: grpo                 # RLVB (GRPO): group-relative advantages in place of the E-step's weights (the only change from the RLVB (EM) run file)
+  grpo_clip: 20                # scores raised to at least the group's best - 20, advantages in [-20, 20] nats
+  grpo_eps: 0.2                # PPO's clip rule against the phase prior (the samples of a phase are fitted about 4 times)
+  grpo_norm: 1                 # every batch's weights get RLVB (EM)'s total absolute size (one factor per batch; AdamW sets the step itself)
+  attn: flash_attention_3      # FlashAttention 3 for speed; the log-probabilities must match: the learner's attention, checked once per
+                               # rank against sdpa at the first score (attn_check: sdpa for the run if the mean |d log p| > 0.02); RLVB (EM) runs: sdpa
+  score_presence: 1            # from here on: the RLVB (EM) 8B run file's own settings
+  max_think: 8192
+  line_wide: true
+  line_target: 0.1
+  steps: 50
+  eval_every: 25
+  eval_split: validation
+  worlds: 4
+  temperature: 1.0
+wandb:
+  name: "8b-thinking train_suite transfer grpo-posterior group-relative ppo0.2 v2"
+  project: ${WANDB_PROJECT:-}
+  entity: ${WANDB_ENTITY:-}
+  group: suite

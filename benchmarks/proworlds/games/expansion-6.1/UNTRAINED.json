@@ -1,0 +1,627 @@
+{
+ "label": "SET15 untrained table v2 (v2 = + lantern #15): untrained Qwen 27B, thinking on, T 0, no paragraph; numbers = report61.py; normal budget 35, long 65; B9 = exact top >= .95 at any turn; premature = answered with exact top < .95 while moves were left",
+ "games": [
+  {
+   "k": 1,
+   "game": "face",
+   "version": "v6.0 face",
+   "frozen_root": "root N 292417d7",
+   "g_file_sha8": "e3aa28da",
+   "normal": {
+    "cell": "root N cell",
+    "file_sha8_in_cell_roots": [
+     "e3aa28da"
+    ],
+    "same_file_as_frozen": true,
+    "board": "normal",
+    "games": 40,
+    "errors": 0,
+    "right": 0.45,
+    "moves": 30.8,
+    "budget_hits": 0,
+    "b9_complete_evidence": 12,
+    "b9_share": 0.3,
+    "premature": 20,
+    "premature_share": 0.5,
+    "right_among_premature": 0.25,
+    "seeds": [
+     50270000,
+     50270039
+    ]
+   },
+   "long": {
+    "long_band": "inside the 1-20 % long band",
+    "cell": "root L l-face: the root L face file 8d63f53d (a long-board fix; its normal worlds, rules text and budget = root N) is NOT the frozen file e3aa28da, so same_file is False by design; long seeds 50,200,000-019 NOT paired with the normal seeds",
+    "file_sha8_in_cell_roots": [
+     "8d63f53d"
+    ],
+    "same_file_as_frozen": false,
+    "board": "long",
+    "games": 20,
+    "errors": 0,
+    "right": 0.15,
+    "moves": 58.9,
+    "budget_hits": 0,
+    "b9_complete_evidence": 0,
+    "b9_share": 0.0,
+    "premature": 16,
+    "premature_share": 0.8,
+    "right_among_premature": 0.0625,
+    "seeds": [
+     50200000,
+     50200019
+    ]
+   }
+  },
+  {
+   "k": 2,
+   "game": "jigsaw",
+   "version": "v6.0 jigsaw",
+   "frozen_root": "root N 292417d7",
+   "g_file_sha8": "d7afad4f",
+   "normal": {
+    "cell": "root N cell",
+    "file_sha8_in_cell_roots": [
+     "d7afad4f"
+    ],
+    "same_file_as_frozen": true,
+    "board": "normal",
+    "games": 40,
+    "errors": 0,
+    "right": 0.325,
+    "moves": 19,
+    "budget_hits": 0,
+    "b9_complete_evidence": 3,
+    "b9_share": 0.075,
+    "premature": 36,
+    "premature_share": 0.9,
+    "right_among_premature": 0.2778,
+    "seeds": [
+     50320000,
+     50320039
+    ]
+   },
+   "long": {
+    "long_band": "OUTSIDE the 1-20 % long band: label only, no drop (training is normal-only)",
+    "cell": "root N long cell",
+    "file_sha8_in_cell_roots": [
+     "d7afad4f"
+    ],
+    "same_file_as_frozen": true,
+    "board": "long",
+    "games": 20,
+    "errors": 0,
+    "right": 0.35,
+    "moves": 57.5,
+    "budget_hits": 0,
+    "b9_complete_evidence": 0,
+    "b9_share": 0.0,
+    "premature": 17,
+    "premature_share": 0.85,
+    "right_among_premature": 0.3529,
+    "seeds": [
+     50320000,
+     50320019
+    ]
+   }
+  },
+  {
+   "k": 3,
+   "game": "kaleido",
+   "version": "v6.0 kaleido",
+   "frozen_root": "root N 292417d7",
+   "g_file_sha8": "1abf38bb",
+   "normal": {
+    "cell": "root N cell",
+    "file_sha8_in_cell_roots": [
+     "1abf38bb"
+    ],
+    "same_file_as_frozen": true,
+    "board": "normal",
+    "games": 40,
+    "errors": 0,
+    "right": 0.475,
+    "moves": 27.9,
+    "budget_hits": 0,
+    "b9_complete_evidence": 15,
+    "b9_share": 0.375,
+    "premature": 24,
+    "premature_share": 0.6,
+    "right_among_premature": 0.2917,
+    "seeds": [
+     50330000,
+     50330039
+    ]
+   },
+   "long": {
+    "long_band": "inside the 1-20 % long band",
+    "cell": "root N long cell",
+    "file_sha8_in_cell_roots": [
+     "1abf38bb"
+    ],
+    "same_file_as_frozen": true,
+    "board": "long",
+    "games": 20,
+    "errors": 0,
+    "right": 0.05,
+    "moves": 49.7,
+    "budget_hits": 0,
+    "b9_complete_evidence": 1,
+    "b9_share": 0.05,
+    "premature": 19,
+    "premature_share": 0.95,
+    "right_among_premature": 0.0526,
+    "seeds": [
+     50330000,
+     50330019
+    ]
+   }
+  },
+  {
+   "k": 4,
+   "game": "bird",
+   "version": "bird v1.4",
+   "frozen_root": "root N2 11cec144",
+   "g_file_sha8": "f77d4876",
+   "normal": {
+    "cell": "root N2 cell",
+    "file_sha8_in_cell_roots": [
+     "f77d4876"
+    ],
+    "same_file_as_frozen": true,
+    "board": "normal",
+    "games": 40,
+    "errors": 0,
+    "right": 0.425,
+    "moves": 32.6,
+    "budget_hits": 0,
+    "b9_complete_evidence": 9,
+    "b9_share": 0.225,
+    "premature": 12,
+    "premature_share": 0.3,
+    "right_among_premature": 0.4167,
+    "seeds": [
+     50460000,
+     50460039
+    ]
+   },
+   "long": {
+    "long_band": "inside the 1-20 % long band",
+    "cell": "root D1 ld1-bird",
+    "file_sha8_in_cell_roots": [
+     "f77d4876"
+    ],
+    "same_file_as_frozen": true,
+    "board": "long",
+    "games": 20,
+    "errors": 0,
+    "right": 0.2,
+    "moves": 57.2,
+    "budget_hits": 0,
+    "b9_complete_evidence": 0,
+    "b9_share": 0.0,
+    "premature": 16,
+    "premature_share": 0.8,
+    "right_among_premature": 0.25,
+    "seeds": [
+     50150500,
+     50150519
+    ]
+   }
+  },
+  {
+   "k": 5,
+   "game": "fish",
+   "version": "fish v1.1",
+   "frozen_root": "root N2 11cec144",
+   "g_file_sha8": "0b7ea821",
+   "normal": {
+    "cell": "root N2 cell 40 + 3rd run 20 = POOLED 60 (B9 edge rule)",
+    "file_sha8_in_cell_roots": [
+     "0b7ea821",
+     "0b7ea821"
+    ],
+    "same_file_as_frozen": true,
+    "board": "normal",
+    "games": 60,
+    "errors": 0,
+    "right": 0.65,
+    "moves": 29.5,
+    "budget_hits": 0,
+    "b9_complete_evidence": 30,
+    "b9_share": 0.5,
+    "premature": 9,
+    "premature_share": 0.15,
+    "right_among_premature": 0.3333,
+    "seeds": [
+     50470000,
+     50470059
+    ]
+   },
+   "long": {
+    "long_band": "inside the 1-20 % long band",
+    "cell": "root D1 ld1-fish",
+    "file_sha8_in_cell_roots": [
+     "0b7ea821"
+    ],
+    "same_file_as_frozen": true,
+    "board": "long",
+    "games": 20,
+    "errors": 0,
+    "right": 0.2,
+    "moves": 57.6,
+    "budget_hits": 0,
+    "b9_complete_evidence": 0,
+    "b9_share": 0.0,
+    "premature": 19,
+    "premature_share": 0.95,
+    "right_among_premature": 0.1579,
+    "seeds": [
+     50180500,
+     50180519
+    ]
+   }
+  },
+  {
+   "k": 6,
+   "game": "recipe",
+   "version": "recipe v7.1",
+   "frozen_root": "root R71 b83e60be",
+   "g_file_sha8": "6bcd2257",
+   "normal": {
+    "cell": "root R71 cell",
+    "file_sha8_in_cell_roots": [
+     "6bcd2257"
+    ],
+    "same_file_as_frozen": true,
+    "board": "normal",
+    "games": 40,
+    "errors": 0,
+    "right": 0.425,
+    "moves": 25,
+    "budget_hits": 1,
+    "b9_complete_evidence": 15,
+    "b9_share": 0.375,
+    "premature": 21,
+    "premature_share": 0.525,
+    "right_among_premature": 0.0952,
+    "seeds": [
+     50110200,
+     50110239
+    ]
+   },
+   "long": {
+    "long_band": "inside the 1-20 % long band",
+    "cell": "root D2 ld2-recipe",
+    "file_sha8_in_cell_roots": [
+     "6bcd2257"
+    ],
+    "same_file_as_frozen": true,
+    "board": "long",
+    "games": 20,
+    "errors": 0,
+    "right": 0.05,
+    "moves": 50.5,
+    "budget_hits": 0,
+    "b9_complete_evidence": 0,
+    "b9_share": 0.0,
+    "premature": 18,
+    "premature_share": 0.9,
+    "right_among_premature": 0.0556,
+    "seeds": [
+     50120600,
+     50120619
+    ]
+   }
+  },
+  {
+   "k": 7,
+   "game": "turtle",
+   "version": "turtle (batch S1)",
+   "frozen_root": "root S1 de363719",
+   "g_file_sha8": "f8d3dde8",
+   "normal": {
+    "cell": "root S1 cell",
+    "file_sha8_in_cell_roots": [
+     "f8d3dde8"
+    ],
+    "same_file_as_frozen": true,
+    "board": "normal",
+    "games": 40,
+    "errors": 0,
+    "right": 0.625,
+    "moves": 30.1,
+    "budget_hits": 0,
+    "b9_complete_evidence": 12,
+    "b9_share": 0.3,
+    "premature": 18,
+    "premature_share": 0.45,
+    "right_among_premature": 0.3333,
+    "seeds": [
+     50180300,
+     50180339
+    ]
+   },
+   "long": {
+    "long_band": "OUTSIDE the 1-20 % long band: label only, no drop (training is normal-only)",
+    "cell": "root D2 ld2-turtle",
+    "file_sha8_in_cell_roots": [
+     "f8d3dde8"
+    ],
+    "same_file_as_frozen": true,
+    "board": "long",
+    "games": 20,
+    "errors": 0,
+    "right": 0.25,
+    "moves": 59.8,
+    "budget_hits": 0,
+    "b9_complete_evidence": 1,
+    "b9_share": 0.05,
+    "premature": 16,
+    "premature_share": 0.8,
+    "right_among_premature": 0.25,
+    "seeds": [
+     50170600,
+     50170619
+    ]
+   }
+  },
+  {
+   "k": 8,
+   "game": "balloon",
+   "version": "balloon v1.2",
+   "frozen_root": "root F3 9524fcfa",
+   "g_file_sha8": "ce8bb559",
+   "normal": {
+    "cell": "root F3 cell",
+    "file_sha8_in_cell_roots": [
+     "ce8bb559"
+    ],
+    "same_file_as_frozen": true,
+    "board": "normal",
+    "games": 40,
+    "errors": 0,
+    "right": 0.35,
+    "moves": 30.4,
+    "budget_hits": 0,
+    "b9_complete_evidence": 3,
+    "b9_share": 0.075,
+    "premature": 28,
+    "premature_share": 0.7,
+    "right_among_premature": 0.25,
+    "seeds": [
+     50110800,
+     50110839
+    ]
+   },
+   "long": {
+    "status": "PENDING (not run yet): LONG-FIX ld-balloon (50,171,400)"
+   }
+  },
+  {
+   "k": 9,
+   "game": "rocket",
+   "version": "rocket v2",
+   "frozen_root": "root F2 34d3a13e",
+   "g_file_sha8": "38ea3dd8",
+   "normal": {
+    "cell": "root F2 cell",
+    "file_sha8_in_cell_roots": [
+     "38ea3dd8"
+    ],
+    "same_file_as_frozen": true,
+    "board": "normal",
+    "games": 40,
+    "errors": 0,
+    "right": 0.4,
+    "moves": 31.1,
+    "budget_hits": 0,
+    "b9_complete_evidence": 1,
+    "b9_share": 0.025,
+    "premature": 29,
+    "premature_share": 0.725,
+    "right_among_premature": 0.4483,
+    "seeds": [
+     50130700,
+     50130739
+    ]
+   },
+   "long": {
+    "status": "PENDING (not run yet): LONG-FIX ld-rocket (50,181,400)"
+   }
+  },
+  {
+   "k": 10,
+   "game": "bell",
+   "version": "bell v2",
+   "frozen_root": "root F4 22ef7cf5",
+   "g_file_sha8": "8d74f7a6",
+   "normal": {
+    "cell": "root F4 cell",
+    "file_sha8_in_cell_roots": [
+     "8d74f7a6"
+    ],
+    "same_file_as_frozen": true,
+    "board": "normal",
+    "games": 40,
+    "errors": 0,
+    "right": 0.325,
+    "moves": 30.6,
+    "budget_hits": 0,
+    "b9_complete_evidence": 6,
+    "b9_share": 0.15,
+    "premature": 23,
+    "premature_share": 0.575,
+    "right_among_premature": 0.2609,
+    "seeds": [
+     50110900,
+     50110939
+    ]
+   },
+   "long": {
+    "status": "not available: the long board is not ready (min looks 2)"
+   }
+  },
+  {
+   "k": 11,
+   "game": "bee",
+   "version": "bee v2",
+   "frozen_root": "root F4 22ef7cf5",
+   "g_file_sha8": "16030907",
+   "normal": {
+    "cell": "root F4 cell",
+    "file_sha8_in_cell_roots": [
+     "16030907"
+    ],
+    "same_file_as_frozen": true,
+    "board": "normal",
+    "games": 40,
+    "errors": 0,
+    "right": 0.35,
+    "moves": 32.6,
+    "budget_hits": 0,
+    "b9_complete_evidence": 2,
+    "b9_share": 0.05,
+    "premature": 19,
+    "premature_share": 0.475,
+    "right_among_premature": 0.4211,
+    "seeds": [
+     50100900,
+     50100939
+    ]
+   },
+   "long": {
+    "status": "PENDING (not run yet): LONG-FIX ld-bee (50,201,400)"
+   }
+  },
+  {
+   "k": 12,
+   "game": "candle",
+   "version": "candle v2",
+   "frozen_root": "root F4 22ef7cf5",
+   "g_file_sha8": "207a812c",
+   "normal": {
+    "cell": "root F4 cell",
+    "file_sha8_in_cell_roots": [
+     "207a812c"
+    ],
+    "same_file_as_frozen": true,
+    "board": "normal",
+    "games": 40,
+    "errors": 0,
+    "right": 0.45,
+    "moves": 32.8,
+    "budget_hits": 0,
+    "b9_complete_evidence": 5,
+    "b9_share": 0.125,
+    "premature": 14,
+    "premature_share": 0.35,
+    "right_among_premature": 0.3571,
+    "seeds": [
+     50120900,
+     50120939
+    ]
+   },
+   "long": {
+    "status": "not available: the long board is not ready (min looks 2)"
+   }
+  },
+  {
+   "k": 13,
+   "game": "sailboat",
+   "version": "sailboat (batch4-rb7)",
+   "frozen_root": "root F6 42787872",
+   "g_file_sha8": "9d6a6ab0",
+   "normal": {
+    "cell": "root F6 cell",
+    "file_sha8_in_cell_roots": [
+     "9d6a6ab0"
+    ],
+    "same_file_as_frozen": true,
+    "board": "normal",
+    "games": 40,
+    "errors": 0,
+    "right": 0.675,
+    "moves": 30.9,
+    "budget_hits": 0,
+    "b9_complete_evidence": 14,
+    "b9_share": 0.35,
+    "premature": 12,
+    "premature_share": 0.3,
+    "right_among_premature": 0.4167,
+    "seeds": [
+     50141200,
+     50141239
+    ]
+   },
+   "long": {
+    "status": "not available: the long board is not ready (B7 min looks 2)"
+   }
+  },
+  {
+   "k": 14,
+   "game": "barn",
+   "version": "barn v1.3",
+   "frozen_root": "root F5c c9645f49",
+   "g_file_sha8": "be7ddbec",
+   "normal": {
+    "cell": "root F5c cell 40 + 3rd run 20 = POOLED 60 (B9 edge rule)",
+    "file_sha8_in_cell_roots": [
+     "be7ddbec",
+     "be7ddbec"
+    ],
+    "same_file_as_frozen": true,
+    "board": "normal",
+    "games": 60,
+    "errors": 0,
+    "right": 0.65,
+    "moves": 31.7,
+    "budget_hits": 0,
+    "b9_complete_evidence": 28,
+    "b9_share": 0.4667,
+    "premature": 13,
+    "premature_share": 0.2167,
+    "right_among_premature": 0.2308,
+    "seeds": [
+     50121200,
+     50121259
+    ]
+   },
+   "long": {
+    "status": "not available: min informative looks 2 in 8 / 1000 fresh long games ( b7many check, 72,100,000 x 1000), the same reason as bell / candle"
+   }
+  },
+  {
+   "k": 15,
+   "game": "lantern",
+   "version": "lantern v1.2 (batch2-rb8-v1.2)",
+   "frozen_root": "root F7 c7e9aa77",
+   "g_file_sha8": "d7db443e",
+   "normal": {
+    "cell": "root F7 cell",
+    "file_sha8_in_cell_roots": [
+     "d7db443e"
+    ],
+    "same_file_as_frozen": true,
+    "board": "normal",
+    "games": 40,
+    "errors": 0,
+    "right": 0.475,
+    "moves": 27.9,
+    "budget_hits": 0,
+    "b9_complete_evidence": 10,
+    "b9_share": 0.25,
+    "premature": 24,
+    "premature_share": 0.6,
+    "right_among_premature": 0.2917,
+    "seeds": [
+     50151200,
+     50151239
+    ]
+   },
+   "long": {
+    "status": "PENDING (not run yet): LONG-FIX ld-lantern (50,241,400; long READY)"
+   }
+  }
+ ]
+}

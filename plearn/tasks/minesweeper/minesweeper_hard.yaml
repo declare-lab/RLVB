@@ -1,0 +1,5 @@
+include: _default.yaml
+task: minesweeper_hard
+description: "MineSweeper hard: an 8 x 8 board with 10 mines; a test only (no teacher: about 1.5e11 mine sets), so no premature."
+env_args: {domain: plearn.tasks.minesweeper.teacher, domain_args: {levels: [hard], teacher: false}}
+teacher: null

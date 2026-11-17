@@ -1,0 +1,4 @@
+include: _expansion.yaml
+task: proworlds_expansion_face
+description: "Pro-Worlds, face (game 1 of TEST-ORDER.txt): 20 test plays, seeds 50101300 + 0..19, normal board, budget 35."
+env_args: {game: face}

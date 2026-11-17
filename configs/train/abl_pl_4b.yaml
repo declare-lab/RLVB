@@ -1,0 +1,36 @@
+# The ablation study of RLVB (EM), in the form of DAPO's Table 1 (arXiv 2503.14476): a naive form of the method,
+# then one module added per run, up to the full method; each module's training curves against the run before it. Qwen3.5-4B on
+# train_suite, the same turn format and reasoning caps (16,384 tokens in training, 8,192 in every evaluation), the validation
+# split of train_suite (16 episodes a task) at update 0 and after every phase, and the test split once at the end
+# (python -m plearn eval --adapter ... --tasks train_suite --split test). One GPU per run (colocate).
+#   abl_pl_4b_naive     the naive form: the teacher scores the action only, every own sample weighted, no length term
+#   abl_pl_4b_belief    + the belief term (the teacher also scores the belief line)
+#   abl_pl_4b_verified  + verified targets (weights only on accepted actions; more samples where no turn is accepted)
+#   abl_pl_4b           + the length reward (this file; the method's other settings are METHOD in plearn/train.py)
+#   abl_pl_4b_ds        + dynamic sampling (DAPO's last row) = the full method
+#   abl_pl_4b_dec       the full method with the decision score of the belief line, against abl_pl_4b_ds
+# Every run keeps the full method's step limit (--kl_stop 0.015, PPO's target-KL stop; no row for it). Each setting runs with
+# seeds 0 and 1 (abl_pl_4b_*seed1), for the spread between two runs of one setting.
+train: abl_pl_4b
+model: qwen3.5-4b
+train_tasks: train_suite
+eval_tasks: [train_suite]
+eval_n: 16
+output: ${PL_RUNS:-runs}/abl_pl_4b
+env_sh: ${PL_ENV_SH:-/dev/null}
+gpus: {actor: "0", learner: "0", colocate: true}
+method:              # a smaller budget than the comparison's, with its four passes over each sample set (16 x 8 / 32): on one GPU the
+  steps: 48          # smoke test made a sample set of 16 histories in 27 min and an update of 8 histories in 7 min (thoughts of 9,000 to
+  phase: 16          # 10,000 tokens), so the comparison's 50 updates of 32 on sets of 200 would take about 44 h a run; this is about 10 h
+  phase_set: 32
+  set_keep: 0        # the rows before dynamic sampling (abl_pl_4b_ds adds it): every history of the set
+  line_score: exact  # the log score of the line in every row but abl_pl_4b_dec (the method's setting is the decision score)
+  B: 8
+  worlds: 4
+  eval_every: 16
+  eval_split: validation
+  seed: 0
+wandb:
+  project: ${WANDB_PROJECT:-}
+  entity: ${WANDB_ENTITY:-}
+  group: ablation

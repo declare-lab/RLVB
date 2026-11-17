@@ -1,0 +1,23 @@
+# Mastermind with TextArena's rules (teacher.py): find a code of 4 different digits from 1 to 6 from black and white pegs in
+# 20 turns, and answer with ACTION: SUBMIT [a b c d]. Text only. The episode is the teacher's own (plearn/tasks/domain.py), so
+# the evaluation reads the agent exactly as training does. Splits: test (seeds 20000 + i), validation (seeds 10000 + i);
+# training draws seeds from 10^6 up.
+dataset: mastermind
+env: plearn.tasks.domain:DomainEpisode
+env_args: {domain: plearn.tasks.mastermind.teacher}
+test_split: test
+num_episodes: 100
+teacher: teacher:Domain
+generation_kwargs:
+  max_think: 8192
+metric_list:
+  - {metric: success, aggregation: mean, higher_is_better: true}
+  - {metric: premature, aggregation: mean, higher_is_better: false}    # answered before the feedback identified the code
+  - {metric: submitted, aggregation: mean, higher_is_better: true}
+  - {metric: looks, aggregation: mean}
+  - {metric: turns, aggregation: mean}
+  - {metric: invalid_turns, aggregation: mean, higher_is_better: false}
+  - {metric: thought_cut, aggregation: mean}
+  - {metric: open_line, aggregation: mean, higher_is_better: false}    # lines that keep every option open after the evidence excludes some
+metadata:
+  version: 1

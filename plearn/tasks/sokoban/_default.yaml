@@ -1,0 +1,25 @@
+# Sokoban with the target hidden (teacher.py): VAGEN's simulator and rooms (gym_sokoban's generator and dynamics under VAGEN's
+# seeding, 6 x 6, one box, VAGEN's solution band 1 to 5 and map partition); our target is drawn evenly from the cells the box can
+# be pushed to and is hidden until the player stands on it or next to it; the game's own moves and picture; the box on the target
+# wins; 15 actions (VAGEN's evaluation budget). No answer line. The episode is the teacher's own (plearn/tasks/domain.py). Splits:
+# test (seeds 20000 + i, VAGEN's evaluation seeds), validation (10000 + i); training seeds from 10^6; training and validation never
+# use a test room.
+dataset: sokoban
+env: plearn.tasks.domain:DomainEpisode
+env_args: {domain: plearn.tasks.sokoban.teacher}
+test_split: test
+num_episodes: 128
+teacher: teacher:Domain
+generation_kwargs:
+  max_think: 8192                    # 8,192 for every test task
+metric_list:
+  - {metric: success, aggregation: mean, higher_is_better: true}
+  - {metric: looks, aggregation: mean}
+  - {metric: turns, aggregation: mean}
+  - {metric: invalid_turns, aggregation: mean, higher_is_better: false}
+  - {metric: thought_cut, aggregation: mean}
+  - {metric: open_line, aggregation: mean, higher_is_better: false}    # lines that keep every option open after the evidence excludes some
+requires:
+  modules: [gym_sokoban]
+metadata:
+  version: 1

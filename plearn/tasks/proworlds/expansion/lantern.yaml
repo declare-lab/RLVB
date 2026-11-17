@@ -1,0 +1,4 @@
+include: _expansion.yaml
+task: proworlds_expansion_lantern
+description: "Pro-Worlds, lantern (game 15 of TEST-ORDER.txt): 20 test plays, seeds 50241300 + 0..19, normal board, budget 35."
+env_args: {game: lantern}

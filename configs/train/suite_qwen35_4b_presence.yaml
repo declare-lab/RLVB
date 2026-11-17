@@ -1,0 +1,39 @@
+# Qwen3.5-4B RLVB (EM) with the sampler's presence penalty in the learner's score: configs/train/suite_qwen35_4b.yaml with
+# method.score_presence 1. The sampler is the same. The learner then scores each own turn under the distribution that made it:
+# vLLM lowers the logit of every token its request has generated before by the penalty, and plearn/method/trainer.py
+# presence_shift does the same before sampler_logp. Without it the samples do not come from the scored policy, and the
+# likelihood of own samples has a gradient even at equal weights, toward the tokens the penalty favours. Every other key is the
+# same (tests/method/test_presence_score.py).
+# The method is METHOD in plearn/train.py (phase 25, phase_set 300, set_keep 200, B 32, line_score decision, length_reward 4,
+# lr 1e-5, kl_stop 0.015, dec_term own) with presence penalty 1.5 and temperature 1.0, 50 updates (adapter_25, adapter_50).
+# The 4B has an MTP head; the 8B run has no MTP, so this run has none (no PL_VLLM_SPEC). The weights: QWEN35_4B_PATH, else
+# $PL_MODELS/Qwen3.5-4B or $PL_MODELS/Qwen35-4B (configs/models/qwen3.5-4b.yaml).
+train: suite_qwen35_4b_presence
+model: qwen3.5-4b
+train_tasks: train_suite              # HiddenGames, the 8 games (train split)
+eval_tasks: [train_suite]             # the validation split of the training tasks (deferred: PL_EVAL_DEFER)
+eval_n: 0
+output: ${PL_RUNS:-runs}/suite_qwen35_4b_presence
+env_sh: ${PL_ENV_SH:-/dev/null}
+gpus: {actor: "${PL_GPUS:-0,1,2,3}", learner: "${PL_GPUS:-0,1,2,3}", colocate: true}
+server:
+  PL_PRESENCE_PENALTY: "1.5"   # the model card setting
+  PL_EVAL_DEFER: "1"           # no validation in training: the runs test after training; eval_every still saves the adapters
+  PL_SKIP_EVAL0: "1"
+  PL_GPUS_PER_SERVER: "1"      # as the 8B: 1 GPU a server, no MTP
+  PL_MAX_NUM_SEQS: "${PL_SEQS:-96}"
+  PL_M_SPLIT: item             # speed
+  PL_ROUTE_SPILL: "2"
+  PL_ROUTE_SPILL_MIN: "96"
+method:
+  steps: 50
+  eval_every: 25
+  eval_split: validation
+  worlds: 4
+  temperature: 1.0             # as the 8B run (thought sampler + decision T; METHOD 0.6)
+  score_presence: 1            # the learner's score has the sampler's presence penalty (PL_PRESENCE_PENALTY above)
+wandb:
+  name: "4B PL Transfer presence score"
+  project: ${WANDB_PROJECT:-}
+  entity: ${WANDB_ENTITY:-}
+  group: suite

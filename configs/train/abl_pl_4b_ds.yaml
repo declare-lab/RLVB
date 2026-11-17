@@ -1,0 +1,13 @@
+# Ablation study (abl_pl_4b.yaml): + dynamic sampling (DAPO's last row) = the full method. The sample set has 48
+# histories instead of 32, and the phase's batches come only from the first 32 that give a gradient, an own turn
+# with an action the teacher accepts (--set_keep), so the M-step makes the same four passes over 32 histories as the rows before. Any
+# other history is skipped, not sampled again.
+# All the runs of the study have the same prompt, so only abl_pl_4b makes the update-0 evaluation.
+include: abl_pl_4b.yaml
+train: abl_pl_4b_ds
+output: ${PL_RUNS:-runs}/abl_pl_4b_ds
+gpus: {actor: "6", learner: "6"}
+server: {PL_SKIP_EVAL0: 1}
+method:
+  phase_set: 48
+  set_keep: 32

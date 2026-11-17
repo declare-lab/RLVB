@@ -1,0 +1,13 @@
+include: _vllm.yaml
+model: qwen3-vl-8b-thinking
+description: Qwen3-VL-8B-Thinking; a base model of RLVB (EM) and RLVB (GRPO).
+pretrained: Qwen/Qwen3-VL-8B-Thinking
+revision: main
+local_dir: Qwen3-VL-8B-Thinking
+output_slug: qwen3vl8b-thinking
+serve:
+  enable_auto_tool_choice: true
+  tool_call_parser: hermes
+  reasoning_parser: qwen3
+generation:
+  top_k: 20

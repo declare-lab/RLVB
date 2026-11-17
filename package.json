@@ -1,0 +1,10 @@
+{
+  "name": "pro-worlds-engine-checks",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "engines": {"node": ">=22"},
+  "scripts": {
+    "test": "node benchmarks/proworlds/games/expansion-6.1/test.mjs --fixtures"
+  }
+}

@@ -1,0 +1,5 @@
+include: _default.yaml
+task: tabletop_lamps
+description: "Lamps: 4 or 5 lamps and as many buttons; a pressed button's lamp lights and stays lit; find which button lights which lamp (PRESS a button), answer the mapping."
+env_args: {domain: plearn.tasks.tabletop.teacher, domain_args: {levels: [lamps]}}
+teacher_args: {levels: [lamps]}

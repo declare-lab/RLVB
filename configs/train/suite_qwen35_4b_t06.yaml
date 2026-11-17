@@ -1,0 +1,37 @@
+# Qwen3.5-4B RLVB (EM) at temperature 0.6: configs/train/suite_qwen35_4b.yaml (the normal LoRA, NO Gated DeltaNet in_proj_a /
+# in_proj_b; lr 1e-5 = METHOD) with the thought sampler and decision temperature 0.6 (= METHOD in plearn/method/trainer.py:
+# SAMPLER T 0.6, DECISION T 0.6) in place of 1.0. Every other key is the same (tests/method/test_t06_run.py). No KL gate
+# (lr 1e-5; the METHOD kl_stop 0.015 stays). The test settings stay those of the other 4B RLVB (EM) tests (T 1.0, cap 8,192, presence
+# penalty 1.5).
+# The method is METHOD in plearn/train.py (phase 25, phase_set 300, set_keep 200, B 32, line_score decision, length_reward 4,
+# lr 1e-5, kl_stop 0.015, dec_term own) with presence penalty 1.5 and temperature 1.0, 50 updates (adapter_25, adapter_50).
+# The 4B has an MTP head; the 8B run has no MTP, so this run has none (no PL_VLLM_SPEC). The weights: QWEN35_4B_PATH, else
+# $PL_MODELS/Qwen3.5-4B or $PL_MODELS/Qwen35-4B (configs/models/qwen3.5-4b.yaml).
+train: suite_qwen35_4b_t06
+model: qwen3.5-4b
+train_tasks: train_suite              # HiddenGames, the 8 games (train split)
+eval_tasks: [train_suite]             # the validation split of the training tasks (deferred: PL_EVAL_DEFER)
+eval_n: 0
+output: ${PL_RUNS:-runs}/suite_qwen35_4b_t06
+env_sh: ${PL_ENV_SH:-/dev/null}
+gpus: {actor: "${PL_GPUS:-0,1,2,3}", learner: "${PL_GPUS:-0,1,2,3}", colocate: true}
+server:
+  PL_PRESENCE_PENALTY: "1.5"   # the model card setting
+  PL_EVAL_DEFER: "1"           # no validation in training: the runs test after training; eval_every still saves the adapters
+  PL_SKIP_EVAL0: "1"
+  PL_GPUS_PER_SERVER: "1"      # as the 8B: 1 GPU a server, no MTP
+  PL_MAX_NUM_SEQS: "${PL_SEQS:-96}"
+  PL_M_SPLIT: item             # speed
+  PL_ROUTE_SPILL: "2"
+  PL_ROUTE_SPILL_MIN: "96"
+method:
+  steps: 50
+  eval_every: 25
+  eval_split: validation
+  worlds: 4
+  temperature: 0.6             # = METHOD; the 8B run and suite_qwen35_4b use 1.0
+wandb:
+  name: "4B PL Transfer T0.6 lr 1e-5"
+  project: ${WANDB_PROJECT:-}
+  entity: ${WANDB_ENTITY:-}
+  group: suite

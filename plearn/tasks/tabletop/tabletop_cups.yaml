@@ -1,0 +1,5 @@
+include: _default.yaml
+task: tabletop_cups
+description: "Cups: 3 to 5 upside-down cups; find the cup of the named object among look-alikes (LIFT a cup), answer its number."
+env_args: {domain: plearn.tasks.tabletop.teacher, domain_args: {levels: [cups]}}
+teacher_args: {levels: [cups]}

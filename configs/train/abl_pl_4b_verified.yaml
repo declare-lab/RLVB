@@ -1,0 +1,11 @@
+# Ablation study (abl_pl_4b.yaml): + verified targets. The E-step weights only the own turns whose action the teacher accepts
+# (--accept_only 1), and a history with no such turn and a belief line near the exact one gets one more round of samples
+# (--em_more 1, --em_more_joint 2). Adding the length reward to this run gives the full method (abl_pl_4b).
+include: abl_pl_4b_belief.yaml
+train: abl_pl_4b_verified
+output: ${PL_RUNS:-runs}/abl_pl_4b_verified
+gpus: {actor: "6", learner: "6"}
+method:
+  accept_only: 1
+  em_more: 1
+  em_more_joint: 2.0

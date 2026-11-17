@@ -1,0 +1,4 @@
+include: _expansion_long.yaml
+task: proworlds_expansion_long_bee
+description: "Pro-Worlds, bee (game 11 of TEST-ORDER.txt): 20 test plays, seeds 50201300 + 0..19, LONG board, budget 65."
+env_args: {game: bee}

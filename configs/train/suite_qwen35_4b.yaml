@@ -1,0 +1,36 @@
+# RLVB (EM) with Qwen3.5-4B and the settings of the 8B run (configs/train/suite_qwen3vl_8b_thinking.yaml) before its line_wide,
+# line_target, score_presence and cap-8,192 changes: one training on train_suite (HiddenGames, 8 games), then the test of
+# adapter_50 on test_suite. The other Qwen3.5-4B run files start from this one.
+# The method is METHOD in plearn/train.py (phase 25, phase_set 300, set_keep 200, B 32, line_score decision, length_reward 4,
+# lr 1e-5, kl_stop 0.015, dec_term own) with presence penalty 1.5 and temperature 1.0, 50 updates (adapter_25, adapter_50).
+# The 4B has an MTP head; the 8B run has no MTP, so this run has none (no PL_VLLM_SPEC). The weights: QWEN35_4B_PATH, else
+# $PL_MODELS/Qwen3.5-4B or $PL_MODELS/Qwen35-4B (configs/models/qwen3.5-4b.yaml).
+# Its trainer command line is the 8B run's except the model (tests/method/test_run_files.py).
+train: suite_qwen35_4b
+model: qwen3.5-4b
+train_tasks: train_suite              # HiddenGames, the 8 games (train split)
+eval_tasks: [train_suite]             # the validation split of the training tasks (deferred: PL_EVAL_DEFER)
+eval_n: 0
+output: ${PL_RUNS:-runs}/suite_qwen35_4b
+env_sh: ${PL_ENV_SH:-/dev/null}
+gpus: {actor: "${PL_GPUS:-0,1,2,3}", learner: "${PL_GPUS:-0,1,2,3}", colocate: true}
+server:
+  PL_PRESENCE_PENALTY: "1.5"   # the model card setting
+  PL_EVAL_DEFER: "1"           # no validation in training: the runs test after training; eval_every still saves the adapters
+  PL_SKIP_EVAL0: "1"
+  PL_GPUS_PER_SERVER: "1"      # as the 8B: 1 GPU a server, no MTP
+  PL_MAX_NUM_SEQS: "${PL_SEQS:-96}"
+  PL_M_SPLIT: item             # speed
+  PL_ROUTE_SPILL: "2"
+  PL_ROUTE_SPILL_MIN: "96"
+method:
+  steps: 50
+  eval_every: 25
+  eval_split: validation
+  worlds: 4
+  temperature: 1.0             # as the 8B run (thought sampler + decision T; METHOD 0.6)
+wandb:
+  name: "4b train_suite transfer pl fixA pp1.5 T1 v1"
+  project: ${WANDB_PROJECT:-}
+  entity: ${WANDB_ENTITY:-}
+  group: suite

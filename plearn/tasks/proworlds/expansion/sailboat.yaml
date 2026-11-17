@@ -1,0 +1,4 @@
+include: _expansion.yaml
+task: proworlds_expansion_sailboat
+description: "Pro-Worlds, sailboat (game 13 of TEST-ORDER.txt): 20 test plays, seeds 50221300 + 0..19, normal board, budget 35."
+env_args: {game: sailboat}

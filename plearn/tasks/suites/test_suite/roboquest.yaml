@@ -1,0 +1,4 @@
+# RoboQuest, text version (plearn/tasks/roboquest): the 10 tasks x the 50 eval50 instances = 500 games.
+group: test_suite/roboquest
+task:
+  - roboquest_text

@@ -1,0 +1,6 @@
+# MineSweeper: the two training boards and the test-only hard board.
+group: minesweeper
+task:
+  - minesweeper_easy
+  - minesweeper_medium
+  - minesweeper_hard

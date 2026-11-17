@@ -1,0 +1,23 @@
+# Serving and client defaults shared by every model. They match the earlier runs:
+# one GPU, bf16, a 65,536-token context and
+# four concurrent puzzles per server. A model file overrides only what differs.
+serve:                       # flags for `vllm serve` (key -> --key, true -> bare flag, mapping -> JSON)
+  tensor_parallel_size: 1
+  dtype: bfloat16
+  gpu_memory_utilization: 0.90
+  max_model_len: 65536
+  max_num_batched_tokens: 32768
+  max_num_seqs: 4
+  enable_prefix_caching: true
+serve_env:
+  VLLM_USE_FLASHINFER_SAMPLER: "0"
+generation:
+  temperature: 1.0
+  top_p: 0.95
+  max_tokens: 0                          # 0 = all context left after the prompt
+  reasoning_effort: none                 # none leaves thinking control to the checkpoint and server
+  system_prefix: ""
+  exclude_reasoning_from_history: true   # reasoning is generated and saved but not resent in later turns
+client:
+  workers_per_port: 4
+  http_timeout: 7200

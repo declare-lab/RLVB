@@ -1,0 +1,24 @@
+# FrozenLake with the goal hidden (teacher.py): VAGEN's simulator (gymnasium's FrozenLake, VAGEN's map generator, 4 x 4, not
+# slippery) with fog over the cells the agent has not been next to; the game's own moves; reaching the goal wins, a hole ends the
+# game; 25 actions (VAGEN's evaluation budget). No answer line: reaching the goal is the answer. The episode is the teacher's own
+# (plearn/tasks/domain.py). Splits: test (seeds 20000 + i, VAGEN's evaluation seeds), validation (10000 + i); training seeds from 10^6;
+# training and validation never use a test map.
+dataset: frozenlake
+env: plearn.tasks.domain:DomainEpisode
+env_args: {domain: plearn.tasks.frozenlake.teacher}
+test_split: test
+num_episodes: 128
+teacher: teacher:Domain
+generation_kwargs:
+  max_think: 8192                    # 8,192 for every test task
+metric_list:
+  - {metric: success, aggregation: mean, higher_is_better: true}
+  - {metric: looks, aggregation: mean}
+  - {metric: turns, aggregation: mean}
+  - {metric: invalid_turns, aggregation: mean, higher_is_better: false}
+  - {metric: thought_cut, aggregation: mean}
+  - {metric: open_line, aggregation: mean, higher_is_better: false}    # lines that keep every option open after the evidence excludes some
+requires:
+  modules: [gymnasium, pygame]
+metadata:
+  version: 1

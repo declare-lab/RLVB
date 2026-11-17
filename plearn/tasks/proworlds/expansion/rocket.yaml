@@ -1,0 +1,4 @@
+include: _expansion.yaml
+task: proworlds_expansion_rocket
+description: "Pro-Worlds, rocket (game 9 of TEST-ORDER.txt): 20 test plays, seeds 50181300 + 0..19, normal board, budget 35."
+env_args: {game: rocket}

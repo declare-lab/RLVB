@@ -1,0 +1,4 @@
+include: _text.yaml
+task: roboquest_text_search_room
+description: "Search Room: the 50 eval50 scenes (benchmarks/roboquest/suite/v1/eval50/search_room.txt), text version."
+env_args: {task: search_room}

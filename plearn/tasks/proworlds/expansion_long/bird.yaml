@@ -1,0 +1,4 @@
+include: _expansion_long.yaml
+task: proworlds_expansion_long_bird
+description: "Pro-Worlds, bird (game 4 of TEST-ORDER.txt): 20 test plays, seeds 50131300 + 0..19, LONG board, budget 65."
+env_args: {game: bird}

@@ -1,0 +1,4 @@
+include: _text.yaml
+task: roboquest_text_odd_parcel
+description: "Odd Parcel: the 50 eval50 scenes (benchmarks/roboquest/suite/v1/eval50/odd_parcel.txt), text version."
+env_args: {task: odd_parcel}

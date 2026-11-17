@@ -1,0 +1,4 @@
+include: _expansion.yaml
+task: proworlds_expansion_recipe
+description: "Pro-Worlds, recipe (game 6 of TEST-ORDER.txt): 20 test plays, seeds 50151300 + 0..19, normal board, budget 35."
+env_args: {game: recipe}

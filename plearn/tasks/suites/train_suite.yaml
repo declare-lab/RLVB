@@ -1,0 +1,13 @@
+# train_suite: the training tasks of every method, on their train split: the 7 HiddenGames test tasks and 1 training-only task.
+# mastermind, minesweeper_easy, minigrid_keycorridor, frozenlake_hidden_goal, sokoban_hidden_target, and tabletop
+# (lamps, cups, blocks: 3D pictures, ManiSkill3). Each task has an exact teacher. A run mixes the teachers with an equal share
+# of the training episodes each (plearn/tasks/mixture.py). Validation is the same tasks on their validation split
+# (python -m plearn eval --split validation; in training, eval_split). The test of the 7 test tasks is test_suite/hidden_games (756 games).
+group: train_suite
+task:
+  - mastermind
+  - minesweeper_easy
+  - minigrid_keycorridor
+  - frozenlake_hidden_goal
+  - sokoban_hidden_target
+  - tabletop                     # 3D pictures (ManiSkill3): lamps, cups, blocks

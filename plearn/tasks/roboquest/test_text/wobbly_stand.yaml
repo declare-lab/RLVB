@@ -1,0 +1,4 @@
+include: _text.yaml
+task: roboquest_text_wobbly_stand
+description: "Wobbly Stand: the 50 eval50 scenes (benchmarks/roboquest/suite/v1/eval50/wobbly_stand.txt), text version."
+env_args: {task: wobbly_stand}

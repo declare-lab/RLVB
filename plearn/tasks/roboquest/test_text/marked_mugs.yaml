@@ -1,0 +1,4 @@
+include: _text.yaml
+task: roboquest_text_marked_mugs
+description: "Marked Mugs: the 50 eval50 scenes (benchmarks/roboquest/suite/v1/eval50/marked_mugs.txt), text version."
+env_args: {task: marked_mugs}

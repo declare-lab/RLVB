@@ -1,0 +1,19 @@
+# Pro-Worlds, normal board (expansion_env.py): the 15 visual games of the frozen expansion v6.1 set x 20 test plays = 300 games,
+# budget 35. In TEST-ORDER.txt order. test_suite/proworlds holds this group.
+group: proworlds_expansion
+task:
+  - proworlds_expansion_face
+  - proworlds_expansion_jigsaw
+  - proworlds_expansion_kaleido
+  - proworlds_expansion_bird
+  - proworlds_expansion_fish
+  - proworlds_expansion_recipe
+  - proworlds_expansion_turtle
+  - proworlds_expansion_balloon
+  - proworlds_expansion_rocket
+  - proworlds_expansion_bell
+  - proworlds_expansion_bee
+  - proworlds_expansion_candle
+  - proworlds_expansion_sailboat
+  - proworlds_expansion_barn
+  - proworlds_expansion_lantern

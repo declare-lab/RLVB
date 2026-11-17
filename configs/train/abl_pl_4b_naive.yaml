@@ -1,0 +1,15 @@
+# Ablation study (abl_pl_4b.yaml): the naive form of the method. The turn score R is the teacher's action term only (--line_score
+# none; the belief line is still written and carried, but not scored), the E-step weights every own sample (--accept_only 0, no
+# extra round) and R has no length term. It keeps the step limit of the full method.
+# All the runs of the study have the same prompt, so only abl_pl_4b makes the update-0 evaluation.
+include: abl_pl_4b.yaml
+train: abl_pl_4b_naive
+output: ${PL_RUNS:-runs}/abl_pl_4b_naive
+gpus: {actor: "2", learner: "2"}
+server: {PL_SKIP_EVAL0: 1}
+method:
+  line_score: none
+  accept_only: 0
+  em_more: 0
+  em_more_joint: 0
+  length_reward: "0"

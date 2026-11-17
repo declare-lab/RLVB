@@ -1,0 +1,4 @@
+include: _expansion_long.yaml
+task: proworlds_expansion_long_jigsaw
+description: "Pro-Worlds, jigsaw (game 2 of TEST-ORDER.txt): 20 test plays, seeds 50111300 + 0..19, LONG board, budget 65."
+env_args: {game: jigsaw}

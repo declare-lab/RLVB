@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "RLVB: Turning Agents from Lazy Guessers into Evidence Seekers with Verifiable Beliefs as Process Reward"
+authors:
+  - given-names: "Richmond Sin Jing Xuan"
+  - given-names: "Peilin"
+    family-names: "Feng"
+  - given-names: "Wenbin"
+    family-names: "Wang"
+  - given-names: "Soujanya"
+    family-names: "Poria"
+year: 2026
+date-released: "2026-11-15"
+license: MIT
+repository-code: "https://github.com/declare-lab/RLVB"
+url: "https://github.com/declare-lab/RLVB"

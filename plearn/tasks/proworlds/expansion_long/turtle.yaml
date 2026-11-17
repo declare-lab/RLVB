@@ -1,0 +1,4 @@
+include: _expansion_long.yaml
+task: proworlds_expansion_long_turtle
+description: "Pro-Worlds, turtle (game 7 of TEST-ORDER.txt): 20 test plays, seeds 50161300 + 0..19, LONG board, budget 65."
+env_args: {game: turtle}

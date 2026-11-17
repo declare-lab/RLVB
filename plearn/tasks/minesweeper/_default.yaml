@@ -1,0 +1,24 @@
+# MineSweeper (POPGym Arcade; teacher.py): find the mines of a board from the game's own picture and actions (the cursor moves,
+# FIRE), and answer with ACTION: SUBMIT <mine cells>. The episode is the teacher's own (plearn/tasks/domain.py), so the evaluation
+# reads the agent exactly as training does. Splits: test (seeds 20000 + i), validation (seeds 10000 + i); training draws seeds
+# from 10^6 up. Needs popgym-arcade (JAX on the CPU).
+dataset: minesweeper
+env: plearn.tasks.domain:DomainEpisode
+test_split: test
+num_episodes: 100
+teacher: teacher:Domain
+generation_kwargs:
+  max_think: 8192
+metric_list:
+  - {metric: success, aggregation: mean, higher_is_better: true}       # the mines named exactly, or every safe cell revealed
+  - {metric: premature, aggregation: mean, higher_is_better: false}    # answered before the evidence identified the mines
+  - {metric: submitted, aggregation: mean, higher_is_better: true}
+  - {metric: looks, aggregation: mean}
+  - {metric: turns, aggregation: mean}
+  - {metric: invalid_turns, aggregation: mean, higher_is_better: false}
+  - {metric: thought_cut, aggregation: mean}
+  - {metric: open_line, aggregation: mean, higher_is_better: false}    # lines that keep every option open after the evidence excludes some
+requires:
+  modules: [popgym_arcade, jax]
+metadata:
+  version: 1

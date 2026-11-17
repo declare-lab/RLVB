@@ -1,0 +1,5 @@
+include: _default.yaml
+task: minesweeper_medium
+description: "MineSweeper medium: a 6 x 6 board with 6 mines (1,947,792 mine sets); a training task with the exact teacher."
+env_args: {domain: plearn.tasks.minesweeper.teacher, domain_args: {levels: [medium]}}
+teacher_args: {levels: [medium]}

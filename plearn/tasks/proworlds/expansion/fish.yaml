@@ -1,0 +1,4 @@
+include: _expansion.yaml
+task: proworlds_expansion_fish
+description: "Pro-Worlds, fish (game 5 of TEST-ORDER.txt): 20 test plays, seeds 50141300 + 0..19, normal board, budget 35."
+env_args: {game: fish}

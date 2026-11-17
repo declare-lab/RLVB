@@ -1,0 +1,4 @@
+include: _expansion_long.yaml
+task: proworlds_expansion_long_balloon
+description: "Pro-Worlds, balloon (game 8 of TEST-ORDER.txt): 20 test plays, seeds 50171300 + 0..19, LONG board, budget 65."
+env_args: {game: balloon}

@@ -1,0 +1,6 @@
+# The three families of the tabletop environment.
+group: tabletop
+task:
+  - tabletop_lamps
+  - tabletop_cups
+  - tabletop_blocks

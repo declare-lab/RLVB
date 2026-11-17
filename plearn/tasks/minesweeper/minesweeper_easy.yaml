@@ -1,0 +1,5 @@
+include: _default.yaml
+task: minesweeper_easy
+description: "MineSweeper easy: a 4 x 4 board with 2 mines (120 mine sets); a training task with the exact teacher."
+env_args: {domain: plearn.tasks.minesweeper.teacher, domain_args: {levels: [easy]}}
+teacher_args: {levels: [easy]}

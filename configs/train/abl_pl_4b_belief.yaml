@@ -1,0 +1,8 @@
+# Ablation study (abl_pl_4b.yaml): the naive form + the belief term. The turn score R also scores the belief line against the
+# posterior (--line_score exact).
+include: abl_pl_4b_naive.yaml
+train: abl_pl_4b_belief
+output: ${PL_RUNS:-runs}/abl_pl_4b_belief
+gpus: {actor: "4", learner: "4"}
+method:
+  line_score: exact

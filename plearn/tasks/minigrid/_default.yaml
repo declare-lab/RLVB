@@ -1,0 +1,23 @@
+# MiniGrid KeyCorridor (teacher.py): find which left room holds the key from MiniGrid's own 7 x 7 views and actions (turn, forward,
+# toggle a door), and answer with ACTION: SUBMIT <row>. The episode is the teacher's own (plearn/tasks/domain.py). Splits: test
+# (seeds 20000 + i), validation (seeds 10000 + i); training draws seeds from 10^6 up. Needs minigrid.
+dataset: minigrid
+env: plearn.tasks.domain:DomainEpisode
+test_split: test
+num_episodes: 100
+teacher: teacher:Domain
+generation_kwargs:
+  max_think: 8192                    # 8,192 for every test task
+metric_list:
+  - {metric: success, aggregation: mean, higher_is_better: true}
+  - {metric: premature, aggregation: mean, higher_is_better: false}    # answered before the views identified the room
+  - {metric: submitted, aggregation: mean, higher_is_better: true}
+  - {metric: looks, aggregation: mean}
+  - {metric: turns, aggregation: mean}
+  - {metric: invalid_turns, aggregation: mean, higher_is_better: false}
+  - {metric: thought_cut, aggregation: mean}
+  - {metric: open_line, aggregation: mean, higher_is_better: false}    # lines that keep every option open after the evidence excludes some
+requires:
+  modules: [minigrid]
+metadata:
+  version: 1

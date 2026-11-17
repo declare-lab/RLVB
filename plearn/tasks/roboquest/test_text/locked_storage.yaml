@@ -1,0 +1,4 @@
+include: _text.yaml
+task: roboquest_text_locked_storage
+description: "Locked Storage: the 50 eval50 scenes (benchmarks/roboquest/suite/v1/eval50/locked_storage.txt), text version."
+env_args: {task: locked_storage}

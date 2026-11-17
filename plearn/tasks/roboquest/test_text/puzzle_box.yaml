@@ -1,0 +1,4 @@
+include: _text.yaml
+task: roboquest_text_puzzle_box
+description: "Puzzle Box: the 50 eval50 scenes (benchmarks/roboquest/suite/v1/eval50/puzzle_box.txt), text version."
+env_args: {task: puzzle_box}

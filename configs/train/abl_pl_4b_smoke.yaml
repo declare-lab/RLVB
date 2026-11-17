@@ -1,0 +1,20 @@
+# The smoke test of the ablation study (abl_pl_4b.yaml), to run before it: the full method with Qwen3.5-4B on one GPU (the
+# server takes 0.55 of the GPU), one phase of 2 updates on a small sample set (16 histories, 8 an update), the evaluation at
+# update 0 and after the phase on 4 validation episodes of each training task. It measures the time of a sample set, an update
+# and an evaluation on one GPU (the study's budget), and writes the E-step batches (case-<tag>/em) and the evaluation episodes
+# (case-<tag>/rollouts) in full for the one-episode check.
+include: abl_pl_4b.yaml
+train: abl_pl_4b_smoke
+eval_n: 4
+output: ${PL_RUNS:-runs}/abl_pl_4b_smoke
+gpus: {actor: "6", learner: "6"}
+server: {vllm_mem: 0.55}
+method:
+  steps: 2
+  phase: 2
+  phase_set: 16
+  B: 8
+  eval_every: 2
+  dump_em_steps: "1,2"
+wandb:
+  group: smoke

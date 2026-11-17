@@ -1,0 +1,3 @@
+include: _default.yaml
+task: frozenlake_hidden_goal
+description: "FrozenLake 4 x 4 with the goal hidden and the holes seen only next to the agent: search for the goal and reach it in 25 actions."

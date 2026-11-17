@@ -1,0 +1,24 @@
+# The full-benchmark test of RoboQuest (README.md beside this file): one task's eval50 instances at the decision level with
+# helpers (bench_env.py), scored by the task's own success check and the benchmark's progress P. Needs the RoboQuest runtime.
+# Splits: test (eval50), dev (the registry's development rows). --task_args roboquest.version=text: the text version. The
+# group roboquest_text (test_text/, the RoboQuest part of test_suite) includes this file and sets the text version; the
+# thinking cap is 8,192 tokens.
+dataset: roboquest
+env: bench_env:Episode
+test_split: test
+num_episodes: 50
+env_args: {version: sim, bridges: 4}
+generation_kwargs:
+  max_think: 8192
+  max_action: 512                    # the long SUBMIT forms (Search Room, Stamps, Wobbly Stand), and a sentence before the ACTION line in the one-line turn
+  carry: false                       # the last belief line is not carried to the next turn (README.md)
+metric_list:
+  - {metric: success, aggregation: mean, higher_is_better: true}
+  - {metric: P, aggregation: mean, higher_is_better: true}             # the benchmark's progress, 0 to 1
+  - {metric: submitted, aggregation: mean, higher_is_better: true}
+  - {metric: evidence_actions, aggregation: mean}
+  - {metric: thought_cut, aggregation: mean}
+requires:
+  paths: ["${ROBOQUEST_RUNTIME}/envs/robocasa/bin/python"]   # set ROBOQUEST_RUNTIME (benchmarks/roboquest/README.md); not set: the check names this path
+metadata:
+  version: 1

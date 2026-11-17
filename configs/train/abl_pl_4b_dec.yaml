@@ -1,0 +1,10 @@
+# Ablation study (abl_pl_4b.yaml): the full method (abl_pl_4b_ds) with the decision score of the belief line : the
+# line is scored by the act it implies, log pi*(a_b), plus 0.1 of its log score, which ranks the lines with the same act
+# (--line_score decision, --line_mix). Against abl_pl_4b_ds, the same run with the log score of the line.
+include: abl_pl_4b_ds.yaml
+train: abl_pl_4b_dec
+output: ${PL_RUNS:-runs}/abl_pl_4b_dec
+gpus: {actor: "4", learner: "4"}
+method:
+  line_score: decision
+  line_mix: 0.1

@@ -1,0 +1,21 @@
+# Pro-Worlds (expansion_env.py): one of the 15 visual games of the frozen expansion v6.1 set, normal board (budget 35), 20 test
+# plays. Test only: no teacher. Thinking is capped at 8,192 tokens.
+dataset: proworlds
+env: expansion_env:Episode
+test_split: test
+num_episodes: 20
+seed: 0
+env_args: {board: normal}
+generation_kwargs:
+  max_think: 8192                    # 8,192 for every test task
+  max_action: 512    # as raw/_raw.yaml
+metric_list:
+  - {metric: success, aggregation: mean, higher_is_better: true}
+  - {metric: premature, aggregation: mean, higher_is_better: false}    # answered while the exact belief of the member was below 0.95
+  - {metric: submitted, aggregation: mean, higher_is_better: true}
+  - {metric: moves, aggregation: mean}
+  - {metric: turns, aggregation: mean}
+  - {metric: unreadable_turns, aggregation: mean, higher_is_better: false}
+  - {metric: thought_cut, aggregation: mean}
+metadata:
+  version: 1

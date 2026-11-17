@@ -1,0 +1,4 @@
+include: _text.yaml
+task: roboquest_text_painted_cubes
+description: "Painted Cubes: the 50 eval50 scenes (benchmarks/roboquest/suite/v1/eval50/painted_cubes.txt), text version."
+env_args: {task: painted_cubes}

@@ -1,0 +1,7 @@
+# Ablation study (abl_pl_4b.yaml): the naive form with seed 1.
+include: abl_pl_4b_naive.yaml
+train: abl_pl_4b_naive_seed1
+output: ${PL_RUNS:-runs}/abl_pl_4b_naive_seed1
+gpus: {actor: "3", learner: "3"}
+method:
+  seed: 1

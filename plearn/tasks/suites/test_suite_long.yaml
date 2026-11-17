@@ -1,0 +1,10 @@
+# test_suite_long: test_suite with the Pro-Worlds LONG board (budget 65) in place of the normal board (budget 35), 1,656 games.
+# The run scripts select it with EXPANSION=long (scripts/eval_<model>.sh).
+#   test_suite/proworlds_long  Pro-Worlds, long board: 15 visual games x 20 test plays = 300
+#   test_suite/hidden_games    HiddenGames: the 8 train_suite tasks on their test split = 856
+#   test_suite/roboquest       RoboQuest, text version: 10 tasks x 50 eval50 instances = 500
+group: test_suite_long
+task:
+  - test_suite/proworlds_long
+  - test_suite/hidden_games
+  - test_suite/roboquest

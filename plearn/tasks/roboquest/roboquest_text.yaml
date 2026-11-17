@@ -1,0 +1,14 @@
+# The RoboQuest test, text version: the ten tasks x 50 eval50 instances = 500 episodes (test_text/). test_suite/roboquest holds
+# this group. RoboQuest has no training task.
+group: roboquest_text
+task:
+  - roboquest_text_odd_parcel
+  - roboquest_text_painted_cubes
+  - roboquest_text_marked_mugs
+  - roboquest_text_unfamiliar_containers
+  - roboquest_text_search_room
+  - roboquest_text_blackout_search
+  - roboquest_text_locked_storage
+  - roboquest_text_puzzle_box
+  - roboquest_text_stamps
+  - roboquest_text_wobbly_stand

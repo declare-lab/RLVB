@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "plearn"
+version = "0.3.0"
+description = "RLVB for evidence-seeking agents: registered tasks, evaluation and training"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [{name = "Richmond Sin Jing Xuan"}, {name = "Peilin Feng"}, {name = "Wenbin Wang"}, {name = "Soujanya Poria"}]
+requires-python = ">=3.11,<3.14"
+dependencies = ["numpy==2.1.3", "Pillow==11.1.0", "PyYAML>=6"]
+
+[project.urls]
+Repository = "https://github.com/declare-lab/RLVB"
+
+[project.optional-dependencies]
+test = ["pytest==8.3.4"]
+# The simulators of the HiddenGames datasets (plearn/tasks/minesweeper, minigrid, frozenlake, sokoban), at the tested versions.
+games = ["popgym-arcade==0.0.7", "jax==0.12.0.1", "jaxlib==0.12.0.1", "minigrid==3.2.0", "gymnasium==1.4.0", "pygame-ce==2.5.8",
+         "gym-sokoban==0.0.6", "gym==0.26.2"]
+tabletop = ["mani-skill==3.0.1", "sapien==3.0.3"]   # the simulator of plearn/tasks/tabletop (ManiSkill3, Vulkan), at the tested versions
+
+[project.scripts]
+plearn = "plearn.cli:main"
+
+# Install from a checkout with `pip install -e .`: plearn reads its tasks, configs/ and the environments' own code in
+# benchmarks/ (plearn puts benchmarks/vagen on the import path for FrozenLake and Sokoban).
+[tool.setuptools.packages.find]
+include = ["plearn*"]
+
+[tool.setuptools.package-data]
+"plearn" = ["tasks/**/*.yaml", "tasks/**/*.mjs", "method/README.md"]

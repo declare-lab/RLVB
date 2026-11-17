@@ -1,0 +1,11 @@
+# test_suite: the test of every model, 1,656 games. Thinking is capped at 8,192 tokens in every task.
+#   test_suite/proworlds      Pro-Worlds, normal board: 15 visual games x 20 test plays = 300
+#   test_suite/hidden_games   HiddenGames: the 8 train_suite tasks on their test split = 856
+#   test_suite/roboquest      RoboQuest, text version: 10 tasks x 50 eval50 instances = 500
+# test_suite_long is the same suite with the Pro-Worlds long board in place of the normal board.
+#   python -m plearn eval --model qwen3-vl-8b-thinking --tasks test_suite --gpus 0 [--adapter DIR]
+group: test_suite
+task:
+  - test_suite/proworlds
+  - test_suite/hidden_games
+  - test_suite/roboquest

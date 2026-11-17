@@ -1,0 +1,107 @@
+# ★ The eval seeds are disjoint from BOTH the train and val ranges in
+# examples/train/, because the same seed is the same instance. They used to start at 0:
+# frozenlake's eval overlapped training on 127 of 128 seeds and primitive_skill's on all
+# 16, so a fine-tuned checkpoint's "eval" number was its training-set accuracy. 20000+ is
+# above every range those configs use.
+# ★ The seed range is INCLUSIVE and the third element is an occurrence limit, not a step.
+# With limit 1 the loader does `rng.sample(range(min, max+1), n_envs)`, so n_envs must equal
+# max-min+1 or a task is dropped at random on every run -- and, where the env indexes its
+# dataset as `seed % len(dataset)`, the extra value wraps onto task 0 and scores it twice.
+# Measured on navigation before this fix: 59 of 60 tasks evaluated, task 0 counted twice.
+defaults:
+  - ../../../vagen/configs/eval_default
+
+# Where rollouts and summaries are written. Override with VAGEN_EVAL_ROOT (an absolute
+# path), or set fileroot here. The old default was one developer's home directory, which
+# every shipped eval config inherited.
+#
+# ★ A relative fileroot is resolved against the CONFIG FILE's directory, not the working
+# directory and not the repo root -- so this default puts results next to the config, in
+# examples/evaluate/<env>/eval_runs/. That is gitignored. Give VAGEN_EVAL_ROOT an absolute
+# path if you want them somewhere else; a relative one will surprise you.
+fileroot: ${oc.env:VAGEN_EVAL_ROOT,./eval_runs}
+
+envs:
+  - name: Sokoban
+    n_envs: 128
+    tag_id: sokoban_test
+    seed: [20000, 20127, 1]
+    split: test
+    max_turns: 5
+    # ★ Both from val_sokoban_vision.yaml. Without response_length_per_turn the
+    # client falls through to chat_config.max_tokens (1024), i.e. twice what the
+    # policy was trained to write in a turn.
+    response_length_per_turn: 512
+    max_env_response_per_turn: 256
+    # The ceiling above is in real tokens, copied from val_sokoban_vision.yaml. Evaluation
+    # measures against it with the served model's own processor -- see `tokenizer:` in
+    # vagen/evaluation/README.md, which defaults to backends.<name>.model -- so the two are
+    # in the same unit and nothing here needs to name a per-image cost.
+    config:
+      dim_room: [6, 6]
+      max_steps: 100
+      num_boxes: 1
+      render_mode: vision
+      max_actions_per_step: 3
+      action_sep: ","
+      use_example_in_sys_prompt: true
+      # prompt_format wm is right here: the model under test is a Qwen2.5-VL.
+      # Native-thinking models should use wm_think so their optional thinking prefix is
+      # followed by the same structured suffix. InternVL and GLM can still use the
+      # simpler action-only protocol:
+      #   bash run_eval.sh config.yaml envs.0.config.prompt_format=answer \
+      #     backends.openrouter.model=OpenGVLab/InternVL3_5-2B-hf
+      # GLM's launcher may use prompt_format=answer when only the action needs markup.
+      prompt_format: wm
+      # ★ Not the training default (True), and deliberately so -- this is the one field
+      # here that is allowed to differ from val_sokoban_vision.yaml.
+      #
+      # Served through an OpenAI-compatible endpoint, this model does not open with
+      # `<perception>`; it writes the same sentence untagged and goes straight to
+      # `<think>`. Measured on Qwen2.5-VL-3B: 0 of 240 turns well-formed, against 1.0 in
+      # training validation on the SAME seeds, the SAME byte-identical system prompt, the
+      # SAME 625-token prompt and the same greedy settings. It is not the seeds, the
+      # images (text render mode fails too), the chat template, or the engine flags -- the
+      # two paths split on the very first token, where the served model returns 'The'
+      # (logprob -1.42) while reporting '<' (-0.92) as its own argmax. That is a serving
+      # -layer discrepancy, not something this config can fix.
+      #
+      # Under strict_format: true that costs every action in the run -- a malformed turn
+      # is a no-op -- so the whole eval reports success_rate 0.00 regardless of how well
+      # the policy plays. False keeps the salvaged action, so this measures whether the
+      # model can solve Sokoban rather than whether the endpoint emits angle brackets.
+      #
+      # Malformed but salvageable actions still receive no format reward, so disabling
+      # strict execution changes task continuity without weakening format scoring.
+      strict_format: false
+      # ★ Both must match val_sokoban_vision.yaml or the eval number is not comparable
+      # with the val curve it will be read against. Absent, format_reward falls back to
+      # the dataclass default of 0.1 -- five times what training pays -- and
+      # min_solution_steps to no constraint, which is a different difficulty distribution.
+      format_reward: 0.02
+      min_solution_steps: [1,5]
+    chat_config:
+      temperature: 0
+      max_tokens: 1024
+      top_p: 1.0
+
+experiment:
+  dump_dir: ${fileroot}/rollouts/eval_sokoban
+  default_max_turns: 5
+
+run:
+  backend: "openrouter"
+  base_seed: 0
+  max_concurrent_jobs: 4
+  resume: skip_completed
+  live_summary: true
+
+backends:
+  openrouter:
+    api_key: ""               # or export OPENROUTER_API_KEY
+    base_url: null
+    model: "openai/gpt-4o-mini"
+    max_concurrency: 2
+    max_retries: 6
+    min_backoff: 0.5
+    max_backoff: 8.0

@@ -1,0 +1,7 @@
+# Ablation study (abl_pl_4b.yaml): the decision score of the belief line, with seed 1.
+include: abl_pl_4b_dec.yaml
+train: abl_pl_4b_dec_seed1
+output: ${PL_RUNS:-runs}/abl_pl_4b_dec_seed1
+gpus: {actor: "5", learner: "5"}
+method:
+  seed: 1
