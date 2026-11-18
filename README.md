@@ -1,4 +1,12 @@
 <div align="center">
+<h1>RLVB: Reinforcement Learning with Verifiable Belief</h1>
+
+<a href="assets/rlvb_vs_grpo.mp4"><img src="assets/rlvb_vs_grpo.gif" alt="GRPO with the outcome reward (left) and RLVB (GRPO) (right) play the same seven test games" width="100%"></a>
+
+<sub>GRPO with the outcome reward (left) and RLVB (GRPO) (right) play the same seven test games (Qwen3-VL-8B). Six are games that RLVB solves and GRPO does not; the last is one that GRPO solves and RLVB does not. The end of each game shows both methods' success rate over all test games of that task. The cups game is drawn as a diagram. Click for the <a href="assets/rlvb_vs_grpo.mp4">MP4 file</a>.</sub>
+</div>
+
+<div align="center">
 <h2>RLVB: Turning Agents from Lazy Guessers into Evidence Seekers with Verifiable Beliefs as Process Reward</h2>
 </div>
 <div align="center">
