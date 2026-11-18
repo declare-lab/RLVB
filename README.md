@@ -9,9 +9,9 @@
 </div>
 <div align="center">
 
-Richmond Sin Jing Xuan<sup>1</sup>,
+[Richmond Sin Jing Xuan](https://richmondsin.vercel.app/)<sup>1</sup>,
 [Peilin Feng](https://peilin-ff.github.io/)<sup>1</sup>,
-Wenbin Wang<sup>2</sup>,
+[Wenbin Wang](https://wenbinwang12.github.io/)<sup>2</sup>,
 [Soujanya Poria](https://soujanyaporia.github.io/)<sup>1</sup>
 
 <sup>1</sup>[DeCLaRe Lab](https://declare-lab.github.io/), Nanyang Technological University &nbsp;&nbsp; <sup>2</sup>Independent
