@@ -1,0 +1,1748 @@
+{
+ "benches": [
+  {
+   "id": "hidden",
+   "name": "HiddenGames",
+   "count": 7,
+   "blurb": "Seven games in which the answer is hidden and the agent must look before it answers. RLVB trains on the training split of these games; the cases are from their test split.",
+   "rules": "Seven games with a hidden answer; the dashed box shows what the simulator knows after each step.",
+   "games": [
+    "tabletop_cups",
+    "tabletop_lamps",
+    "tabletop_blocks",
+    "minigrid_keycorridor",
+    "frozenlake_hidden_goal",
+    "sokoban_hidden_target",
+    "minesweeper_easy"
+   ],
+   "covers": [
+    "static/img/covers/cups.jpg",
+    "static/img/covers/lamps.jpg",
+    "static/img/covers/blocks.jpg"
+   ]
+  },
+  {
+   "id": "proworlds",
+   "name": "Pro-Worlds",
+   "count": 15,
+   "blurb": "Fifteen visual puzzles never seen in training. A large picture fills a board, and the agent sees it only through a window of one site.",
+   "rules": "Fifteen puzzles never seen in training; the agent sees the board one site at a time and decides when it has seen enough.",
+   "games": [
+    "proworlds_expansion_balloon",
+    "proworlds_expansion_barn",
+    "proworlds_expansion_bee",
+    "proworlds_expansion_bell",
+    "proworlds_expansion_bird",
+    "proworlds_expansion_candle",
+    "proworlds_expansion_face",
+    "proworlds_expansion_fish",
+    "proworlds_expansion_jigsaw",
+    "proworlds_expansion_kaleido",
+    "proworlds_expansion_lantern",
+    "proworlds_expansion_recipe",
+    "proworlds_expansion_rocket",
+    "proworlds_expansion_sailboat",
+    "proworlds_expansion_turtle"
+   ],
+   "covers": [
+    "static/img/covers/bell.png",
+    "static/img/covers/candle.png",
+    "static/img/covers/barn.png"
+   ]
+  },
+  {
+   "id": "roboquest",
+   "name": "RoboQuest",
+   "count": 10,
+   "blurb": "Ten household tasks in a simulated kitchen, never seen in training. The agent works from text; the pictures here render the same steps in the simulator.",
+   "rules": "Ten kitchen tasks never seen in training; the agent reads text, and the pictures show the same steps in the simulator.",
+   "games": [
+    "roboquest_text_blackout_search",
+    "roboquest_text_search_room",
+    "roboquest_text_locked_storage",
+    "roboquest_text_marked_mugs",
+    "roboquest_text_odd_parcel",
+    "roboquest_text_painted_cubes",
+    "roboquest_text_puzzle_box",
+    "roboquest_text_stamps",
+    "roboquest_text_unfamiliar_containers",
+    "roboquest_text_wobbly_stand"
+   ],
+   "covers": [
+    "static/img/covers/search_room.jpg",
+    "static/img/covers/painted_cubes.jpg",
+    "static/img/covers/puzzle_box.jpg"
+   ]
+  }
+ ],
+ "games": {
+  "tabletop_cups": {
+   "title": "Cups",
+   "short": "Find the black ball under one of five cups.",
+   "goal": "Five upside-down cups stand in a row. A black ball is under one of them; the other cups hide a look-alike, another colour or another shape, or nothing.",
+   "see": "Two pictures of the table, from the left and from the right.",
+   "act": "LIFT k raises cup k and leaves it up. Each cup can be lifted once.",
+   "answer": "SUBMIT k names the cup of the black ball.",
+   "tip": "A look-alike is not the ball. The answer is known once the ball itself shows, or once every other cup is ruled out.",
+   "bench": "hidden",
+   "truth": "cup 5",
+   "budget": "5 lifts",
+   "pixel": false,
+   "thumb": "frames/tabletop_cups/rlvb_grpo/0.jpg",
+   "outcomes": {
+    "base": {
+     "ok": false,
+     "n": 1
+    },
+    "base_b": {
+     "ok": false,
+     "n": 1
+    },
+    "sft": {
+     "ok": false,
+     "n": 3
+    },
+    "grpo": {
+     "ok": false,
+     "n": 1
+    },
+    "ppo": {
+     "ok": false,
+     "n": 2
+    },
+    "ppo_ba": {
+     "ok": false,
+     "n": 2
+    },
+    "rlvb_em": {
+     "ok": false,
+     "n": 1
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 5
+    }
+   }
+  },
+  "tabletop_lamps": {
+   "title": "Lamps",
+   "short": "Find which button lights which lamp.",
+   "goal": "Five lamps stand in a row, with five push buttons in front of them, lettered from A. Each button lights one lamp, and every mapping is equally likely.",
+   "see": "Two pictures of the table, from the left and from the right.",
+   "act": "PRESS X lights the lamp of button X, and the lamp stays lit. Each button can be pressed once.",
+   "answer": "SUBMIT and the whole mapping, for example SUBMIT A1 B2 C3 D4 E5.",
+   "tip": "Since the lamps stay lit, each press is read from the lamp that newly turns on. Once all but one button are pressed, the last pair is forced.",
+   "bench": "hidden",
+   "truth": "mapping A1 B3 C4 D2 E5",
+   "budget": "5 presses",
+   "pixel": false,
+   "thumb": "frames/tabletop_lamps/rlvb_grpo/0.jpg",
+   "outcomes": {
+    "base": {
+     "ok": false,
+     "n": 2
+    },
+    "base_b": {
+     "ok": false,
+     "n": 1
+    },
+    "sft": {
+     "ok": false,
+     "n": 3
+    },
+    "grpo": {
+     "ok": false,
+     "n": 1
+    },
+    "ppo": {
+     "ok": false,
+     "n": 1
+    },
+    "ppo_ba": {
+     "ok": false,
+     "n": 2
+    },
+    "rlvb_em": {
+     "ok": false,
+     "n": 1
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 5
+    }
+   }
+  },
+  "tabletop_blocks": {
+   "title": "Blocks",
+   "short": "Find the block on a slippery base.",
+   "goal": "Four blocks stand on lines drawn across the table 3 cm apart. One of them stands on a slippery base.",
+   "see": "Two pictures of the table, from the left and from the right.",
+   "act": "PUSH k pushes block k away from the cameras: it moves 3 cm, or 9 cm if it is the slippery one. Each block can be pushed once.",
+   "answer": "SUBMIT k names the slippery block.",
+   "tip": "Read how far each pushed block slid against the lines.",
+   "bench": "hidden",
+   "truth": "block 3",
+   "budget": "4 pushes",
+   "pixel": false,
+   "thumb": "frames/tabletop_blocks/rlvb_grpo/0.jpg",
+   "outcomes": {
+    "base": {
+     "ok": false,
+     "n": 1
+    },
+    "base_b": {
+     "ok": true,
+     "n": 1
+    },
+    "sft": {
+     "ok": false,
+     "n": 4
+    },
+    "grpo": {
+     "ok": false,
+     "n": 1
+    },
+    "ppo": {
+     "ok": false,
+     "n": 2
+    },
+    "ppo_ba": {
+     "ok": true,
+     "n": 2
+    },
+    "rlvb_em": {
+     "ok": false,
+     "n": 2
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 5
+    }
+   }
+  },
+  "minigrid_keycorridor": {
+   "title": "KeyCorridor",
+   "short": "Find the room that holds the key.",
+   "goal": "A building has three rooms on the left, a hallway in the middle and three rooms on the right. A key lies in one of the left rooms.",
+   "see": "The 7 x 7 cells in front of the agent; walls and closed doors hide what is behind them.",
+   "act": "TURN LEFT and TURN RIGHT turn the agent, FORWARD moves it one cell, and TOGGLE opens the door in front of it.",
+   "answer": "SUBMIT r with the row of the room, from 1 at the top to 3 at the bottom.",
+   "tip": "The room is known once an open door shows the key, or once the other two rooms are seen empty.",
+   "bench": "hidden",
+   "truth": "room 3, the bottom one",
+   "budget": "64 actions",
+   "pixel": true,
+   "thumb": "frames/minigrid_keycorridor/rlvb_grpo/0.png",
+   "outcomes": {
+    "base": {
+     "ok": false,
+     "n": 2
+    },
+    "base_b": {
+     "ok": true,
+     "n": 2
+    },
+    "sft": {
+     "ok": true,
+     "n": 34
+    },
+    "grpo": {
+     "ok": false,
+     "n": 2
+    },
+    "ppo": {
+     "ok": false,
+     "n": 1
+    },
+    "ppo_ba": {
+     "ok": false,
+     "n": 4
+    },
+    "rlvb_em": {
+     "ok": true,
+     "n": 2
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 4
+    }
+   }
+  },
+  "frozenlake_hidden_goal": {
+   "title": "FrozenLake",
+   "short": "Reach a goal hidden in the fog without falling in.",
+   "goal": "A frozen lake of 4 x 4 cells, columns A to D and rows 1 to 4. The goal is hidden in one cell. Every other cell is a hole with chance 0.2, and a safe path to the goal always exists.",
+   "see": "The cells the agent has been on and the four cells next to it; fog covers the rest.",
+   "act": "LEFT, DOWN, RIGHT and UP move the agent one cell.",
+   "answer": "Reaching the goal wins; stepping into a hole ends the game.",
+   "tip": "The belief names the cells where the goal may still be.",
+   "bench": "hidden",
+   "truth": "the goal is at B1",
+   "budget": "25 actions",
+   "pixel": true,
+   "thumb": "frames/frozenlake_hidden_goal/rlvb_grpo/0.png",
+   "outcomes": {
+    "base": {
+     "ok": true,
+     "n": 23
+    },
+    "base_b": {
+     "ok": false,
+     "n": 25
+    },
+    "sft": {
+     "ok": true,
+     "n": 24
+    },
+    "grpo": {
+     "ok": true,
+     "n": 14
+    },
+    "ppo": {
+     "ok": false,
+     "n": 25
+    },
+    "ppo_ba": {
+     "ok": true,
+     "n": 12
+    },
+    "rlvb_em": {
+     "ok": true,
+     "n": 11
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 19
+    }
+   }
+  },
+  "sokoban_hidden_target": {
+   "title": "Sokoban",
+   "short": "Push the box onto a hidden target.",
+   "goal": "A room of 6 x 6 cells holds one box. The target is one of the cells the box can be pushed to, and it shows only when the agent stands on it or right next to it.",
+   "see": "A picture of the room.",
+   "act": "UP, DOWN, LEFT and RIGHT move the agent one cell; a step into the box pushes it if the cell behind it is free.",
+   "answer": "The box on the target wins.",
+   "tip": "The agent has to find the target before it spends its moves on pushing.",
+   "bench": "hidden",
+   "truth": "the target is at B2",
+   "budget": "15 actions",
+   "pixel": true,
+   "thumb": "frames/sokoban_hidden_target/rlvb_grpo/0.png",
+   "outcomes": {
+    "base": {
+     "ok": false,
+     "n": 15
+    },
+    "base_b": {
+     "ok": false,
+     "n": 15
+    },
+    "sft": {
+     "ok": false,
+     "n": 15
+    },
+    "grpo": {
+     "ok": false,
+     "n": 15
+    },
+    "ppo": {
+     "ok": false,
+     "n": 15
+    },
+    "ppo_ba": {
+     "ok": true,
+     "n": 9
+    },
+    "rlvb_em": {
+     "ok": true,
+     "n": 6
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 11
+    }
+   }
+  },
+  "minesweeper_easy": {
+   "title": "MineSweeper",
+   "short": "Find the two mines of a 4 x 4 board.",
+   "goal": "A board of 4 x 4 cells hides 2 mines, and every pair of cells is equally likely.",
+   "see": "The board, with the cursor in orange. A revealed safe cell shows how many of its eight neighbours are mines.",
+   "act": "MOVE UP, MOVE DOWN, MOVE LEFT and MOVE RIGHT move the cursor; FIRE reveals the cell under it. A revealed mine ends the game.",
+   "answer": "SUBMIT and the two mine cells, for example SUBMIT B2 D4, at any time. Revealing every safe cell also wins.",
+   "tip": "The numbers rule out pairs of cells; the answer is known when one pair is left.",
+   "bench": "hidden",
+   "truth": "mines at A1 and B2",
+   "budget": "32 actions",
+   "pixel": true,
+   "thumb": "frames/minesweeper_easy/rlvb_grpo/0.png",
+   "outcomes": {
+    "base": {
+     "ok": false,
+     "n": 3
+    },
+    "base_b": {
+     "ok": false,
+     "n": 8
+    },
+    "sft": {
+     "ok": false,
+     "n": 13
+    },
+    "grpo": {
+     "ok": false,
+     "n": 1
+    },
+    "ppo": {
+     "ok": false,
+     "n": 1
+    },
+    "ppo_ba": {
+     "ok": false,
+     "n": 8
+    },
+    "rlvb_em": {
+     "ok": false,
+     "n": 13
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 24
+    }
+   }
+  },
+  "proworlds_expansion_balloon": {
+   "title": "Hot-air balloon",
+   "short": "Which hot-air balloon is it?",
+   "members": [
+    "aurora",
+    "breeze",
+    "cirrus",
+    "drift",
+    "ember",
+    "flare",
+    "glide",
+    "haze"
+   ],
+   "goal": "Find which of the 8 candidates the picture shows. The parts to find are its upper corners (a pointed or a round flap), its middle panels (a ring or a plus emblem), its ropes (straight or crossed) and its basket (square or a cone).",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
+   "answer": "The name of a candidate, at any time.",
+   "board": "10 x 10 sites",
+   "bench": "proworlds",
+   "truth": "haze",
+   "budget": "35 moves",
+   "pixel": true,
+   "thumb": "thumbs/proworlds_expansion_balloon.png",
+   "outcomes": {
+    "base": {
+     "ok": false,
+     "n": 8
+    },
+    "base_b": {
+     "ok": true,
+     "n": 13
+    },
+    "sft": {
+     "ok": false,
+     "n": 21
+    },
+    "grpo": {
+     "ok": false,
+     "n": 9
+    },
+    "ppo": {
+     "ok": false,
+     "n": 5
+    },
+    "ppo_ba": {
+     "ok": false,
+     "n": 6
+    },
+    "rlvb_em": {
+     "ok": false,
+     "n": 11
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 33
+    }
+   }
+  },
+  "proworlds_expansion_barn": {
+   "title": "Barn",
+   "short": "Which barn is it?",
+   "members": [
+    "jace",
+    "kira",
+    "lyle",
+    "maeve",
+    "nils",
+    "opal",
+    "penn",
+    "rhys"
+   ],
+   "goal": "Find which of the 8 candidates the picture shows. The parts to find are its roof marks, its loft marks, its door marks and its weather vane, each a large black shape.",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
+   "answer": "The name of a candidate, at any time.",
+   "board": "10 x 10 sites",
+   "bench": "proworlds",
+   "truth": "opal",
+   "budget": "35 moves",
+   "pixel": true,
+   "thumb": "thumbs/proworlds_expansion_barn.png",
+   "outcomes": {
+    "base": {
+     "ok": false,
+     "n": 17
+    },
+    "base_b": {
+     "ok": false,
+     "n": 7
+    },
+    "sft": {
+     "ok": true,
+     "n": 36
+    },
+    "grpo": {
+     "ok": false,
+     "n": 8
+    },
+    "ppo": {
+     "ok": false,
+     "n": 5
+    },
+    "ppo_ba": {
+     "ok": false,
+     "n": 5
+    },
+    "rlvb_em": {
+     "ok": false,
+     "n": 17
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 23
+    }
+   }
+  },
+  "proworlds_expansion_bee": {
+   "title": "Bee",
+   "short": "Which bee is it?",
+   "members": [
+    "cobalt",
+    "indigo",
+    "ochre",
+    "sienna",
+    "cerise",
+    "teal",
+    "vermilion",
+    "sepia"
+   ],
+   "goal": "Find which of the 8 candidates the picture shows. The parts to find are its antennae (a plus or a diamond), its wings (a star or a ring), its legs (a flat bar or a V) and its stinger (a square or a thin bar).",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
+   "answer": "The name of a candidate, at any time.",
+   "board": "10 x 10 sites",
+   "bench": "proworlds",
+   "truth": "cerise",
+   "budget": "35 moves",
+   "pixel": true,
+   "thumb": "thumbs/proworlds_expansion_bee.png",
+   "outcomes": {
+    "base": {
+     "ok": false,
+     "n": 22
+    },
+    "base_b": {
+     "ok": false,
+     "n": 8
+    },
+    "sft": {
+     "ok": false,
+     "n": 26
+    },
+    "grpo": {
+     "ok": false,
+     "n": 10
+    },
+    "ppo": {
+     "ok": false,
+     "n": 5
+    },
+    "ppo_ba": {
+     "ok": true,
+     "n": 4
+    },
+    "rlvb_em": {
+     "ok": true,
+     "n": 12
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 19
+    }
+   }
+  },
+  "proworlds_expansion_bell": {
+   "title": "Bell",
+   "short": "Which bell is it?",
+   "members": [
+    "aria",
+    "cadenza",
+    "coda",
+    "etude",
+    "fermata",
+    "largo",
+    "nocturne",
+    "sonata"
+   ],
+   "goal": "Find which of the 8 candidates the picture shows. The parts to find are its loop (a disc or a triangle), the ends of its rim (a triangle or a square), its bands (a thin bar or three stripes) and its clapper (a plus or a diamond).",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
+   "answer": "The name of a candidate, at any time.",
+   "board": "10 x 10 sites",
+   "bench": "proworlds",
+   "truth": "etude",
+   "budget": "35 moves",
+   "pixel": true,
+   "thumb": "thumbs/proworlds_expansion_bell.png",
+   "outcomes": {
+    "base": {
+     "ok": false,
+     "n": 4
+    },
+    "base_b": {
+     "ok": false,
+     "n": 5
+    },
+    "sft": {
+     "ok": false,
+     "n": 17
+    },
+    "grpo": {
+     "ok": false,
+     "n": 4
+    },
+    "ppo": {
+     "ok": false,
+     "n": 4
+    },
+    "ppo_ba": {
+     "ok": false,
+     "n": 5
+    },
+    "rlvb_em": {
+     "ok": true,
+     "n": 6
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 22
+    }
+   }
+  },
+  "proworlds_expansion_bird": {
+   "title": "Bird",
+   "short": "Which bird is it?",
+   "members": [
+    "crested tern",
+    "hoopoe",
+    "treeswift",
+    "cardinal",
+    "tern",
+    "heron",
+    "swallow",
+    "robin"
+   ],
+   "goal": "Find which of the 8 candidates the picture shows. The parts to find are the top of its head (a crest of spikes or a smooth arc), its beak (a long thin spike or a short wedge) and its tail (two long points or a fan of feathers).",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
+   "answer": "The name of a candidate, at any time.",
+   "board": "10 x 10 sites",
+   "bench": "proworlds",
+   "truth": "tern",
+   "budget": "35 moves",
+   "pixel": true,
+   "thumb": "thumbs/proworlds_expansion_bird.png",
+   "outcomes": {
+    "base": {
+     "ok": false,
+     "n": 8
+    },
+    "base_b": {
+     "ok": false,
+     "n": 23
+    },
+    "sft": {
+     "ok": false,
+     "n": 37
+    },
+    "grpo": {
+     "ok": false,
+     "n": 15
+    },
+    "ppo": {
+     "ok": false,
+     "n": 3
+    },
+    "ppo_ba": {
+     "ok": false,
+     "n": 4
+    },
+    "rlvb_em": {
+     "ok": false,
+     "n": 36
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 26
+    }
+   }
+  },
+  "proworlds_expansion_candle": {
+   "title": "Candle",
+   "short": "Which candle is it?",
+   "members": [
+    "boreas",
+    "eurus",
+    "notus",
+    "zephyr",
+    "sirocco",
+    "mistral",
+    "chinook",
+    "foehn"
+   ],
+   "goal": "Find which of the 8 candidates the picture shows. The parts to find are its flame (a star or a square), its wax drips (a ring or a diamond), its handles (a V or a disc) and its feet (a triangle or a flat bar).",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
+   "answer": "The name of a candidate, at any time.",
+   "board": "10 x 10 sites",
+   "bench": "proworlds",
+   "truth": "foehn",
+   "budget": "35 moves",
+   "pixel": true,
+   "thumb": "thumbs/proworlds_expansion_candle.png",
+   "outcomes": {
+    "base": {
+     "ok": false,
+     "n": 16
+    },
+    "base_b": {
+     "ok": false,
+     "n": 18
+    },
+    "sft": {
+     "ok": false,
+     "n": 36
+    },
+    "grpo": {
+     "ok": false,
+     "n": 15
+    },
+    "ppo": {
+     "ok": false,
+     "n": 4
+    },
+    "ppo_ba": {
+     "ok": false,
+     "n": 12
+    },
+    "rlvb_em": {
+     "ok": true,
+     "n": 34
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 36
+    }
+   }
+  },
+  "proworlds_expansion_face": {
+   "title": "Face",
+   "short": "Which emotion does the face show?",
+   "members": [
+    "happy",
+    "sad",
+    "angry",
+    "surprised",
+    "sleepy",
+    "scared",
+    "calm",
+    "laughing"
+   ],
+   "goal": "Find which of the 8 candidates the picture shows. The parts to find are the brows (raised or lowered), the eyes (open or closed), the mouth corners (up or down) and the middle of the mouth (open or closed).",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
+   "answer": "The name of a candidate, at any time.",
+   "board": "10 x 10 sites",
+   "bench": "proworlds",
+   "truth": "scared",
+   "budget": "35 moves",
+   "pixel": true,
+   "thumb": "thumbs/proworlds_expansion_face.png",
+   "outcomes": {
+    "base": {
+     "ok": false,
+     "n": 11
+    },
+    "base_b": {
+     "ok": false,
+     "n": 14
+    },
+    "sft": {
+     "ok": false,
+     "n": 28
+    },
+    "grpo": {
+     "ok": false,
+     "n": 12
+    },
+    "ppo": {
+     "ok": false,
+     "n": 8
+    },
+    "ppo_ba": {
+     "ok": false,
+     "n": 9
+    },
+    "rlvb_em": {
+     "ok": false,
+     "n": 23
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 28
+    }
+   }
+  },
+  "proworlds_expansion_fish": {
+   "title": "Fish",
+   "short": "Which fish is it?",
+   "members": [
+    "pip",
+    "rio",
+    "coco",
+    "milo",
+    "kiki",
+    "zara",
+    "toto",
+    "bobo"
+   ],
+   "goal": "Find which of the 8 candidates the picture shows. The parts to find are its back fin, its tail and a patch of its orange side.",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
+   "answer": "The name of a candidate, at any time.",
+   "board": "9 x 9 sites",
+   "bench": "proworlds",
+   "truth": "coco",
+   "budget": "35 moves",
+   "pixel": true,
+   "thumb": "thumbs/proworlds_expansion_fish.png",
+   "outcomes": {
+    "base": {
+     "ok": false,
+     "n": 14
+    },
+    "base_b": {
+     "ok": false,
+     "n": 33
+    },
+    "sft": {
+     "ok": false,
+     "n": 37
+    },
+    "grpo": {
+     "ok": false,
+     "n": 15
+    },
+    "ppo": {
+     "ok": false,
+     "n": 4
+    },
+    "ppo_ba": {
+     "ok": false,
+     "n": 4
+    },
+    "rlvb_em": {
+     "ok": true,
+     "n": 29
+    },
+    "rlvb_grpo": {
+     "ok": false,
+     "n": 36
+    }
+   }
+  },
+  "proworlds_expansion_jigsaw": {
+   "title": "Jigsaw scene",
+   "short": "Which place does the picture show?",
+   "members": [
+    "harbour",
+    "island",
+    "lakeside cabin",
+    "frozen lake",
+    "fishing village",
+    "snowy woods",
+    "ski resort",
+    "city",
+    "jungle",
+    "snowfield"
+   ],
+   "goal": "Find which of the 10 candidates the picture shows. The parts to find are the ground piece (water or plain land), the plant piece (trees or only grass), the building piece (a building or blank) and the sky piece (falling snow or the sun).",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
+   "answer": "The name of a candidate, at any time.",
+   "board": "8 x 8 sites",
+   "bench": "proworlds",
+   "truth": "lakeside cabin",
+   "budget": "35 moves",
+   "pixel": true,
+   "thumb": "thumbs/proworlds_expansion_jigsaw.png",
+   "outcomes": {
+    "base": {
+     "ok": true,
+     "n": 4
+    },
+    "base_b": {
+     "ok": true,
+     "n": 7
+    },
+    "sft": {
+     "ok": false,
+     "n": 14
+    },
+    "grpo": {
+     "ok": true,
+     "n": 6
+    },
+    "ppo": {
+     "ok": true,
+     "n": 2
+    },
+    "ppo_ba": {
+     "ok": true,
+     "n": 2
+    },
+    "rlvb_em": {
+     "ok": true,
+     "n": 8
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 8
+    }
+   }
+  },
+  "proworlds_expansion_kaleido": {
+   "title": "Kaleidoscope",
+   "short": "Which kaleidoscope pattern is it?",
+   "members": [
+    "snowflake",
+    "starburst",
+    "wheel",
+    "cross",
+    "diamond",
+    "web",
+    "petal",
+    "ring"
+   ],
+   "goal": "Find which of the 8 candidates the picture shows. The parts to find are its centre (a solid dot or a hollow circle), its spokes (straight or curved) and its rim (points or round bumps).",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
+   "answer": "The name of a candidate, at any time.",
+   "board": "9 x 9 sites",
+   "bench": "proworlds",
+   "truth": "cross",
+   "budget": "35 moves",
+   "pixel": true,
+   "thumb": "thumbs/proworlds_expansion_kaleido.png",
+   "outcomes": {
+    "base": {
+     "ok": false,
+     "n": 2
+    },
+    "base_b": {
+     "ok": false,
+     "n": 6
+    },
+    "sft": {
+     "ok": true,
+     "n": 12
+    },
+    "grpo": {
+     "ok": false,
+     "n": 6
+    },
+    "ppo": {
+     "ok": false,
+     "n": 4
+    },
+    "ppo_ba": {
+     "ok": false,
+     "n": 5
+    },
+    "rlvb_em": {
+     "ok": true,
+     "n": 10
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 10
+    }
+   }
+  },
+  "proworlds_expansion_lantern": {
+   "title": "Lantern",
+   "short": "Which lantern is it?",
+   "members": [
+    "rello",
+    "sanvi",
+    "tobin",
+    "ulmar",
+    "vesna",
+    "wilko",
+    "yaren",
+    "zorla"
+   ],
+   "goal": "Find which of the 8 candidates the picture shows. The parts to find are its handle, its hooks, its flame window, its side panes and its base.",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
+   "answer": "The name of a candidate, at any time.",
+   "board": "10 x 10 sites",
+   "bench": "proworlds",
+   "truth": "ulmar",
+   "budget": "35 moves",
+   "pixel": true,
+   "thumb": "thumbs/proworlds_expansion_lantern.png",
+   "outcomes": {
+    "base": {
+     "ok": false,
+     "n": 10
+    },
+    "base_b": {
+     "ok": false,
+     "n": 5
+    },
+    "sft": {
+     "ok": false,
+     "n": 36
+    },
+    "grpo": {
+     "ok": true,
+     "n": 9
+    },
+    "ppo": {
+     "ok": false,
+     "n": 11
+    },
+    "ppo_ba": {
+     "ok": false,
+     "n": 8
+    },
+    "rlvb_em": {
+     "ok": false,
+     "n": 11
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 17
+    }
+   }
+  },
+  "proworlds_expansion_recipe": {
+   "title": "Recipe",
+   "short": "Which dish is on the plate?",
+   "members": [
+    "steamed rice",
+    "cheese platter",
+    "tomato salad",
+    "toast",
+    "caprese salad",
+    "grilled cheese",
+    "bruschetta",
+    "pizza"
+   ],
+   "goal": "Find which of the 8 candidates the picture shows. The parts to find are the cheese, tomato and bread places, each showing its ingredient or an empty ring; a small side plate in the corner shows a random ingredient and does not count.",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
+   "answer": "The name of a candidate, at any time.",
+   "board": "9 x 9 sites",
+   "bench": "proworlds",
+   "truth": "steamed rice",
+   "budget": "35 moves",
+   "pixel": true,
+   "thumb": "thumbs/proworlds_expansion_recipe.png",
+   "outcomes": {
+    "base": {
+     "ok": true,
+     "n": 10
+    },
+    "base_b": {
+     "ok": false,
+     "n": 19
+    },
+    "sft": {
+     "ok": false,
+     "n": 35
+    },
+    "grpo": {
+     "ok": true,
+     "n": 3
+    },
+    "ppo": {
+     "ok": false,
+     "n": 11
+    },
+    "ppo_ba": {
+     "ok": false,
+     "n": 4
+    },
+    "rlvb_em": {
+     "ok": true,
+     "n": 32
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 13
+    }
+   }
+  },
+  "proworlds_expansion_rocket": {
+   "title": "Rocket",
+   "short": "Which rocket is it?",
+   "members": [
+    "arrow",
+    "comet",
+    "dart",
+    "falcon",
+    "hawk",
+    "lance",
+    "spark",
+    "swift"
+   ],
+   "goal": "Find which of the 8 candidates the picture shows. The parts to find are its nose (a disc or a triangle), its windows (a flat bar or a V), its fins (a star or a ring) and its flame (a thin bar or three stripes).",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
+   "answer": "The name of a candidate, at any time.",
+   "board": "10 x 10 sites",
+   "bench": "proworlds",
+   "truth": "comet",
+   "budget": "35 moves",
+   "pixel": true,
+   "thumb": "thumbs/proworlds_expansion_rocket.png",
+   "outcomes": {
+    "base": {
+     "ok": true,
+     "n": 21
+    },
+    "base_b": {
+     "ok": false,
+     "n": 15
+    },
+    "sft": {
+     "ok": false,
+     "n": 36
+    },
+    "grpo": {
+     "ok": false,
+     "n": 9
+    },
+    "ppo": {
+     "ok": false,
+     "n": 5
+    },
+    "ppo_ba": {
+     "ok": false,
+     "n": 7
+    },
+    "rlvb_em": {
+     "ok": false,
+     "n": 6
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 34
+    }
+   }
+  },
+  "proworlds_expansion_sailboat": {
+   "title": "Sailboat",
+   "short": "Which sailboat is it?",
+   "members": [
+    "nimbo",
+    "pharo",
+    "quilla",
+    "rennet",
+    "sabla",
+    "torvi",
+    "ulmo",
+    "vessa"
+   ],
+   "goal": "Find which of the 8 candidates the picture shows. The parts to find are its mast marks, its sail marks, its hull marks and its flag.",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
+   "answer": "The name of a candidate, at any time.",
+   "board": "10 x 10 sites",
+   "bench": "proworlds",
+   "truth": "quilla",
+   "budget": "35 moves",
+   "pixel": true,
+   "thumb": "thumbs/proworlds_expansion_sailboat.png",
+   "outcomes": {
+    "base": {
+     "ok": false,
+     "n": 17
+    },
+    "base_b": {
+     "ok": true,
+     "n": 14
+    },
+    "sft": {
+     "ok": true,
+     "n": 34
+    },
+    "grpo": {
+     "ok": true,
+     "n": 22
+    },
+    "ppo": {
+     "ok": false,
+     "n": 3
+    },
+    "ppo_ba": {
+     "ok": false,
+     "n": 16
+    },
+    "rlvb_em": {
+     "ok": true,
+     "n": 14
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 19
+    }
+   }
+  },
+  "proworlds_expansion_turtle": {
+   "title": "Turtle",
+   "short": "Which turtle is it?",
+   "members": [
+    "brisa",
+    "calder",
+    "dovan",
+    "eskel",
+    "fyra",
+    "gorm",
+    "halla",
+    "imbra"
+   ],
+   "goal": "Find which of the 8 candidates the picture shows. The parts to find are its head, its front legs, the middle of its shell, its back legs and its tail.",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
+   "answer": "The name of a candidate, at any time.",
+   "board": "10 x 10 sites",
+   "bench": "proworlds",
+   "truth": "fyra",
+   "budget": "35 moves",
+   "pixel": true,
+   "thumb": "thumbs/proworlds_expansion_turtle.png",
+   "outcomes": {
+    "base": {
+     "ok": true,
+     "n": 12
+    },
+    "base_b": {
+     "ok": false,
+     "n": 10
+    },
+    "sft": {
+     "ok": false,
+     "n": 33
+    },
+    "grpo": {
+     "ok": false,
+     "n": 15
+    },
+    "ppo": {
+     "ok": false,
+     "n": 7
+    },
+    "ppo_ba": {
+     "ok": false,
+     "n": 15
+    },
+    "rlvb_em": {
+     "ok": true,
+     "n": 16
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 35
+    }
+   }
+  },
+  "roboquest_text_blackout_search": {
+   "title": "Blackout search",
+   "short": "Find two objects in a dark kitchen.",
+   "goal": "Collect two named objects on the tray in a kitchen lit only by a lantern. They may be in drawers, in cabinets, on counters or under cloches, next to look-alikes: a green tin is not the green can.",
+   "act": "LOOK AROUND THE KITCHEN maps and numbers the compartments and counters; OPEN k, LOOK AT COUNTER k and LIFT THE CLOCHE ON COUNTER k inspect one place. The agent carries the lantern to each place it inspects.",
+   "answer": "SUBMIT and each object with its place, for example SUBMIT BLUE MUG FROM DRAWER 3, RED CAN FROM COUNTER 5.",
+   "bench": "roboquest",
+   "truth": null,
+   "budget": "23 evidence actions",
+   "pixel": false,
+   "thumb": "frames/roboquest_text_blackout_search/rlvb_grpo/0.jpg",
+   "outcomes": {
+    "base": {
+     "ok": false,
+     "n": 6
+    },
+    "base_b": {
+     "ok": false,
+     "n": 9
+    },
+    "sft": {
+     "ok": false,
+     "n": 6
+    },
+    "grpo": {
+     "ok": false,
+     "n": 2
+    },
+    "ppo": {
+     "ok": false,
+     "n": 3
+    },
+    "ppo_ba": {
+     "ok": true,
+     "n": 19
+    },
+    "rlvb_em": {
+     "ok": false,
+     "n": 13
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 18
+    }
+   }
+  },
+  "roboquest_text_search_room": {
+   "title": "Search room",
+   "short": "Find two objects in a kitchen.",
+   "goal": "Collect two named objects on the tray. They may be in drawers, in cabinets, on counters or under cloches, next to look-alikes.",
+   "act": "LOOK AROUND THE KITCHEN maps and numbers the compartments and counters; OPEN k, LOOK AT COUNTER k and LIFT THE CLOCHE ON COUNTER k inspect one place.",
+   "answer": "SUBMIT and each object with its place, for example SUBMIT BLUE MUG FROM DRAWER 3, RED CAN FROM COUNTER 5.",
+   "bench": "roboquest",
+   "truth": null,
+   "budget": "28 evidence actions",
+   "pixel": false,
+   "thumb": "frames/roboquest_text_search_room/rlvb_grpo/0.jpg",
+   "outcomes": {
+    "base": {
+     "ok": false,
+     "n": 10
+    },
+    "base_b": {
+     "ok": false,
+     "n": 15
+    },
+    "sft": {
+     "ok": false,
+     "n": 11
+    },
+    "grpo": {
+     "ok": false,
+     "n": 3
+    },
+    "ppo": {
+     "ok": false,
+     "n": 3
+    },
+    "ppo_ba": {
+     "ok": false,
+     "n": 19
+    },
+    "rlvb_em": {
+     "ok": false,
+     "n": 18
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 23
+    }
+   }
+  },
+  "roboquest_text_locked_storage": {
+   "title": "Locked storage",
+   "short": "Unlock the compartment that holds the target.",
+   "goal": "Collect one named object. A compartment with a coloured lock plate opens only while the token of that colour rests on its reader pad, and tokens lie inside other compartments.",
+   "act": "LOOK AROUND THE KITCHEN finds the compartments, pads and tokens; PUT THE c TOKEN ON THE p PAD sets a token on a pad; OPEN k looks inside compartment k.",
+   "answer": "SUBMIT k takes the object out of compartment k.",
+   "bench": "roboquest",
+   "truth": null,
+   "budget": "12 evidence actions",
+   "pixel": false,
+   "thumb": "frames/roboquest_text_locked_storage/rlvb_grpo/0.jpg",
+   "outcomes": {
+    "base": {
+     "ok": false,
+     "n": 7
+    },
+    "base_b": {
+     "ok": false,
+     "n": 7
+    },
+    "sft": {
+     "ok": true,
+     "n": 9
+    },
+    "grpo": {
+     "ok": true,
+     "n": 11
+    },
+    "ppo": {
+     "ok": false,
+     "n": 7
+    },
+    "ppo_ba": {
+     "ok": false,
+     "n": 13
+    },
+    "rlvb_em": {
+     "ok": true,
+     "n": 9
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 14
+    }
+   }
+  },
+  "roboquest_text_marked_mugs": {
+   "title": "Marked mugs",
+   "short": "Put each bowl on the pad of its colour.",
+   "goal": "Each bowl carries a coloured label on its bottom. Stand every bowl upright on the pad of its colour, with its own two balls inside.",
+   "act": "LIFT BOWL i shows the label of bowl i to the wrist camera; LOOK AROUND THE KITCHEN looks for more bowls; LIFT THE PLATE uncovers a pad.",
+   "answer": "SUBMIT and a colour for each bowl, for example SUBMIT 1:red 2:blue.",
+   "bench": "roboquest",
+   "truth": null,
+   "budget": "8 evidence actions",
+   "pixel": false,
+   "thumb": "frames/roboquest_text_marked_mugs/rlvb_grpo/0.jpg",
+   "outcomes": {
+    "base": {
+     "ok": false,
+     "n": 2
+    },
+    "base_b": {
+     "ok": false,
+     "n": 4
+    },
+    "sft": {
+     "ok": false,
+     "n": 5
+    },
+    "grpo": {
+     "ok": false,
+     "n": 3
+    },
+    "ppo": {
+     "ok": false,
+     "n": 1
+    },
+    "ppo_ba": {
+     "ok": false,
+     "n": 4
+    },
+    "rlvb_em": {
+     "ok": false,
+     "n": 4
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 6
+    }
+   }
+  },
+  "roboquest_text_odd_parcel": {
+   "title": "Odd parcel",
+   "short": "Find every parcel that weighs differently.",
+   "goal": "Most parcels weigh the same, and fewer than half weigh differently. Put every parcel that weighs differently in the box.",
+   "act": "WEIGH a b VS c d puts parcels on the two pans of a balance and reads its tilt; LOOK AROUND THE KITCHEN looks for more parcels.",
+   "answer": "SUBMIT and the odd parcels, or SUBMIT NONE.",
+   "bench": "roboquest",
+   "truth": null,
+   "budget": "12 evidence actions",
+   "pixel": false,
+   "thumb": "frames/roboquest_text_odd_parcel/rlvb_grpo/0.jpg",
+   "outcomes": {
+    "base": {
+     "ok": false,
+     "n": 2
+    },
+    "base_b": {
+     "ok": true,
+     "n": 8
+    },
+    "sft": {
+     "ok": true,
+     "n": 6
+    },
+    "grpo": {
+     "ok": true,
+     "n": 4
+    },
+    "ppo": {
+     "ok": false,
+     "n": 2
+    },
+    "ppo_ba": {
+     "ok": false,
+     "n": 11
+    },
+    "rlvb_em": {
+     "ok": true,
+     "n": 6
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 6
+    }
+   }
+  },
+  "roboquest_text_painted_cubes": {
+   "title": "Painted cubes",
+   "short": "Sort cubes by the marks on their faces.",
+   "goal": "Cubes carry marks on some faces, and a rule says which cubes go in the blue bin, for example every cube that has a triangle. Some faces are turned away from the cameras.",
+   "act": "LIFT CUBE c shows its bottom and two far sides; LOOK AT CUBE c shows its top and two near sides.",
+   "answer": "SUBMIT and the cubes that meet the rule, or SUBMIT NONE; every other cube goes in the yellow bin.",
+   "bench": "roboquest",
+   "truth": null,
+   "budget": "17 evidence actions",
+   "pixel": false,
+   "thumb": "frames/roboquest_text_painted_cubes/rlvb_grpo/0.jpg",
+   "outcomes": {
+    "base": {
+     "ok": false,
+     "n": 3
+    },
+    "base_b": {
+     "ok": false,
+     "n": 3
+    },
+    "sft": {
+     "ok": true,
+     "n": 7
+    },
+    "grpo": {
+     "ok": false,
+     "n": 2
+    },
+    "ppo": {
+     "ok": false,
+     "n": 1
+    },
+    "ppo_ba": {
+     "ok": false,
+     "n": 5
+    },
+    "rlvb_em": {
+     "ok": false,
+     "n": 2
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 7
+    }
+   }
+  },
+  "roboquest_text_puzzle_box": {
+   "title": "Puzzle box",
+   "short": "Find an order of sliders that opens the box.",
+   "goal": "Seven sliders lock the lid of a wooden box. The tip of each slider rests in a notch of the lid or of another slider, so a slider moves only when nothing blocks it.",
+   "act": "PULL SLIDER n and PUSH SLIDER n move one slider, and the reply says how far it went; OPEN THE LID tries the lid.",
+   "answer": "SUBMIT and the sliders to pull, in order; the helpers then open the lid and put the tangerine in the tray.",
+   "bench": "roboquest",
+   "truth": null,
+   "budget": "14 evidence actions",
+   "pixel": false,
+   "thumb": "frames/roboquest_text_puzzle_box/rlvb_grpo/0.jpg",
+   "outcomes": {
+    "base": {
+     "ok": true,
+     "n": 1
+    },
+    "base_b": {
+     "ok": true,
+     "n": 1
+    },
+    "sft": {
+     "ok": false,
+     "n": 8
+    },
+    "grpo": {
+     "ok": false,
+     "n": 1
+    },
+    "ppo": {
+     "ok": true,
+     "n": 1
+    },
+    "ppo_ba": {
+     "ok": true,
+     "n": 4
+    },
+    "rlvb_em": {
+     "ok": true,
+     "n": 5
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 7
+    }
+   }
+  },
+  "roboquest_text_stamps": {
+   "title": "Stamps",
+   "short": "Print the reference pattern with unmarked stamps.",
+   "goal": "Stamp the final board with the pattern on the reference card. Each stamp prints a fixed pattern of dots, but the housings are unmarked, so the stamps are tried on a scratch board first.",
+   "act": "PRINT a IN SLOT s TURN r presses stamp a, turned r quarter turns, on slot s of the scratch board; the print turns with the stamp, and the ink stays.",
+   "answer": "SUBMIT and each stamp with its turn, for example SUBMIT 1:0 3:2.",
+   "bench": "roboquest",
+   "truth": null,
+   "budget": "10 evidence actions",
+   "pixel": false,
+   "thumb": "frames/roboquest_text_stamps/rlvb_grpo/0.jpg",
+   "outcomes": {
+    "base": {
+     "ok": false,
+     "n": 2
+    },
+    "base_b": {
+     "ok": false,
+     "n": 2
+    },
+    "sft": {
+     "ok": false,
+     "n": 2
+    },
+    "grpo": {
+     "ok": false,
+     "n": 2
+    },
+    "ppo": {
+     "ok": false,
+     "n": 2
+    },
+    "ppo_ba": {
+     "ok": true,
+     "n": 3
+    },
+    "rlvb_em": {
+     "ok": false,
+     "n": 3
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 3
+    }
+   }
+  },
+  "roboquest_text_unfamiliar_containers": {
+   "title": "Unfamiliar containers",
+   "short": "Find two fruits in boxes that open in different ways.",
+   "goal": "An orange and a lemon are inside wooden boxes. Each box has knobbed panels that open in one particular way.",
+   "act": "<WAY> BOX n <FACE> works one panel, for example PULL BOX 2 FRONT; the ways include PULL, SWING, PRESS THEN PULL, PUSH SIDEWAYS, LIFT, SLIDE and TIP UP. LOOK AROUND THE KITCHEN finds the boxes out of view.",
+   "answer": "SUBMIT and the boxes that hold the fruits; only boxes the agent has opened can be named.",
+   "bench": "roboquest",
+   "truth": null,
+   "budget": "32 evidence actions",
+   "pixel": false,
+   "thumb": "frames/roboquest_text_unfamiliar_containers/rlvb_grpo/0.jpg",
+   "outcomes": {
+    "base": {
+     "ok": false,
+     "n": 4
+    },
+    "base_b": {
+     "ok": false,
+     "n": 10
+    },
+    "sft": {
+     "ok": false,
+     "n": 11
+    },
+    "grpo": {
+     "ok": false,
+     "n": 9
+    },
+    "ppo": {
+     "ok": false,
+     "n": 3
+    },
+    "ppo_ba": {
+     "ok": false,
+     "n": 14
+    },
+    "rlvb_em": {
+     "ok": true,
+     "n": 8
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 16
+    }
+   }
+  },
+  "roboquest_text_wobbly_stand": {
+   "title": "Wobbly stand",
+   "short": "Level a stand with shims.",
+   "goal": "A four-legged stand is not level, and a ball on its top rolls. Level it with shim plates of 5, 10 and 15 mm so that the ball stays still.",
+   "act": "WATCH THE BALL watches the ball for 3 seconds; PUT PLATE p UNDER THE <leg> LEG and REMOVE PLATE p try a shim; INSPECT THE LEGS compares the legs.",
+   "answer": "SUBMIT and the plates under each leg, for example SUBMIT FRONT LEFT: 2.",
+   "bench": "roboquest",
+   "truth": null,
+   "budget": "8 evidence actions",
+   "pixel": false,
+   "thumb": "frames/roboquest_text_wobbly_stand/rlvb_grpo/0.jpg",
+   "outcomes": {
+    "base": {
+     "ok": true,
+     "n": 2
+    },
+    "base_b": {
+     "ok": true,
+     "n": 2
+    },
+    "sft": {
+     "ok": false,
+     "n": 9
+    },
+    "grpo": {
+     "ok": true,
+     "n": 2
+    },
+    "ppo": {
+     "ok": true,
+     "n": 2
+    },
+    "ppo_ba": {
+     "ok": false,
+     "n": 5
+    },
+    "rlvb_em": {
+     "ok": true,
+     "n": 2
+    },
+    "rlvb_grpo": {
+     "ok": true,
+     "n": 4
+    }
+   }
+  }
+ }
+}
