@@ -1,7 +1,7 @@
 <div align="center">
 <h1>RLVB: Reinforcement Learning with Verifiable Belief</h1>
 
-<a href="assets/rlvb_vs_grpo.mp4"><img src="assets/rlvb_vs_grpo.gif" alt="GRPO with the outcome reward (left) and RLVB (GRPO) (right) play the same seven test games" width="100%"></a>
+<a href="assets/rlvb_vs_base_grpo.mp4"><img src="assets/rlvb_vs_base_grpo.gif" alt="Base, GRPO with the outcome reward and RLVB (GRPO) play the same test games" width="100%"></a>
 </div>
 
 <div align="center">
