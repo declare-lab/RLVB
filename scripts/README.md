@@ -18,7 +18,7 @@ tests in [docs/evaluation.md](../docs/evaluation.md).
 ```sh
 PL_GPUS=0,1,2,3 scripts/pl_qwen3vl_8b_thinking.sh                         # RLVB (EM) 8B, then its tests
 PL_GPUS=0,1,2,3 scripts/grpo_posterior_qwen3vl_8b_thinking.sh             # RLVB (GRPO) 8B, then its tests
-MODEL_REPO=posterior-learning/pl-qwen3-vl-8b-thinking scripts/eval_qwen3vl_8b_thinking.sh   # test a released model
+MODEL_REPO=richmondsin/pl-qwen3-vl-8b-thinking scripts/eval_qwen3vl_8b_thinking.sh   # test a released model
 TURN=one_line scripts/eval_qwen3vl_8b_thinking.sh                         # the base model, action only
 BENCH=proworlds EXPANSION=long scripts/eval_qwen3vl_8b_thinking.sh       # the base model, Pro-Worlds long board only
 ```

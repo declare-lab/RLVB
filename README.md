@@ -17,7 +17,7 @@
 <sup>1</sup>[DeCLaRe Lab](https://declare-lab.github.io/), Nanyang Technological University &nbsp;&nbsp; <sup>2</sup>Independent
 
 ![Paper](https://img.shields.io/badge/Paper-coming%20soon-lightgrey)
-[![Models](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Models-yellow)](https://huggingface.co/posterior-learning)
+[![Models](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Models-yellow)](https://huggingface.co/richmondsin)
 
 </div>
 
@@ -149,7 +149,7 @@ PL_GPUS=0,1,2,3 scripts/grpo_posterior_qwen3vl_8b_thinking.sh
 
 ```bash
 # a released model on test_suite, seed 0, one GPU; TURN=two_line (the default): the belief line and the action line
-MODEL_REPO=posterior-learning/pl-qwen3-vl-8b-thinking SEEDS=0 EVAL_GPUS=0 scripts/eval_qwen3vl_8b_thinking.sh
+MODEL_REPO=richmondsin/pl-qwen3-vl-8b-thinking SEEDS=0 EVAL_GPUS=0 scripts/eval_qwen3vl_8b_thinking.sh
 # your own adapter, at the seeds 0, 1 and 2
 ADAPTER=runs/suite_qwen3vl_8b_thinking/queue-suite_qwen3vl_8b_thinking/adapter_50 scripts/eval_qwen3vl_8b_thinking.sh
 # the base model with the belief line ("Base (w/ belief)"), and with the action line only ("Base", TURN=one_line)
@@ -177,13 +177,13 @@ All settings and variables of the tests are in [docs/evaluation.md](docs/evaluat
 
 ## 📦 Released models
 
-Full models (the adapter merged into the base model) on the Hugging Face organization
-[`posterior-learning`](https://huggingface.co/posterior-learning):
+Full models (the adapter merged into the base model) on Hugging Face
+[`richmondsin`](https://huggingface.co/richmondsin):
 
 | Learner | Qwen3-VL-8B-Thinking | Qwen3.5-4B | Qwen3-VL-4B-Thinking |
 |---|---|---|---|
-| RLVB (EM) | `posterior-learning/pl-qwen3-vl-8b-thinking` | `posterior-learning/pl-qwen3.5-4b` | `posterior-learning/pl-qwen3-vl-4b-thinking` |
-| RLVB (GRPO) | `posterior-learning/grpo-posterior-qwen3-vl-8b-thinking` | `posterior-learning/grpo-posterior-qwen3.5-4b` | `posterior-learning/grpo-posterior-qwen3-vl-4b-thinking` |
+| RLVB (EM) | `richmondsin/pl-qwen3-vl-8b-thinking` | `richmondsin/pl-qwen3.5-4b` | `richmondsin/pl-qwen3-vl-4b-thinking` |
+| RLVB (GRPO) | `richmondsin/grpo-posterior-qwen3-vl-8b-thinking` | `richmondsin/grpo-posterior-qwen3.5-4b` | `richmondsin/grpo-posterior-qwen3-vl-4b-thinking` |
 
 Test a released model with `MODEL_REPO=<repository id> scripts/eval_<model>.sh` (`TURN=two_line`, the default).
 

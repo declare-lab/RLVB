@@ -1,5 +1,5 @@
 """A full model from a base model and a LoRA adapter, and its Hugging Face upload, in the form of the published full models
-(posterior-learning/grpo-qwen3-vl-8b-thinking, posterior-learning/pl-qwen3-vl-8b-thinking, ...): W <- W + (lora_alpha / r) * B @ A for every LoRA module,
+(richmondsin/grpo-qwen3-vl-8b-thinking, richmondsin/pl-qwen3-vl-8b-thinking, ...): W <- W + (lora_alpha / r) * B @ A for every LoRA module,
 computed in fp32 and stored in the base dtype; every other tensor byte-identical to the base; the non-weight files (config,
 tokenizer, chat template, processor and generation configs) the base files unchanged, the base README as README.base.md; a model
 card README.md and MERGE-REPORT.json with three checks:

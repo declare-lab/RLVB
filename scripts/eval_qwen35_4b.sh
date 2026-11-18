@@ -7,7 +7,7 @@
 # ADAPTER    a LoRA adapter folder, or a Hugging Face repository id of an adapter (downloaded with huggingface_hub; HF_TOKEN for a
 #            private one; ADAPTER_SUBDIR: the adapter's folder in the download when it is not the top). Not set: the base model.
 # MODEL_REPO a full model in place of the base model: a weights folder, or a Hugging Face repository id (for example
-#            posterior-learning/grpo-posterior-qwen3.5-4b; downloaded with huggingface_hub). Not set: the registered base model.
+#            richmondsin/grpo-posterior-qwen3.5-4b; downloaded with huggingface_hub). Not set: the registered base model.
 # BENCH      all (the default: test_suite), roboquest (test_suite/roboquest), proworlds (test_suite/proworlds; alias: expansion),
 #            hidden_games (test_suite/hidden_games, the 7 HiddenGames on their test split; alias: games): one benchmark of the suite
 # EXPANSION  normal (the default) or long: the Pro-Worlds board. long: test_suite_long (BENCH=all) or test_suite/proworlds_long

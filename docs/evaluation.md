@@ -18,7 +18,7 @@ One script for each base model: `scripts/eval_qwen3vl_8b_thinking.sh`, `scripts/
 
 | Variable | Values |
 |---|---|
-| `MODEL_REPO` | a full model: a weights folder or a Hugging Face id (for example `posterior-learning/pl-qwen3-vl-8b-thinking`). Not set: the base model |
+| `MODEL_REPO` | a full model: a weights folder or a Hugging Face id (for example `richmondsin/pl-qwen3-vl-8b-thinking`). Not set: the base model |
 | `ADAPTER` | a LoRA adapter folder or a Hugging Face id of an adapter (`ADAPTER_SUBDIR` when the adapter is not at the top) |
 | `BENCH` | `all` (`test_suite`, the default), `roboquest`, `proworlds`, `hidden_games` |
 | `EXPANSION` | `normal` (default) or `long`: the Pro-Worlds board. `long` gives `test_suite_long`, or `test_suite/proworlds_long` |
@@ -31,8 +31,8 @@ One script for each base model: `scripts/eval_qwen3vl_8b_thinking.sh`, `scripts/
 ```sh
 scripts/eval_qwen3vl_8b_thinking.sh                                            # Base (w/ belief): belief + action
 TURN=one_line scripts/eval_qwen3vl_8b_thinking.sh                              # Base: action only
-MODEL_REPO=posterior-learning/pl-qwen3-vl-8b-thinking scripts/eval_qwen3vl_8b_thinking.sh               # RLVB (EM)
-MODEL_REPO=posterior-learning/grpo-posterior-qwen3-vl-8b-thinking scripts/eval_qwen3vl_8b_thinking.sh   # RLVB (GRPO)
+MODEL_REPO=richmondsin/pl-qwen3-vl-8b-thinking scripts/eval_qwen3vl_8b_thinking.sh               # RLVB (EM)
+MODEL_REPO=richmondsin/grpo-posterior-qwen3-vl-8b-thinking scripts/eval_qwen3vl_8b_thinking.sh   # RLVB (GRPO)
 ADAPTER=runs/suite_qwen3vl_8b_thinking/queue-suite_qwen3vl_8b_thinking/adapter_50 scripts/eval_qwen3vl_8b_thinking.sh
 ```
 
