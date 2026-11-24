@@ -224,7 +224,6 @@ docs/                    install, evaluation, training, environments
   title  = {RLVB: Turning Agents from Lazy Guessers into Evidence Seekers with Verifiable Beliefs as Process Reward},
   author = {{Richmond Sin Jing Xuan} and Peilin Feng and Wenbin Wang and Soujanya Poria},
   year   = {2026},
-  note   = {CVPR 2027 submission},
   howpublished = {\url{https://github.com/declare-lab/RLVB}}
 }
 ```
