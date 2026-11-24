@@ -17,7 +17,7 @@
 <sup>1</sup>[DeCLaRe Lab](https://declare-lab.github.io/), Nanyang Technological University &nbsp;&nbsp; <sup>2</sup>Independent
 
 ![Paper](https://img.shields.io/badge/Paper-coming%20soon-lightgrey)
-[![Models](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Models-yellow)](https://huggingface.co/richmondsin)
+[![Models](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Models-yellow)](https://huggingface.co/collections/richmondsin/rlvb)
 
 </div>
 
@@ -177,8 +177,8 @@ All settings and variables of the tests are in [docs/evaluation.md](docs/evaluat
 
 ## 📦 Released models
 
-Full models (the adapter merged into the base model) on Hugging Face
-[`richmondsin`](https://huggingface.co/richmondsin):
+Full models (the adapter merged into the base model) on Hugging Face, in the collection
+[`richmondsin/rlvb`](https://huggingface.co/collections/richmondsin/rlvb):
 
 | Learner | Qwen3-VL-8B-Thinking | Qwen3.5-4B | Qwen3-VL-4B-Thinking |
 |---|---|---|---|
