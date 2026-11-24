@@ -20,6 +20,7 @@ The contract (class World):
 from __future__ import annotations
 import math, random
 import numpy as np
+import plearn.tasks as _tasks                                        # PLAN_PAST_LIMIT
 
 
 class World:
@@ -64,7 +65,11 @@ class Belief:
     def U(self): return max(self.answer_counts().values())
     def identified(self): return self.U() > 1 - 1e-9
     def cls(self): return (self.W.family, min(sum(1 for v in self.answer_counts().values() if v > 0.01), 4))
-    def looks(self): return [a for a in self.W.looks if len(self.outcome_dist(a)) > 1]
+    def looks(self):
+        """The looks that can split the hypotheses, while the world's limit lasts (Domain.look_strings offers looks while
+        t < W.T, but the lookahead was given the domain's T, e.g. RoboQuest's 5 for an OddParcel world of 4; PLAN_PAST_LIMIT: no check)."""
+        if self.t >= self.W.T and not _tasks.PLAN_PAST_LIMIT: return []
+        return [a for a in self.W.looks if len(self.outcome_dist(a)) > 1]
     def outcome_dist(self, a):
         d = {}
         for h, p in zip(self.W.hypotheses, self.probs()):

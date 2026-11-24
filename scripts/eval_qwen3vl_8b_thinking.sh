@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # The test of Qwen3-VL-8B-Thinking on test_suite: one plearn eval per seed and benchmark.
-# The settings: thinking cap 8,192 tokens (--max_think 8192), test temperature 1.0 (PL_TEST_T=1.0), top-p 0.95 and top-k 20 (the
+# The settings: thinking cap 8,192 tokens (--max_think $MAX_THINK), test temperature 1.0 (PL_TEST_T=1.0), top-p 0.95 and top-k 20 (the
 # tasks' own), presence penalty 1.5, PL_VLLM_SEED = the test seed.
 # The server: context 81,920 tokens (PL_MAX_MODEL_LEN), 192 requests at once (PL_MAX_NUM_SEQS), 16,384 batched tokens
 # (PL_MAX_BATCHED), GPU memory 0.85 (--mem), one GPU (TP 1).
@@ -16,12 +16,17 @@
 #            --task_args <dataset>.one_line=1 for RoboQuest, Pro-Worlds and HiddenGames; the base model's action-only test)
 # SEEDS      the test seeds (default "0 1 2");  EVAL_GPUS the GPUs of the test server, one tensor-parallel group (default 0: one GPU)
 # TAG        the output name (default: untrained_<model>, the adapter folder's name or the repository id); output
-#            $PL_RUNS/eval/<TAG>[-<BENCH>][-long][-one_line]-seed<S> (BENCH all: no -<BENCH>); a new start plays only the missing episodes
+#            $PL_RUNS/eval/<TAG>[-<BENCH>][-long][-one_line][-think<N>][-<option>]-seed<S> (BENCH all: no -<BENCH>); a new start
+#            plays only the missing episodes
+# MAX_THINK  the thinking cap of the test in tokens (default 8192, the reported tests); another value adds -think<N> to the
+#            output name (for example MAX_THINK=16384 TURN=one_line: the base model at a 16k cap)
+# FINAL_SUBMIT, ONLY, ASK_ONCE, REPLAY  RoboQuest and harness checks of a test (off by default; each one below, at its line)
+# PL_SAVE_THOUGHTS=1  the turn records keep the thought text (plearn/api/episode.py thought_rec)
 # DRY=1      print the commands, run nothing (no download)
 set -euo pipefail
 cd "$(dirname "$0")/.."                                      # the repository root
 : "${PL_RUNS:=runs}" "${EVAL_GPUS:=0}" "${SEEDS:=0 1 2}" "${DRY:=0}" "${TURN:=two_line}" "${BENCH:=all}" "${ADAPTER:=}" "${ADAPTER_SUBDIR:=}"
-: "${EXPANSION:=normal}" "${MODEL_REPO:=}"
+: "${EXPANSION:=normal}" "${MODEL_REPO:=}" "${MAX_THINK:=8192}"
 export PL_RUNS
 MODEL=qwen3-vl-8b-thinking
 run() { echo "+ $(printf '%q ' "$@")"; [ "$DRY" = 1 ] || "$@"; }   # the command, quoted as the shell reads it
@@ -45,6 +50,38 @@ case "$TURN" in
                  sokoban.one_line=1 tabletop.one_line=1); SUF="$SUF-one_line" ;;
   *) echo "TURN: two_line or one_line" >&2; exit 2 ;;
 esac
+[[ "$MAX_THINK" =~ ^[1-9][0-9]*$ ]] || { echo "MAX_THINK: a number of tokens" >&2; exit 2; }
+[ "$MAX_THINK" = 8192 ] || SUF="$SUF-think$MAX_THINK"         # another thinking cap than the reported tests' 8,192
+# FINAL_SUBMIT=1 (default: off, the reported tests): a RoboQuest episode that has used all its decisions without a SUBMIT gets
+# one more turn that asks for the SUBMIT alone (--task_args roboquest.final_submit=1); the output folder gets -final_submit
+[ "${FINAL_SUBMIT:-0}" = 1 ] && { TA+=(roboquest.final_submit=1); SUF="$SUF-final_submit"; }
+# FINAL_SUBMIT=prefill: in that turn the model does not think again; its reply is started as 'ACTION: SUBMIT' and it writes only the
+# answer, after its own last belief line (--task_args roboquest.final_submit=prefill); the output folder gets -final_submit_prefill
+[ "${FINAL_SUBMIT:-0}" = prefill ] && { TA+=(roboquest.final_submit=prefill); SUF="$SUF-final_submit_prefill"; }
+# ONLY=<file> (with BENCH=roboquest): lines '<task> <instance id>'; the test plays these RoboQuest instances alone, and only the
+# tasks that the file names (--task_args roboquest.only=<file>); the output folder gets -only
+if [ -n "${ONLY:-}" ]; then
+  [ "$BENCH" = roboquest ] || { echo "ONLY: with BENCH=roboquest" >&2; exit 2; }
+  [ -f "$ONLY" ] || { echo "ONLY: no file $ONLY" >&2; exit 2; }
+  ONLY=$(cd "$(dirname "$ONLY")" && pwd)/$(basename "$ONLY")
+  TASKS=$(grep -v '^#' "$ONLY" | awk 'NF {print "roboquest_text_" $1}' | sort -u | paste -sd, -)
+  TA+=(roboquest.only="$ONLY"); SUF="$SUF-only"
+fi
+# ASK_ONCE=1 (default: off): the ask-once baseline, a harness check on all three benchmarks. The first SUBMIT of an episode is not
+# carried out; the agent is asked once to check whether the evidence identifies the answer and plays that turn again
+# (PL_ASK_ONCE=1, plearn/evaluator.py ask_once); the output folder gets -ask_once
+[ "${ASK_ONCE:-0}" = 1 ] && { export PL_ASK_ONCE=1; SUF="$SUF-ask_once"; }
+# ASK_ONCE=think: the same, and the agent also sees the reasoning of its first reply (PL_ASK_ONCE=think); folder suffix -ask_once_think
+[ "${ASK_ONCE:-0}" = think ] && { export PL_ASK_ONCE=think; SUF="$SUF-ask_once_think"; }
+# REPLAY=<turns file> (with BENCH=roboquest): the turns of an earlier test (a gzip CSV, one row per turn: benchmark, task, spec,
+# turn, kind, belief, action, feedback; plearn/tasks/roboquest/bench_env.py _logged); every episode first carries out its logged turns in the simulator, without the model, and the model plays only what is left
+# (--task_args roboquest.replay=<file>); the output folder gets -replay. With ONLY and FINAL_SUBMIT=1: the SUBMIT turn alone.
+if [ -n "${REPLAY:-}" ]; then
+  [ "$BENCH" = roboquest ] || { echo "REPLAY: with BENCH=roboquest" >&2; exit 2; }
+  [ -f "$REPLAY" ] || { echo "REPLAY: no file $REPLAY" >&2; exit 2; }
+  REPLAY=$(cd "$(dirname "$REPLAY")" && pwd)/$(basename "$REPLAY")
+  TA+=(roboquest.replay="$REPLAY"); SUF="$SUF-replay"
+fi
 download() {                                                 # a Hugging Face repository id -> its local folder in DL (DRY: a placeholder)
   if [ "$DRY" = 1 ]; then echo "# download $1 (huggingface_hub snapshot_download)"; DL="<the download of $1>"
   else DL=$(python -c 'import sys; from huggingface_hub import snapshot_download; print(snapshot_download(sys.argv[1]))' "$1"); fi
@@ -74,5 +111,5 @@ fi
 [ ${#TA[@]} -gt 0 ] && ARGS+=(--task_args "${TA[@]}")
 for s in $SEEDS; do
   run env PL_PRESENCE_PENALTY=1.5 PL_VLLM_SEED="$s" PL_TEST_T=1.0 PL_MAX_MODEL_LEN=81920 PL_MAX_NUM_SEQS=192 PL_MAX_BATCHED=16384 python -m plearn eval --model "$MODEL" \
-      --tasks "$TASKS" "${ARGS[@]}" --max_think 8192 --mem 0.85 --gpus "$EVAL_GPUS" --output_path "$PL_RUNS/eval/$TAG$SUF-seed$s"
+      --tasks "$TASKS" "${ARGS[@]}" --max_think "$MAX_THINK" --mem 0.85 --gpus "$EVAL_GPUS" --output_path "$PL_RUNS/eval/$TAG$SUF-seed$s"
 done

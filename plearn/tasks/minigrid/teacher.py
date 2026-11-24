@@ -10,14 +10,16 @@ The teacher's belief is exact: the places (row, cell) of the key that no view ha
 drawn after the key, and the number of draws before them does not depend on its place). Its policy pi*: an action is worth the best
 pose (cell and direction) that a shortest plan of turns, steps and door openings starting with it reaches, with the view of that
 pose: E[u] over 'the key is in view' (its room is then known) and 'it is not' (those places drop out), with the time of the plan
-(Reliability.util); the answer now is worth u(c(t), rho(b)). The belief line names the rows still possible, 'Possible: rows 1, 3'
+(Reliability.util); the answer now is worth u(c(t), rho(b)). The plan must end by look T (the game offers T looks, then one
+turn to answer; plearn.tasks.PLAN_PAST_LIMIT, --plan_past_limit 1: also the poses after it, as before the fix). The belief line names the rows still possible, 'Possible: rows 1, 3'
 ('Possible: all' before any evidence), scored as the set of rooms it allows.
 """
 from __future__ import annotations
-import math, re
+import copy, math, re
 from collections import deque
 import numpy as np
 from plearn.api.episode import carried
+import plearn.tasks as _tasks                                        # PLAN_PAST_LIMIT
 
 LEFT, RIGHT, FORWARD, TOGGLE = 0, 1, 2, 5                           # MiniGrid's action numbers
 ACTIONS = {LEFT: "TURN LEFT", RIGHT: "TURN RIGHT", FORWARD: "FORWARD", TOGGLE: "TOGGLE"}
@@ -91,6 +93,21 @@ class Belief:
     def cls(self): return ("minigrid", min(int((self.counts() > 0).sum()), 4))
     def post(self):
         c = self.counts(); return {str(j + 1): float(v / c.sum()) for j, v in enumerate(c) if v}
+    def look_info(self, a):
+        """--stall_cap: the expected drop of the answer entropy (nats, over the rooms) of action a: the view from the
+        pose it leads to (Ep.step_plan, the views cached as pose_value's) shows the key (its room known) or excludes the places in
+        view. 0 when the view shows no place that may hold the key, for an action the plan cannot take, or once the room is known."""
+        ep = self.ep; nxt = ep.step_plan((ep.pos, ep.dir, frozenset(ep.opened)), a)
+        if nxt is None: return 0.0
+        pos, d, opened = nxt; key = (pos, d, opened)
+        if key not in ep._vis: ep._vis[key] = frozenset(visible(ep.env, pos, d, opened))
+        cells = ep._vis[key]; alive = np.nonzero(self.M)[0]; k = len(alive)
+        ent = lambda c: float(-(c[c > 0] / c.sum() * np.log(c[c > 0] / c.sum())).sum())
+        h0 = ent(np.bincount(ep.H[alive, 0], minlength=ep.rows))
+        inview = np.array([(int(ep.H[i, 1]), int(ep.H[i, 2])) in cells for i in alive], dtype=bool)
+        if h0 <= 0 or not inview.any(): return 0.0
+        rest = alive[~inview]                                          # the key not in view: those places drop out
+        return max(0.0, h0 - (len(rest) / k * ent(np.bincount(ep.H[rest, 0], minlength=ep.rows)) if len(rest) else 0.0))
     def view_value(self, rel, cells):
         """E[f(rho)] after a view of `cells`: the key in view (its room known), or not (the places in view drop out)."""
         ep = self.ep; alive = np.nonzero(self.M)[0]; k = len(alive)
@@ -106,11 +123,13 @@ class Belief:
         ep = self.ep
         if not acts: return {}
         cost = lambda n: math.exp(-lam * n / T); out = {}
+        last = math.inf if _tasks.PLAN_PAST_LIMIT else T - self.t - 1       # a pose after look T cannot be reached
         for a in acts:
             nxt = ep.step_plan((ep.pos, ep.dir, frozenset(ep.opened)), a)
             if nxt is None: out[a] = rel.none; continue
             best = rel.none
             for state, d in ep.reach(nxt).items():
+                if d > last: continue
                 v = ep.pose_value(self, rel, state)
                 if v is not None: best = max(best, rel.with_cost(cost(self.t + 1 + d), v))
             out[a] = best
@@ -270,6 +289,14 @@ class Domain:
         if not e.done and e.turns_used >= self.turns: e.done, e.correct = True, False
 
     def belief(self, e): return Belief(e, e.M.copy(), e.t)
+    def freeze(self, B):
+        """B with its game frozen at B's history: a plan keeps B, and the own turns of a history are scored
+        after the game has gone on, so the lookahead of a stated line (decision_score) must read the agent's place and what it has
+        seen at the history, not at the game's end. The plan made at the history is unchanged: it ran on the live game then."""
+        s = copy.copy(B.ep); s.M, s.opened, s.log = B.ep.M.copy(), set(B.ep.opened), list(B.ep.log)
+        s.env = copy.copy(B.ep.env); s.env.grid = copy.deepcopy(B.ep.env.grid)   # the doors the game opens later stay closed
+        s._vis, s._reach = {}, {}                                    # their caches read the grid of the time they were made
+        return Belief(s, B.M, B.t)
     def label(self, e): return str(e.truth[0] + 1)
     def answer_posterior(self, e): return self.belief(e).post()
     def answer_prob(self, B, y): return B.post().get(str(y).strip(), 0.0)

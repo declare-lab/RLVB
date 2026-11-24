@@ -22,7 +22,15 @@ class CapTests(unittest.TestCase):
     # ablations (the RLVB (EM) run files with --update grpo)
     TRAIN_CAP_8192 = {"suite_qwen35_4b_presence_8k.yaml", "suite_qwen35_4b_line_target.yaml", "suite_qwen3vl_8b_thinking.yaml",
                       "suite_qwen3vl_4b_thinking.yaml", "grpo_posterior_qwen3vl_8b_thinking.yaml",
-                      "grpo_posterior_qwen3vl_4b_thinking.yaml", "grpo_posterior_qwen35_4b.yaml"}
+                      "grpo_posterior_qwen3vl_4b_thinking.yaml", "grpo_posterior_qwen35_4b.yaml",
+                      # the RLVB (GRPO) ablations (configs/train, scripts/ablation_scripts): all keep the training cap of 8,192
+                      "abl_grpo_nobelief_qwen3vl_4b_thinking.yaml", "abl_grpo_noaction_qwen3vl_4b_thinking.yaml",
+                      "looks_nobelief_qwen3vl_4b_thinking.yaml", "onpolicy_nobelief_qwen3vl_4b_thinking.yaml",
+                      "pool_nobelief_qwen3vl_4b_thinking.yaml", "pool_nobelief_qwen3vl_8b_thinking.yaml", "pool_nobelief_qwen35_4b.yaml",
+                      "pool_nobelief_lb8000_qwen35_4b.yaml", "phase5_nobelief_lb8000_c1_qwen35_4b.yaml", "phase5_nobelief_nolen_qwen35_4b.yaml",
+                      "phase5_nobelief_trow_qwen35_4b.yaml", "phase5_nobelief_trow_stall_qwen35_4b.yaml",
+                      "pool_nobelief_trow_stall_qwen3vl_8b_thinking.yaml", "pool_nobelief_trow_stall_qwen3vl_4b_thinking.yaml",
+                      "pool_nobeliefline_qwen3vl_8b_thinking.yaml", "pool_nobeliefline_qwen3vl_4b_thinking.yaml", "phase5_nobeliefline_nolen_qwen35_4b.yaml"}
 
     def test_every_pl_run_file_keeps_the_method_caps(self):
         files = sorted(glob.glob(os.path.join(ROOT, "configs", "train", "*.yaml")))

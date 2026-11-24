@@ -66,6 +66,11 @@ history's +1, through the same clipped thought step (its own </think> too: the s
 near-certain token the gradient of log p is ~0, so the push acts on the thought's uncertain tokens. The trust region is the phase's
 --kl_stop. Logged: neg_thoughts (items per update). METHOD is unchanged (L = 0).
 --line_score none: the turn score is log pi*(u | h) alone; the belief line is not scored.
+--no_belief_line 1 (24 Nov 2026, the user: "that script only remove the belief reward, but i want the belief line to be completely
+removed"; "we suspect that the belief line is noisy"): with --line_score none, the turn has no belief line at all. The prompt has the
+action-only rules of the one-line turn (plearn/tasks/domain.py action_only on the domain's system text, the tests' one_line prompt)
+and no carried line; each own turn is z </think> a (M actions sampled after each thought), scored by log pi*(a | h) alone, and the M-step
+item is that text (turn_item). The teacher, the sample sets and the update are unchanged. Test with the one-line turn (TURN=one_line).
 --line_score exact, --carry (v8c): the belief line is written in the environment's belief language (the form of the
 teacher's line; read exactly or it gets the floor, so no reader of prose), scored by the log score with floor --line_floor, and
 carried into the next turn as the agent's state (the belief is recursive, b_t = update(b_{t-1}, o_t), and the context is the
@@ -224,6 +229,99 @@ E-step weights are still computed, for the logs. The rows log grpo_scale, grpo_a
 of own turns pushed down and up), grpo_adv_zero_hist (groups with no signal), grpo_stop_t and grpo_stop_d (blocks the clip rule
 stopped, summed over the ranks) and grpo_items. --temper and --think_cost act on the E-step weights only, so grpo refuses them.
 The sample sets do not depend on --update, so PL_SET_FROM may reuse an RLVB (EM) run's first set (tests/method/test_grpo_posterior.py).
+--fl_view_value (default 0, the fix): FrozenLake's teacher valued a move by the best walk through known-safe cells to a
+cell whose view it then scored as an answer, log c(n) + E[log U'] (plearn/tasks/frozenlake/teacher.py, Belief._view_lookahead), but
+the game has no answer: only reaching the goal pays. Once the goal is known (U = 1) a walk to any cell that shows fog was worth
+log c(n) + log 1, exactly what reaching the goal in as many moves is worth, and the walk on to the goal was never counted, so the
+teacher tied or preferred sightseeing over finishing, and its greedy policy could wander and never reach the goal; with the goal
+unknown a view was worth its best guess's accuracy, again without the walk still needed (two looks of one cell at the same distance
+tie). Against the exact full-horizon value of the teacher's own greedy continuation (enumerated over the posterior) on 148
+training histories, its top action was the best in 57% of them (38% with the goal known, 69% unknown; mean regret 0.047 with it
+known). Now a move is worth the return it leads to (Belief.lookahead): with the goal known, reaching it along a safe shortest route;
+otherwise an exact depth-d expectimax over the posterior whose leaf is each hypothesis's own shortest walk to its goal. Measured
+after the fix on the same 148 histories (the reference recomputed with the fixed teacher): the top action is the best in 90% (100% with the goal known, 84% unknown), mean regret 0.0003, Spearman 0.96 (0.74 before); from the start of 300 training scenes the greedy teacher wins all (as before) in 3.9 actions (6.7), return 0.926 (0.876), and pi* wins 98.5% (85.3%, 13.2% out of time), return 0.801 (0.684); from those 148 histories the greedy teacher now wins 98% with the goal known (87%). A plan costs 2.8 ms (7.3 ms before; one process, warm), plus ~0.07 s once per start cell (walks()). Only FrozenLake changes (the other games' plans are byte-identical); the test-time path does not use the lookahead (plearn evaluate).
+--fl_view_value 1 restores the old values, for runs made before the fix (plearn.tasks.FL_VIEW_VALUE). PL_SET_FROM refuses a saved set
+of a run with another --fl_view_value (a set.json without it: 1) when the run has FrozenLake (tests/method/test_fl_walk_value.py).
+--sk_guess_value (default 0, the fix): Sokoban's teacher (plearn/tasks/sokoban/teacher.py, Belief._guess_lookahead)
+valued heading for a target as a guess among the k candidates, u(c(n + L), 1 / k) = log c(n + L) - log k, and an exploring walk
+(no push) to a view by its chance of showing the target, the rest again such a guess. The game has no guess: it ends only when the
+box is on the target (a win) or after T actions; a box on another cell shows that cell is not the target and the search goes on, so
+log k (1.1 nats for 3 candidates, against 0.02 an action) undervalued every plan that leaves candidates to be found later, above
+all pushes, whose views on the way and whose chance of landing the box on the target counted for nothing; the teacher preferred
+the walk whose view resolves most now, even one that leaves the player on the wrong side of the box (seed 823435504 at t = 2: the
+walk UP had log pi* -0.07 and the push LEFT -2.9, the reference 0.59 and 0.90). Against the exact full-horizon value of the
+teacher's own greedy play (enumerated over the posterior) on 442 training histories, its top move was the best in 91% (68% while
+0.1 <= U < 0.5, mean regret 0.026 there), Spearman 0.85, and 72 pairs of moves were reversed by more than 0.05. Now a move is
+worth the return it leads to (Belief.lookahead): an exact expectimax over the posterior to the end of the game (after each move:
+the box on a cell that may hold the target wins with its chance, else the new view shows the target or excludes its cells; with
+the target known, its exact shortest solution; a dead box or the limit: the floor u(c(T), 0)). Not to the run's depth: with depth
+2 and each candidate's solution length at the leaf the greedy teacher stood still where a view or a push had to come first (it won
+88% from start states, pi* 86%). Measured after the fix on the same 442 histories (the reference recomputed with the fixed
+teacher): the top move is the best in 99.5% (98% while 0.1 <= U < 0.5), mean regret 0.0000 (0.026 there before), Spearman 1.00,
+no reversed pair, the looks in the accept window 84% (83% before), the gap from the best look to the next level 0.20 nats (0.20);
+from the start of 300 training rooms the greedy teacher wins 99.7% (as before) in 6.1 actions (6.5), return 0.883 (0.877), and
+pi* wins 99.7% (96.7%), return 0.789 (0.769). The values depend only on (state, possible targets, time) and are shared by an
+episode's plans: a room's first plan costs 27 ms on average (median 2.4, p99 361, max 417; before 2.5 / 0.8 / 11 / 11), each later
+plan 0.14 ms (0.23); 4.7 ms a plan on average over greedy games (0.6). Only Sokoban changes (the other games' plans are
+byte-identical); with the target known the plans are as before (exact solution lengths).
+--sk_guess_value 1 restores the old values, for runs made before the fix (plearn.tasks.SK_GUESS_VALUE). PL_SET_FROM refuses a saved
+set of a run with another --sk_guess_value (a set.json without it: 1) when the run has Sokoban (tests/method/test_sk_return_value.py).
+--plan_past_limit (default 0, the fix): near the end of a game two lookaheads valued plans that end after the game's
+action limit. The limits, measured on the engines: MiniGrid offers T = 64 looks (look_strings), then one turn to answer (turns
+= T + 1; the engine's own max_steps, 480, never binds); popgym's MineSweeper ends the game on a MOVE that is action 2 n^2 (32 on
+easy; no answer after it), not on a FIRE that is action 2 n^2 (popgym tests a FIRE's limit on the time before it), after which the
+answer comes on the next turn. MiniGrid (Belief.lookahead) valued every pose a plan reaches, also after look T; MineSweeper
+(Belief.lookahead, values_two) valued a move by the best FIRE at any distance and a second reveal at any distance, so at action 29
+the teacher moved where its plan could not be finished (spec 970564884: RIGHT, FIRE, then a move as action 32 ended the game with no
+answer; the reference value of RIGHT was 0 against 0.107 for FIRE). Now a plan's poses come by look T (MiniGrid) and its FIREs by
+action 2 n^2, a move as action 2 n^2 is worth the floor u(c, 0) and values_two's second reveal must fit in the actions left after
+the first (its cache is keyed on the time too). Measured on the study's histories (the reference recomputed under each setting):
+MineSweeper easy, 239 histories: the 17 at t >= 28 now have the top action best in 82% (59%), mean regret 0.0009 (0.035), Spearman
+0.63 (0.01); the others 81% (80%), regret 0.0056 (0.0061); from 300 training boards pi* wins 77.3% (71.5%), return 0.271 (0.258), the
+greedy teacher as before (79.7%). MiniGrid S4R3, 302 histories: the 28 at t >= 56 now have the top action best in 100% (46%),
+mean regret 0.0000 (0.0053), Spearman 1.00 (-0.20) (spec 835189679 at t = 58: the old teacher turned and walked on, the new one
+answers, reference 0.155 against 0.137); the other 274 as before (99%, regret 0.0001). The plan cost is unchanged (MineSweeper
+7.3 ms, 7.1 before).
+The same omission, also fixed under this switch: TableTop's looks had no time check (an invalid turn counts in t, so after
+invalid turns the lookahead valued looks after the budget of n looks), and RoboQuest's worlds (plearn/method/teacher.py
+Belief.looks) were planned to the domain's T (5) while a world allows W.T looks (4 for OddParcel and a MarkedMugs of 4): 10 of 238
+RoboQuest histories change. The other games' plans are byte-identical; their lookaheads already end at the limit (mastermind,
+sokoban, frozenlake, the proworlds teachers, parcels).
+--plan_past_limit 1 restores the old values, for runs made before the fix (plearn.tasks.PLAN_PAST_LIMIT). PL_SET_FROM refuses a saved
+set of a run with another --plan_past_limit (a set.json without it: 1) when the run has MiniGrid, MineSweeper, TableTop or RoboQuest
+(tests/method/test_action_limit.py).
+These three lookaheads read the game through the belief's episode, which is the live episode at plan time and the copy that
+Domain.freeze makes for the plan (FrozenLake, Sokoban, MiniGrid), so a line's S_dec computed after the episode has
+gone on is the one at its history (tests/method/test_fl_walk_value.py, test_sk_return_value.py). Sokoban's value table (Ep._vals)
+is shared by the frozen copies (copy.copy): its values depend only on (state, possible targets, time); slim() drops plan["B"],
+so it is never pickled into an actor batch.
+--tau_look (default 0 = --tau): the temperature of pi*'s Boltzmann among the looks only (estimator.targets, Planner.act_logp,
+the waste_lp of Planner.__call__, Planner.implied). Among looks the values differ by about one step of time cost (0.02 in log value,
+0.2 nats at tau 0.1), while an answer before the evidence is enough costs about 25 nats and the accept window is 3 nats, so the
+score taught "do not answer early" about 100 times more strongly than "choose a good look". With --tau_look 0.02 one wasted step costs
+1 nat. The answer-or-look sigmoid (pC), the stop rule when the answer is identified, the Boltzmann among the answers and wrong_lp keep
+--tau, so the penalty on a premature answer is unchanged. A domain with look_scale = False keeps --tau (mastermind: its lookahead
+separates guesses whose real difference is about a third of a guess); TableTop's looks are all tied, so nothing changes there.
+--tau_look_play 0 (default): only the scores of own turns and the accept rule use --tau_look; the teacher's played moves (plan tgt:
+--beta_expert) keep --tau, so the histories are distributed as in RLVB (GRPO). 1: tgt uses --tau_look too (a
+sharper teacher plays better moves; other histories). The batches hold the own turns' scores, so PL_SET_FROM refuses a saved set with
+another --tau_look or --tau_look_play (a set.json without them: 0). Logs: look_gap (nats from the best looks to the next level),
+look_accept (the share of the looks accepted) and tau_look_on (the share of scored histories where --tau_look applied); look_stats.
+Not in METHOD (tests/method/test_tau_look.py).
+--stall_cap C (part 3 of the reward repair; default 0 = off): a stalling step is rejected. A look that is neither one of the
+teacher's best looks (the highest log pi* among the looks) nor one with real expected evidence (look_info: the expected drop of the
+answer's entropy, above STALL_INFO; each of the five game teachers computes it from its own outcome model, Tabletop from
+Belief.outcomes) gets log pi* = min(its own, best - C), best being the highest log pi* of any action; so does an action that is not
+legal (waste_lp). A look loses only its small time cost against the best one, so before it was accepted (accepted: best - log 20,
+3.0 nats); with C = 3.5 it is rejected, and a group of such own turns gets the teacher's row (--teacher_row). The rule only lowers a
+value: the answers, the best looks and the looks with evidence keep theirs, and the teacher's own moves (tgt) are unchanged.
+MineSweeper: a cursor move counts only when it heads for the best cell (it is then one of the best looks). Planner(stall_cap),
+cap_stalls; plan["stall"] holds the lowered values, and the log stall_rejected is the share of own turns rejected by the cap alone.
+PL_SET_FROM refuses a set made with another C (tests/method/test_stall_cap.py).
+--stall_play 1 (with --stall_cap): the teacher's own moves (tgt) come from the capped scores too (capped_tgt: a lowered look keeps
+exp(new - old) of its probability). At tau 0.1 the teacher's choice among moves that differ by one or two steps of time cost is
+soft, so without it the teacher itself takes a move the cap rejects at about a third of its steps in the four navigation games
+(offline check: MineSweeper 30%, MiniGrid 37%, FrozenLake 45%, Sokoban 34%; with it 3-5%, and its games are shorter).
 """
 from __future__ import annotations
 import argparse, contextlib, copy, importlib, inspect, io, json, math, os, random, re, statistics, sys, time
@@ -254,6 +352,18 @@ ATTN_TOL = float(os.environ.get("PL_ATTN_TOL", "0.02"))   # --attn: the largest 
 MSTEP = {}             # --m_step blocks: the two blocks' losses and gradient norms of the last update, for the log row
 CARRY = False          # --carry: the agent's own belief line of its last turn enters its next prompt
 EXACT_LINE = False     # --line_score exact: the prompt states the environment's belief language (the domain's BELIEF_HINT)
+NO_BELIEF_LINE = False  # --no_belief_line (24 Nov 2026, the user: "i want the belief line to be completely removed"): no belief line at all
+
+
+def after_line(pre, line):
+    """The prefix of the action after the belief line: pre + line + TERM. With --no_belief_line the turn has no belief line: the
+    action follows </think> at once (pre)."""
+    return pre if NO_BELIEF_LINE else pre + line + TERM
+
+
+def no_line_prompt(text):
+    """--no_belief_line: the prompt neither asks for a belief line (the two-line rules, the 'Possible:' hint) nor carries one."""
+    return not any(k in text for k in (CARRY_MARK, "reply with exactly two lines", "Line 1:", "Line 2:", "write one line starting with 'Possible:'"))
 
 
 def turn_prompt(D, tok, e):
@@ -261,20 +371,26 @@ def turn_prompt(D, tok, e):
     if hasattr(D, "system_text"): system = D.system_text(e)            # a domain whose system text depends on the episode
     elif EXACT_LINE and hasattr(mod, "SYSTEM_EXACT"): system = mod.SYSTEM_EXACT    # the two-line protocol with the belief language
     else: system = mod.SYSTEM + (getattr(mod, "BELIEF_HINT", None) if EXACT_LINE else None or getattr(mod, "ANCHOR_HINT", ANCHOR_HINT))
+    if NO_BELIEF_LINE:                                                # --no_belief_line: the action-only rules (the
+        from plearn.tasks.domain import action_only, system_text      # one-line turn of the tests, plearn/tasks/domain.py one_line)
+        system = action_only(system_text(D, e))                       # and no carried line (below)
     if PROC is not None and getattr(D, "images", False):              # observations as images, interleaved with the text
         from plearn.models.sampler import tag_prompt
-        note = getattr(e, "note", None) if CARRY else None
+        note = getattr(e, "note", None) if CARRY and not NO_BELIEF_LINE else None
         content, images = D.user_content(e, note=note) if "note" in inspect.signature(D.user_content).parameters else D.user_content(e)
         text = PROC.apply_chat_template([{"role": "system", "content": system}, {"role": "user", "content": content}],
                                         tokenize=False, add_generation_prompt=True)
+        assert not NO_BELIEF_LINE or no_line_prompt(text), "--no_belief_line: the prompt asks for or carries a belief line"
         return tag_prompt(text, images)
     text = D._history(e)
-    if CARRY and getattr(e, "note", None):                            # the agent's own last belief line, before the closing request
+    if CARRY and not NO_BELIEF_LINE and getattr(e, "note", None):     # the agent's own last belief line, before the closing request
         head, sep, tail = text.rpartition(" Decide now.")
         note = carried(e.note)
         text = head + note + "\nDecide now." + tail if sep else text + note
     msgs = [{"role": "system", "content": system}, {"role": "user", "content": text}]
-    return tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)      # ends with "<think>\n"
+    out = tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)      # ends with "<think>\n"
+    assert not NO_BELIEF_LINE or no_line_prompt(out), "--no_belief_line: the prompt asks for or carries a belief line"
+    return out
 
 
 def anchor_answer(anchor, answers, D=None, e=None):
@@ -396,8 +512,16 @@ def monitor_train_metrics(crit_h, rows_h, w, fit, decs, eps):
 
 class Planner:
     """The ideal decision at the current history: exact anchor, action target pi*, and the exact thought."""
-    def __init__(self, D, rel, tau, depth):
+    def __init__(self, D, rel, tau, depth, tau_look=0.0, tau_look_play=0, stall_cap=0.0, stall_play=0):
         self.D, self.rel, self.tau, self.depth = D, rel, tau, depth
+        self.tau_look, self.tau_look_play = float(tau_look or 0.0), int(tau_look_play or 0)   # --tau_look, --tau_look_play (0: tau)
+        self.stall_cap = float(stall_cap or 0.0)                        # --stall_cap (0: off; the training planners only)
+        self.stall_play = int(stall_play or 0)                          # --stall_play: the teacher's own moves (tgt) from the capped scores
+
+    def look_tau(self, Dk):
+        """The temperature of the Boltzmann among the looks for the teacher Dk: --tau_look when it is set and the domain does not
+        opt out (Domain.look_scale = False: mastermind), else --tau."""
+        return self.tau_look if self.tau_look > 0 and getattr(Dk, "look_scale", True) else self.tau
 
     def __call__(self, e):
         D = self.D; B = D.belief(e); Dk = getattr(e, "_teacher", D); T, lam = Dk.T, Dk.lam   # a mixed run: the episode's own teacher
@@ -409,7 +533,8 @@ class Planner:
             elif B.U() > 0: best = answers[0]
         commits = {y: Dk.commit_string(y) for y in answers}
         depth = D.depth(B) if hasattr(D, "depth") else self.depth
-        tgt, Q, pC, qy = E.targets(B, looks, answers, commits, post, self.rel, lam, T, self.tau, depth)
+        tl = self.look_tau(Dk)                                          # --tau_look: the scores of own turns; the played moves (tgt) too with --tau_look_play 1
+        tgt, Q, pC, qy = E.targets(B, looks, answers, commits, post, self.rel, lam, T, self.tau, depth, tl if self.tau_look_play else None)
         cm = sum(tgt.pop(s, 0.0) for s in commits.values())
         if answers and cm > 0: tgt[commits[best if best is not None else answers[0]]] = cm
         anchor = D.belief_note(e) if hasattr(D, "belief_note") else E.note_text(post, answers)
@@ -434,34 +559,48 @@ class Planner:
         waste = self.rel.util(math.exp(-lam * (B.t + 1) / T), r)   # a decision that changes nothing: answering one step later
         # the critic's action score: log pi*(a | h), the teacher's policy itself (E.targets: the stop rule when the answer is certain,
         # the Boltzmann over the looks' values at tau, the answer probability pC), at the level of a look's value group
-        logp, F = self.act_logp(looks, commits, Q, pC, qy), LOGP_FLOOR
+        logp, waste_lp, wrong_lp = self.scores(looks, commits, Q, pC, qy, waste, self.rel.util(c0, 0.0), tl)
+        stall = None                                                    # --stall_cap: stalling looks and actions that are not legal
+        if self.stall_cap > 0: logp, waste_lp, stall = cap_stalls(logp, waste_lp, looks, self.stall_cap, lambda a: look_info(B, a))
+        if self.stall_play and stall: tgt = capped_tgt(tgt, logp, stall)   # --stall_play: the teacher plays by the capped scores too
+        if hasattr(Dk, "freeze"): B = Dk.freeze(B)                     # the game at this history, for scores made later
+        return {"anchor": anchor, "tgt": tgt, "exact": "\n".join(lines), "B": B, "best": best, "post": post, "values": values, "waste": waste,
+                "logp": logp, "waste_lp": waste_lp, "wrong_lp": wrong_lp, "tl_on": bool(looks) and tl != self.tau,
+                "legal": list(looks.values()) + list(commits.values()), "looks": looks, "commits": commits, "answers": answers, "truth": D.label(e),
+                "dom": getattr(e, "_teacher_name", None),   # a mixed run: the episode's teacher by name (plans are pickled)
+                **({"stall": stall} if stall is not None else {})}   # --stall_cap: the values it lowered (score_turn's stall log)
+
+    def scores(self, looks, commits, Q, pC, qy, waste, v0, tl=None):
+        """The critic's action scores from the values Q of the looks, qy of the answers and pC (the lookahead's): log pi* of every legal string (act_logp), of a decision that
+        changes nothing worth `waste` (waste_lp) and of an answer outside the posterior worth v0 (wrong_lp). tl: the temperature of
+        the Boltzmann among the looks (look_tau; None: tau); pC, the answers and wrong_lp keep tau."""
+        tl = tl or self.tau
+        logp, F = self.act_logp(looks, commits, Q, pC, qy, tl), LOGP_FLOOR
         lg = lambda x: math.log(x) if x > 0 else F
         if looks:
-            groups = sorted({round(Q[k], 3) for k in looks}); qL = groups[-1]; z = sum(math.exp((g - qL) / self.tau) for g in groups)
-            waste_lp = max(F, min(lg(1 - pC), lg(1 - pC) + (round(waste, 3) - qL) / self.tau - math.log(z)))   # a log-probability: at
+            groups = sorted({round(Q[k], 3) for k in looks}); qL = groups[-1]; z = sum(math.exp((g - qL) / tl) for g in groups)
+            waste_lp = max(F, min(lg(1 - pC), lg(1 - pC) + (round(waste, 3) - qL) / tl - math.log(z)))   # a log-probability: at
             # most the share of the looks (where every look is worth far less than a decision that changes nothing, as the guesses at a
             # solved Mastermind state, the Boltzmann term alone would give an unreadable line about +1e7, more than any action)
         else:
             waste_lp = F
         if qy:
             qC = max(qy.values()); zy = sum(math.exp((v - qC) / self.tau) for v in qy.values())
-            v0 = self.rel.util(c0, 0.0)                                   # an answer outside the posterior: accuracy 0 (0 in the accuracy
-            wrong_lp = max(F, min(lg(pC), lg(pC) + (v0 - qC) / self.tau - math.log(zy)))   # value; its floor in the log value)
+            # v0: an answer outside the posterior, accuracy 0 (0 in the accuracy value; its floor in the log value)
+            wrong_lp = max(F, min(lg(pC), lg(pC) + (v0 - qC) / self.tau - math.log(zy)))
         else:
             wrong_lp = F
-        return {"anchor": anchor, "tgt": tgt, "exact": "\n".join(lines), "B": B, "best": best, "post": post, "values": values, "waste": waste,
-                "logp": logp, "waste_lp": waste_lp, "wrong_lp": wrong_lp,
-                "legal": list(looks.values()) + list(commits.values()), "looks": looks, "commits": commits, "answers": answers, "truth": D.label(e),
-                "dom": getattr(e, "_teacher_name", None)}   # a mixed run: the episode's teacher by name (plans are pickled)
+        return logp, waste_lp, wrong_lp
 
-    def act_logp(self, looks, commits, Q, pC, qy):
+    def act_logp(self, looks, commits, Q, pC, qy, tl=None):
         """log pi*(a | h) of every legal string from the parts of E.targets: the stop rule and the answer probability pC, the
-        Boltzmann over the looks' values at tau at the level of a look's value group (its group's score), the answers' values."""
-        logp, F = {}, LOGP_FLOOR
+        Boltzmann over the looks' values at tl (look_tau; None: tau) at the level of a look's value group (its group's score), the
+        answers' values at tau."""
+        logp, F = {}, LOGP_FLOOR; tl = tl or self.tau
         lg = lambda x: math.log(x) if x > 0 else F
         if looks:
-            groups = sorted({round(Q[k], 3) for k in looks}); qL = groups[-1]; z = sum(math.exp((g - qL) / self.tau) for g in groups)
-            for k, s in looks.items(): logp[s] = max(F, lg(1 - pC) + (round(Q[k], 3) - qL) / self.tau - math.log(z))
+            groups = sorted({round(Q[k], 3) for k in looks}); qL = groups[-1]; z = sum(math.exp((g - qL) / tl) for g in groups)
+            for k, s in looks.items(): logp[s] = max(F, lg(1 - pC) + (round(Q[k], 3) - qL) / tl - math.log(z))
         if qy:
             qC = max(qy.values()); zy = sum(math.exp((v - qC) / self.tau) for v in qy.values())
             for y, v in qy.items(): logp[commits[y]] = max(F, lg(pC) + (v - qC) / self.tau - math.log(zy))
@@ -473,7 +612,7 @@ class Planner:
         post = Bb.post() if hasattr(Bb, "post") else {y: Dk.answer_prob(Bb, y) for y in plan["answers"]}
         depth = self.D.depth(Bb) if hasattr(self.D, "depth") else self.depth
         _, Q, pC, qy = E.targets(Bb, plan["looks"], plan["answers"], plan["commits"], post, self.rel, Dk.lam, Dk.T, self.tau, depth)
-        lp = self.act_logp(plan["looks"], plan["commits"], Q, pC, qy)
+        lp = self.act_logp(plan["looks"], plan["commits"], Q, pC, qy, self.look_tau(Dk))
         if not lp: return []
         top = max(lp.values()); return [s for s, v in lp.items() if v >= top - 1e-9]
 
@@ -529,6 +668,29 @@ def keep_batch(src, dump_em, step, log=None):
     print(f"KEEP BATCH update {step}: {d} {mb:.0f} MiB", flush=True)
     if log is not None: log.write(json.dumps({"kept_batch": step, "kept_dir": d, "kept_mib": round(mb)}) + "\n"); log.flush()
     return dst
+
+
+def keep_last_saves(out, tag, step, keep, protect):
+    """PL_KEEP_LAST (keep the 25 / 50 saves and always the last 2 updates; older ones are deleted as the run
+    goes on): with PL_KEEP_LAST = K > 0 the learner saves the full state (adapter + Adam) after every update; after
+    update `step` this removes the saves of the older updates, so only the last K updates stay (a kept update among them counts as
+    one of the K), besides every update n with protect(n) (the
+    --eval_every / PL_SAVE_STEPS / last-update saves, kept as before). Only files of updates <= step are touched (a file of a later
+    update is from another attempt of the same run and stays). Returns the removed update numbers, oldest first."""
+    pat = re.compile(re.escape(tag) + r"-(lora|opt|readout)-(\d+)\.pt")
+    found = {}
+    try: names = os.listdir(out)
+    except OSError: return []
+    for f in names:
+        m = pat.fullmatch(f)
+        if m and int(m.group(2)) <= step: found.setdefault(int(m.group(2)), []).append(f)
+    last = set(sorted(found)[-keep:]) if keep > 0 else set()          # the last `keep` updates, a kept step among them counts too
+    gone = sorted(n for n in found if not protect(n) and n not in last)
+    for n in gone:
+        for f in found[n]:
+            try: os.remove(os.path.join(out, f))
+            except OSError: pass                                        # another rank of this node removed it first
+    return gone
 
 
 def dump_rollouts(out, step, D, eps, decs):
@@ -899,7 +1061,7 @@ def score(model, tok, pairs, chunk, per_token=False, readout=False, states=False
             enc = tok(it[1], add_special_tokens=False, return_offsets_mapping=True); cids.append(enc["input_ids"]); offs.append(enc["offset_mapping"])
             if pen: reqs.append(presence_requests(it[1], d0, enc["offset_mapping"], enc["input_ids"]))
             if span is None and d0 is None: masks.append(None); decs.append(None); continue
-            sp_ = None if span is None else (list(span) if span and isinstance(span[0], (tuple, list)) else [span])   # one span or a list of spans
+            sp_ = None if not span else (list(span) if isinstance(span[0], (tuple, list)) else [span])   # one span or a list of spans (an empty list = no span)
             masks.append(None if sp_ is None else [float(not any(a < e_ and b > s_ for s_, e_ in sp_)) for a, b in enc["offset_mapping"]])
             decs.append(None if d0 is None else [a >= d0 for a, b in enc["offset_mapping"]])
         pre = [encode_prefix(tok, it[0]) for it in part]
@@ -998,9 +1160,9 @@ READOUT = {}           # --readout: {"head": Readout, "norm": the final norm mod
 # PL_WANDB_ALL=1 sends every metric to W&B as well.
 WANDB_KEEP = re.compile(
     r"^(train/(loss_dec|loss_think|grad_norm_think|grad_norm_dec|kl_q_pi|em_ess|m_items|em_q_budget|em_q_correct|think_tokens_p"
-    r"|think_tokens_q|think_truncated|think_repeat_n|think_repeat_of|em_more_hist|em_left_out|em_no_accept|em_wrong_line|crit_belief_ok|crit_act_best|crit_line_wide|w_premature"
+    r"|think_tokens_q|think_truncated|think_repeat_n|think_repeat_of|em_more_hist|em_left_out|teacher_rows|stall_rejected|em_no_accept|em_wrong_line|crit_belief_ok|crit_act_best|crit_line_wide|w_premature"
     r"|w_exact_line|w_line_target|estep_read_exact|estep_read_misread|kl_prior|kl_stop_left|set_accept_share|neg_items|neg_p|loss_neg|neg_thoughts|sec|gen_sec|wall_min"
-    r"|grpo_scale|grpo_adv_abs|grpo_adv_neg|grpo_adv_pos|grpo_adv_zero_hist|grpo_stop_t|grpo_stop_d|grpo_items|attn_flash|attn_dlogp_mean|attn_dlogp_max)"
+    r"|grpo_scale|grpo_adv_abs|grpo_adv_neg|grpo_adv_pos|grpo_adv_zero_hist|grpo_stop_t|grpo_stop_d|grpo_items|attn_flash|attn_dlogp_mean|attn_dlogp_max|look_gap|look_accept|tau_look_on)"
     r"|eval/(update|eval_minutes|belief_ok|belief_ok_sampled|decision_ok|decision_ok_sampled|decision_regret|decision_regret_sampled|think_tokens|groups\.train_suite\.(success|looks|thought_cut|invalid_turns|open_line)"
     r"|tasks\.[a-z0-9_]+\.(success|premature|looks|thought_cut|fact_acc|open_line)|tasks\.tabletop_[a-z]+\.(read_exact|read_misread|read_reasoning|read_wider)))$")
 
@@ -1270,6 +1432,9 @@ def turn_item(z, anc, a, stopped, own_term=False):
     two lines is in the text but not counted (the protocol puts it in the action's prefix; the model's own separator is not kept).
     kl_split v2: 7.21 of the 7.24 nats per turn that 25 updates moved the decision were these two tokens."""
     d0 = len(z) + len(CLOSE); cut = None if stopped else (len(z), d0)
+    if NO_BELIEF_LINE:                                                # --no_belief_line: z </think> a, the turn as the model wrote it
+        assert not anc, "--no_belief_line: an own turn with a belief line"
+        return (z + CLOSE + a + TERM, cut, d0) if not own_term else (z + CLOSE + a, [cut] if cut else None, d0)   # no span = None (24 Nov fix: [] crashed score)
     if not own_term: return z + CLOSE + anc + TERM + a + TERM, cut, d0
     t0 = d0 + len(anc)
     return z + CLOSE + anc + TERM + a, ([cut] if cut else []) + [(t0, t0 + len(TERM))], d0
@@ -1291,7 +1456,7 @@ def target_item(z, l1, l2, stopped, own_term, line_target=True):
     cont, cut, d0 = turn_item(z, l1, l2, stopped, own_term)
     if line_target: return cont, cut, d0, 1.0
     spans = list(cut) if isinstance(cut, list) else ([cut] if cut else [])
-    return cont, spans + [line_span(z, l1, l2, own_term)], d0, 0.0
+    return cont, (spans + ([] if NO_BELIEF_LINE else [line_span(z, l1, l2, own_term)])) or None, d0, 0.0   # no span = None
 
 
 def loss_neg(model, tok, items, N, chunk, weights, gd, params):
@@ -1545,16 +1710,143 @@ def action_value(D, text, plan, table="values"):
 def action_logp(D, text, plan): return action_value(D, text, plan, "logp")
 
 
+def look_stats(plans, ratio):
+    """--tau_look logs, over the scored histories: look_gap, the mean gap in nats of log pi* between the best looks and the next
+    level of looks (histories with two levels or more); look_accept, the share of the looks the accept rule (ratio) accepts (each
+    history with looks counts once); tau_look_on, the share of histories whose looks were scored at --tau_look (not --tau)."""
+    gap, acc, on = [], [], []
+    for pl in plans:
+        if not pl.get("looks"): continue
+        lv = sorted({round(pl["logp"][s], 9) for s in pl["looks"].values() if s in pl["logp"]}, reverse=True)
+        if len(lv) > 1: gap.append(lv[0] - lv[1])
+        top = max(pl["logp"].values()) - math.log(ratio)
+        acc.append(statistics.fmean(pl["logp"].get(s, LOGP_FLOOR) >= top for s in pl["looks"].values()))
+        on.append(float(bool(pl.get("tl_on"))))
+    fm_ = lambda x: statistics.fmean(x) if x else None
+    return {"look_gap": fm_(gap), "look_accept": fm_(acc), "tau_look_on": fm_(on)}
+
+
+def teacher_row(r):
+    """--teacher_row: an M-step row that holds the teacher's own belief line and action (its tenth field), not an own turn."""
+    return len(r) > 9 and bool(r[9])
+
+
+def teacher_action(plan):
+    """--teacher_row: the teacher's action at a history: the most likely one in "logp", the table the accept rule reads (accepted),
+    so that it is accepted by construction; a plan without that table: the most likely one of its target "tgt". The first of
+    equal ones."""
+    t = plan.get("logp") or plan["tgt"]
+    return max(t, key=t.get)
+
+
+def own_rows(rows):
+    """--teacher_row: the number of own turns among the rows of a history (the teacher's turn is not one)."""
+    return sum(not teacher_row(r) for r in rows)
+
+
+def add_teacher_rows(rows_h, crit_h, plans, ratio, score):
+    """--teacher_row 1: for every history where no own turn takes an action the teacher accepts, one more turn: the history's first
+    own thought with the teacher's exact belief line (plan "anchor") and the teacher's action (teacher_action), scored by
+    score(row0, plan, line, action) -> (row, scores) as an own turn is. The row gets a tenth field True and its scores the mark
+    "teacher"; a turn the teacher does not accept (not expected) is not added. Returns the number of histories that got one."""
+    n = 0
+    for rows, crit, pl in zip(rows_h, crit_h, plans):
+        if not rows or any(accepted(c["A"], pl, ratio) for c in crit): continue
+        r, c = score(rows[0], pl, pl["anchor"], teacher_action(pl))
+        if r[8]: rows.append(tuple(r) + (True,)); crit.append({**c, "teacher": True}); n += 1
+    return n
+
+
+def own_w(wh, rows, M):
+    """--teacher_row: the weights of the own turns of a history, for em_ess_think (a log value). A teacher row
+    is not one of the M thought samples; without this the 64 + 1 weights of such a history did not reshape to (-1, M)."""
+    wh = np.asarray(wh, dtype=float)
+    if len(rows) == len(wh): wh = wh[[not teacher_row(r) for r in rows]]
+    return wh[:len(wh) - len(wh) % M]
+
+
+def cap_teacher_adv(A, flags, cap):
+    """--teacher_row_cap: the advantage of a teacher row is at most cap nats (cap <= 0, the default: no limit); every other turn is
+    unchanged. Without a limit the group is balanced: the own turns of a group of n lose the teacher row's advantage in total, and
+    grpo_weights divides every advantage by n, so such a history weighs less than one with mixed own turns. A limit makes the
+    history mostly a push-down of the own turns."""
+    A = np.asarray(A, dtype=float); f = np.asarray(flags, dtype=bool)
+    if not len(A) or not f.any() or cap <= 0: return A
+    return np.where(f, np.minimum(A, cap), A)
+
+
+STALL_INFO = 1e-9   # --stall_cap: a look whose expected evidence is at most this shows nothing (a numerical zero)
+
+
+def look_info(B, a):
+    """--stall_cap: the evidence that look a is expected to bring at belief B: the expected drop of the entropy of the
+    answer in nats (the mutual information of the look's next observation and the answer). The teacher's own B.look_info
+    (mastermind, minesweeper, minigrid, frozenlake, sokoban); else from B.outcomes and B.post (tabletop); None when the belief
+    cannot say (the look then counts as one with evidence)."""
+    if hasattr(B, "look_info"): return float(B.look_info(a))
+    if hasattr(B, "outcomes") and hasattr(B, "post"):
+        h = lambda p: -sum(v * math.log(v) for v in p.values() if v > 0)
+        return max(0.0, h(B.post()) - sum(p * h(b.post()) for p, b in B.outcomes(a)))
+    return None
+
+
+def cap_stalls(logp, waste_lp, looks, cap, info):
+    """--stall_cap: a look that is neither one of the teacher's best looks (the highest log pi* among the looks, the
+    look value group its Boltzmann puts first) nor one with real expected evidence (info(a) above STALL_INFO) gets at most
+    best - cap, best being the highest log pi* of any action (the accept rule's reference); an action that is not legal (waste_lp)
+    too. A value is only lowered: the answers, the best looks, the looks with evidence and every value already below the line keep
+    theirs, and so does best. With cap above log(--accept) (3.0 nats at 20) such a step is rejected. info is called only for the
+    looks the cap would lower. Returns (logp, waste_lp, stall); stall = {"logp": the old values of the looks it lowered,
+    "waste_lp": the old waste_lp, or None when it is unchanged}."""
+    if cap <= 0 or not logp: return logp, waste_lp, None
+    line = max(logp.values()) - cap
+    top = max((logp[s] for s in looks.values() if s in logp), default=None)
+    out, old = dict(logp), {}
+    for a, s in looks.items():
+        v = logp.get(s)
+        if v is None or v <= line or v >= top: continue                # already below the line, or one of the best looks
+        x = info(a)
+        if x is None or x > STALL_INFO: continue                         # a look with real expected evidence (None: cannot say)
+        out[s] = line; old[s] = v
+    w = min(waste_lp, line)
+    return out, w, {"logp": old, "waste_lp": waste_lp if w < waste_lp else None}
+
+
+def capped_tgt(tgt, logp, stall):
+    """--stall_play: the teacher's own moves when it plays by the capped scores too: the probability of each look
+    that cap_stalls lowered is multiplied by exp(new - old), then the target is renormalized; every other move keeps its ratio to
+    the others. A look the cap left alone, an answer and the target's commit mass are not changed otherwise."""
+    st = (stall or {}).get("logp") or {}
+    if not st: return tgt
+    out = {s: p * math.exp(logp[s] - st[s]) if s in st else p for s, p in tgt.items()}
+    z = sum(out.values())
+    return {s: p / z for s, p in out.items()} if z > 0 else tgt
+
+
+def stall_rejected(A, plan, ratio, A_old):
+    """--stall_cap log: an own turn that the teacher rejects only because of the cap (its action's log pi* before the cap, A_old,
+    is accepted)."""
+    return not accepted(A, plan, ratio) and accepted(A_old, plan, ratio)
+
+
+def uncapped(plan):
+    """--stall_cap log: the plan with the values cap_stalls lowered put back (the plan itself when nothing was lowered)."""
+    st = plan.get("stall")
+    if not st or (not st["logp"] and st["waste_lp"] is None): return plan
+    return {**plan, "logp": {**plan["logp"], **st["logp"]}, "waste_lp": plan["waste_lp"] if st["waste_lp"] is None else st["waste_lp"]}
+
+
 def accepted(A, plan, ratio):
     """An own action with log pi* = A is one the teacher accepts: pi* gives it at least 1/ratio of the probability of its best action."""
     return A >= max(plan["logp"].values(), default=LOGP_FLOOR) - math.log(ratio)
 
 
-def turn_score(line_score, line_mix, S, W, Sd, A):
+def turn_score(line_score, line_mix, S, W, Sd, A, act=1):
     """The teacher's log-likelihood score of one turn (the critic's R, score_turn): the belief line's part by --line_score, then the
-    action's log pi* A. reader / exact: S + W; decision: S_dec + line_mix (S + W); none (Sd None): no line part."""
+    action's log pi* A. reader / exact: S + W; decision: S_dec + line_mix (S + W); none (Sd None): no line part. act 0 (--act_score 0,
+    the ablation without the action reward): R is the belief line's part only, no A."""
     line = S + W if line_score in ("reader", "exact") else Sd + line_mix * (S + W) if Sd is not None else 0.0
-    return line + A
+    return line + (A if act else 0.0)
 
 
 def grpo_advantages(R, acc=None, clip=20.0):
@@ -1607,7 +1899,7 @@ def block_counts(tok, it):
     between the lines under --dec_term own, a belief line --line_target masks), and is a decision token when it starts at or
     after it[3] (d0)."""
     span = it[2] if len(it) > 2 else None; d0 = it[3] if len(it) > 3 else None
-    sp_ = [] if span is None else (list(span) if span and isinstance(span[0], (tuple, list)) else [span])
+    sp_ = [] if not span else (list(span) if isinstance(span[0], (tuple, list)) else [span])   # an empty list = no span
     n = [0, 0]
     for a, b in tok(it[1], add_special_tokens=False, return_offsets_mapping=True)["offset_mapping"]:
         if any(a < e_ and b > s_ for s_, e_ in sp_): continue
@@ -1712,6 +2004,12 @@ def train(args):
     signal.signal(signal.SIGTERM, lambda *_: sys.exit(143))          # a plain exit runs atexit, which stops the vLLM server
     world, rank = int(os.environ.get("WORLD_SIZE", "1")), int(os.environ.get("RANK", "0")); lead = rank == 0; dist = None
     actor, learner = args.role == "actor", args.role == "learner"   # --role: the actor makes the batches, the learner fits them (--queue)
+    global NO_BELIEF_LINE; NO_BELIEF_LINE = bool(args.no_belief_line)   # on every rank, before a worker rank's job loop (turn_item)
+    assert not args.no_belief_line or (args.objective == "critic" and args.line_score == "none" and args.credit == "own" and not args.neg_answer
+                                       and not args.neg_thought and not args.teacher_row and args.readout <= 0 and args.act_pick <= 1
+                                       and args.line_target < 0 and args.em_more_joint <= 0 and not args.line_wide), \
+        ("--no_belief_line 1: the critic with --line_score none (no belief reward), --credit own, no --neg_answer / --neg_thought / --teacher_row / "
+         "--readout / --act_pick / --line_target / --em_more_joint / --line_wide (each reads or writes a belief line)")
     pp = score_settings(args)                                         # on every rank, before a worker rank's job loop
     assert not (actor or learner) or args.queue, "--role actor/learner: set --queue, the folder both processes share"
     assert not args.colocate or (args.phase_set and args.phase), "--colocate: with --phase_set and --phase (the GPUs switch at the phase ends)"
@@ -1724,6 +2022,10 @@ def train(args):
         "--neg_answer: the critic with --m_step blocks and --accept_only 1 (its histories are the ones accept_only leaves out)"
     assert args.neg_thought == 0 or (args.objective == "critic" and args.m_step == "blocks" and args.accept_only), \
         "--neg_thought: the critic with --m_step blocks and --accept_only 1"
+    assert args.act_score or (args.objective == "critic" and args.line_score != "none"), \
+        "--act_score 0: the critic with a scored belief line (--line_score not none), else R has no part left"
+    assert args.accept_rule or not (args.accept_only or args.set_keep or args.em_more or args.neg_answer or args.neg_thought or args.credit == "share"), \
+        "--accept_rule 0: no rule that reads the teacher's acceptance of the action (--accept_only 0, --set_keep 0, --em_more 0, --neg_answer 0, --neg_thought 0, --credit own)"
     assert args.line_target < 0 or (args.objective == "critic" and args.m_step == "blocks"), \
         "--line_target: the critic with --m_step blocks (the thought block has its own weights there)"
     assert args.update == "em" or (args.objective == "critic" and args.m_step == "blocks" and args.credit == "own" and args.neg_answer == 0
@@ -1936,7 +2238,7 @@ def train(args):
             seg = [range(off[h], off[h + 1]) for h in range(nh)]      # first for every history: no model work, the same on every rank
             R = [torch.tensor([rows_[i][5] for i in s], dtype=torch.float64) for s in seg]
             acc_h = [[bool(rows_[i][8]) if len(rows_[i]) > 8 else True for i in s] for s in seg]   # the teacher accepts the turn's action (score_turn)
-            ok_h = [[a and (okr is None or bool(okr[i])) for a, i in zip(a_, s)] for a_, s in zip(acc_h, seg)]   # correct: accepted, line_ok
+            ok_h = [[(a or not args.accept_rule) and (okr is None or bool(okr[i])) for a, i in zip(a_, s)] for a_, s in zip(acc_h, seg)]   # correct: accepted, line_ok (--accept_rule 0: line_ok only)
             n_tok = {}
             def nt(z):
                 if z not in n_tok: n_tok[z] = len(tok.encode(z, add_special_tokens=False))
@@ -1957,7 +2259,10 @@ def train(args):
                           "em_q_budget": float(np.mean([b[0] for b in bud])) if bud else 0.0, "em_q_correct": float(np.mean([b[1] for b in bud])) if bud else 0.0})
             gw = [None] * nh                                          # --update grpo: each own turn's weight (w stays the E-step's, for the logs)
             if grpo:                                                  # the same on every rank: every history's advantages, one batch factor
-                A_h = [grpo_advantages(r.numpy(), a_, args.grpo_clip) for r, a_ in zip(R, acc_h)]
+                A_h = [grpo_advantages(r.numpy(), a_ if args.accept_rule else None, args.grpo_clip)
+                       for r, a_ in zip(R, acc_h)]   # --accept_rule 0: no min(A, 0)
+                if any(teacher_row(r_) for r_ in rows_):               # --teacher_row: its advantage is limited (--teacher_row_cap)
+                    A_h = [cap_teacher_adv(a, [teacher_row(rows_[i]) for i in sg], getattr(args, "teacher_row_cap", 0.0)) for a, sg in zip(A_h, seg)]
                 gw, sc = grpo_weights(A_h, sum(1 for s in seg if len(s)), bool(args.grpo_norm))
                 adv = np.concatenate([a for a in A_h if len(a)]) if any(len(a) for a in A_h) else np.zeros(0)
                 MSTEP.update({"grpo_scale": sc,                       # the batch factor (--grpo_norm 1: RLVB (EM)'s total weight over the raw one)
@@ -2001,7 +2306,7 @@ def train(args):
             w = list(torch.softmax(lp2.sum(1).view(len(mine), K), 1).cpu().numpy()); lp2 = list(lp2.view(len(mine), K, 2))
         model.train(); opt.zero_grad()
         items_think, items_short, w_think, w_short = [], [], [], []
-        w_tt = [] if ltg is not None else None                       # --line_target: the thought block's own weights
+        w_tt = [] if (ltg is not None or any(teacher_row(r_) for r_ in rows_)) else None   # --line_target, --teacher_row: the thought block's own weights
         sw_lt = [0.0, 0.0]                                           # --line_target: the fitted weight, and its part on turns with a verified line
         for r, (j, k) in zip(sub_, pos):
             prompt, z, pre, anc, a = r[:5]
@@ -2024,6 +2329,7 @@ def train(args):
                     items_think.append((rt[0], cont, sp_, d0, mode) + ((ro,) if ro else ()))
                     w_think.append(float(wf) * (hw[mine[j]] if hw else 1.0))
                     if w_tt is not None:
+                        if teacher_row(ri): tf = 0.0                    # --teacher_row: the own thought before the teacher's lines is not trained
                         w_tt.append(w_think[-1] * tf)
                         if w_think[-1] > 0: sw_lt[0] += w_think[-1]; sw_lt[1] += w_tt[-1]
         if critic and args.neg_thought > 0 and neg:                    # --neg_thought: the thoughts of those answers, negative weight
@@ -2063,7 +2369,7 @@ def train(args):
                 t_ = torch.tensor([float(MSTEP[k]) for k in ("grpo_stop_t", "grpo_stop_d", "grpo_items")], device=model.device, dtype=torch.float64)
                 dist.all_reduce(t_); MSTEP.update(dict(zip(("grpo_stop_t", "grpo_stop_d", "grpo_items"), t_.tolist())))
             n_items = len(items_think); ln, p_neg = 0.0, []
-            if w_tt is not None:                                   # --line_target: the share of the fitted weight on turns with a verified line
+            if w_tt is not None and ltg is not None:               # --line_target: the share of the fitted weight on turns with a verified line (w_tt alone: --teacher_row)
                 sw = sw_lt                                         # (those turns train their thought and both lines; the others their action only)
                 if world > 1: t_ = torch.tensor(sw, device=model.device, dtype=torch.float64); dist.all_reduce(t_); sw = t_.tolist()
                 MSTEP["w_line_target"] = sw[1] / sw[0] if sw[0] > 0 else 0.0
@@ -2181,7 +2487,13 @@ def train(args):
             em_update(job["rows"], job["nh"], job["sizes"], job.get("snap", False), job.get("hw"), job.get("kappa", 0.0), job.get("lrw", 0.0), job.get("okr"), job.get("neg"), job.get("ltg"))
             for k in job["images"]: IMAGES.pop(k, None)
         dist.destroy_process_group(); return
-    rel = E.Reliability(args.kappa, args.ucb_z, fidelity=args.rho == "fidelity", value=args.value); planner = Planner(D, rel, args.tau, args.depth)
+    assert not args.rho_exact or args.rho == "fidelity", "--rho_exact 1 needs --rho fidelity (the table's prior is then the exact posterior U(b))"
+    assert not args.teacher_row or (args.objective == "critic" and args.update == "grpo" and args.credit == "own" and not args.neg_answer and not args.neg_thought), \
+        "--teacher_row 1: the critic with --update grpo and --credit own, without --neg_answer / --neg_thought (their histories get the teacher row)"
+    assert args.stall_cap <= 0 or args.stall_cap > math.log(args.accept), \
+        "--stall_cap: above log(--accept) (else a stalling step stays accepted)"
+    assert not args.stall_play or args.stall_cap > 0, "--stall_play 1 needs --stall_cap > 0 (the teacher plays by the capped scores)"
+    rel = E.Reliability(args.kappa, args.ucb_z, fidelity=args.rho == "fidelity", value=args.value); rel.frozen = bool(args.rho_exact); planner = Planner(D, rel, args.tau, args.depth, args.tau_look, args.tau_look_play, args.stall_cap, args.stall_play)
     if args.value != "accuracy" and D is not None:                 # a domain's own lookahead must compute the value it is asked for
         for d in getattr(D, "subs", [D]):
             assert args.value in getattr(d, "value_modes", ("accuracy",)), f"{type(d).__module__} has no --value {args.value}"
@@ -2211,6 +2523,10 @@ def train(args):
     if rank == 0: print(f"score: temperature {args.temperature}, top-p {args.top_p}, top-k {args.top_k}, presence penalty {pp} "
                         f"(the sampler's PL_PRESENCE_PENALTY: {os.environ.get('PL_PRESENCE_PENALTY') or 0}; --score_presence {args.score_presence})", flush=True)
     global CARRY, EXACT_LINE; CARRY = args.carry; EXACT_LINE = args.line_score in ("exact", "decision")
+    import plearn.tasks as _tasks                                       # the teachers' switches: the module text
+    _tasks.FL_VIEW_VALUE = bool(args.fl_view_value)                     # --fl_view_value: the module text
+    _tasks.SK_GUESS_VALUE = bool(args.sk_guess_value)                   # --sk_guess_value: the module text
+    _tasks.PLAN_PAST_LIMIT = bool(args.plan_past_limit)                 # --plan_past_limit: the module text
     assert args.line_score != "decision" or D is None or all(hasattr(d, "line_belief") for d in getattr(D, "subs", [D])), \
         "--line_score decision: every teacher reads a belief line as a belief (line_belief)"
     assert not args.line_wide or (args.line_score != "none" and (D is None or all(hasattr(d, "line_excess") or not hasattr(d, "belief_score")
@@ -2241,7 +2557,7 @@ def train(args):
     if args.eval_domain_args: eargs.update(json.loads(args.eval_domain_args))   # the evaluation domain only (for example, a benchmark's rubric)
     if not learner:                                                   # --role learner: the actor evaluates
         D_eval = importlib.import_module(args.domain).Domain(**eargs)
-        P_eval = Planner(D_eval, rel, args.tau, args.depth)
+        P_eval = Planner(D_eval, rel, args.tau, args.depth, args.tau_look, args.tau_look_play)
         def collect_held(P_held):
             if hasattr(D_eval, "families"):
                 for i, fam in enumerate(D_eval.families):
@@ -2254,7 +2570,7 @@ def train(args):
             # speed: the held-out histories (first read at the first evaluation) are made beside the first set,
             # by a planner on a copy of the table as it is now: the same histories as before the set (a few minutes less)
             import concurrent.futures as _cfh
-            held_fut = _cfh.ThreadPoolExecutor(1).submit(collect_held, Planner(D_eval, copy.deepcopy(rel), args.tau, args.depth))
+            held_fut = _cfh.ThreadPoolExecutor(1).submit(collect_held, Planner(D_eval, copy.deepcopy(rel), args.tau, args.depth, args.tau_look, args.tau_look_play))
         else:
             collect_held(P_eval)
 
@@ -2264,6 +2580,7 @@ def train(args):
         return [r[0] for r in sampler.sample(prompts, 1, max_think or args.max_think, stop_think=True, priority=priority)]
 
     def anchors(pres, priority=1):
+        if NO_BELIEF_LINE: return [""] * len(pres)                    # --no_belief_line: no belief line is sampled
         return [first_line(t) for (t, _), in [r for r in sampler.sample(pres, 1, args.max_anchor, stop_think=False, priority=priority)]]
 
     # ---- the model acting on real episodes (training rollouts and evaluation)
@@ -2308,7 +2625,7 @@ def train(args):
         prompts = [turn_prompt(Dm, tok, e) for e in eps]                 # use the plan; one lookahead at a time: its GPU work tensors)
         zs = own_thoughts(prompts, greedy, priority=0)                   # the episodes' turns go first (each waits for the one before)
         pres = [p + z + CLOSE for p, (z, _) in zip(prompts, zs)]
-        anc = anchors(pres, priority=0); pre_act = [p + a + TERM for p, a in zip(pres, anc)]
+        anc = anchors(pres, priority=0); pre_act = [after_line(p, a) for p, a in zip(pres, anc)]
         n_pick = args.act_pick if args.act_pick > 1 and READOUT.get("head") is not None else 1
         cands = [[first_line(t) for t, _ in cs] for cs in sampler.sample(pre_act, n_pick, args.max_action, stop_think=False, priority=0)]
         plans = fut.result()
@@ -2344,9 +2661,9 @@ def train(args):
         prompts = [turn_prompt(Dm, tok, e) for e in eps]; K, M = args.em_k, args.em_m; KM = K * M
         cands = sampler.sample(prompts, K, args.max_think, stop_think=True)
         zs = [z for cand in cands for z, _ in cand]; pres = [p + z + CLOSE for p, cand in zip(prompts, cands) for z, _ in cand]
-        bs = [first_line(t) for cs in sampler.sample(pres, M, args.max_anchor, stop_think=False) for t, _ in cs]
+        bs = [""] * (len(pres) * M) if NO_BELIEF_LINE else [first_line(t) for cs in sampler.sample(pres, M, args.max_anchor, stop_think=False) for t, _ in cs]
         pres = [p for p in pres for _ in range(M)]
-        us = [first_line(t) for (t, _), in sampler.sample([p + b + TERM for p, b in zip(pres, bs)], 1, args.max_action, stop_think=False)]
+        us = [first_line(t) for (t, _), in sampler.sample([after_line(p, b) for p, b in zip(pres, bs)], 1, args.max_action, stop_think=False)]
         bs, us = [list(x) for x in zip(*[ordered(b, u) for b, u in zip(bs, us)])]          # the two lines as the test reads them
         recs = []
         for i, (e, pl, p) in enumerate(zip(eps, plans, prompts)):
@@ -2380,7 +2697,7 @@ def train(args):
                 else:
                     e.t += 1; e.invalid = getattr(e, "invalid", 0) + 1      # an action the environment cannot carry out
                 if getattr(e, "lab", None) is not None:           # a domain that also runs the benchmark's own episode: it decides the state and the score
-                    th = r.get("thought") or ""; rep = f"{r['anchor']}\n{r['action']}"
+                    th = r.get("thought") or ""; rep = r["action"] if NO_BELIEF_LINE else f"{r['anchor']}\n{r['action']}"
                     Dm.bench_turn(e, th, rep, len(tok.encode(th + CLOSE + rep, add_special_tokens=False)))
                 if hasattr(Dm, "after_turn"): Dm.after_turn(e)    # a domain with its own turn limit for each episode
 
@@ -2415,10 +2732,11 @@ def train(args):
         the scores."""
         cands = sampler.sample([p for p, _ in hist_], K, args.max_think, stop_think=True, adapter=own)
         zs = [(h, z, st) for h, cand in enumerate(cands) for z, st in cand for _ in range(M)]   # st: the thought ended by itself
-        bs = [first_line(t) for cs in sampler.sample([hist_[h][0] + z + CLOSE for h, z, _ in zs[::M]], M, args.max_anchor,
-                                                     stop_think=False, adapter=own) for t, _ in cs]
+        bs = [""] * len(zs) if NO_BELIEF_LINE else \
+            [first_line(t) for cs in sampler.sample([hist_[h][0] + z + CLOSE for h, z, _ in zs[::M]], M, args.max_anchor,
+                                                    stop_think=False, adapter=own) for t, _ in cs]   # --no_belief_line: no line
         pres = [hist_[h][0] + z + CLOSE for h, z, _ in zs]
-        us = [first_line(t) for (t, _), in sampler.sample([p + b + TERM for p, b in zip(pres, bs)], 1, args.max_action, stop_think=False, adapter=own)]
+        us = [first_line(t) for (t, _), in sampler.sample([after_line(p, b) for p, b in zip(pres, bs)], 1, args.max_action, stop_think=False, adapter=own)]
         rows, crit = [[] for _ in hist_], [[] for _ in hist_]
         for (h, z, st), pre, b, u in zip(zs, pres, bs, us):
             r, c = score_turn(hist_[h][0], hist_[h][1], z, st, pre, b, u); rows[h].append(r); crit[h].append(c)
@@ -2436,10 +2754,11 @@ def train(args):
             if k_ not in dec: dec[k_] = decision_score(D, planner, pl, bo)
             Sd = dec[k_]
         W = line_wide(D, bo, pl, args.line_floor) if args.line_wide else 0.0   # --line_wide: the options the exact line excludes
-        R = turn_score(args.line_score, args.line_mix, S, W, Sd, A)    # the teacher's log-likelihood of the turn
+        R = turn_score(args.line_score, args.line_mix, S, W, Sd, A, args.act_score)   # the teacher's log-likelihood of the turn (--act_score 0: no A)
         slots = D.slot_scores(pl["B"], bo, args.line_floor) if hasattr(D, "slot_scores") and args.line_score in ("exact", "decision") and bo == b else None   # the line's statements, scored apart (logged)
         c = {"S": S, "S_teacher": St, "S_dec": Sd, "W": W, "V": V, "V_best": Vmax, "A": A, "R": R, "exact": bool(D.read_exact(bo)) if hasattr(D, "read_exact") else None, "slots": slots,
              "read": D.reading(pl["B"], bo, pl.get("truth")) if hasattr(D, "reading") else None}   # the line against the pictures (tabletop)
+        if "stall" in pl: c["stall"] = stall_rejected(A, pl, args.accept, action_logp(D, uo, uncapped(pl)))   # --stall_cap: rejected by the cap alone (logged)
         ro = {"U": float(pl["B"].U()), "identified": bool(pl["B"].identified()), "act_lp": float(A)} if args.readout > 0 else None   # --readout: the exact targets
         return (prompt, z, pre, b, u, R, st, ro, accepted(A, pl, args.accept)), c    # the model's own lines in its own order are trained
 
@@ -2475,9 +2794,10 @@ def train(args):
             if r_ and any(good_turn(c, pl) for c in crit): break
             cand = sampler.sample([prompt], K, args.max_think, stop_think=True, adapter=own)[0]
             pres1 = [prompt + z + CLOSE for z, _ in cand]
-            bl = sampler.sample(pres1, M, args.max_anchor, stop_think=False, adapter=own)
-            zs = [(z, st) for z, st in cand for _ in range(M)]; bs = [first_line(t) for cs in bl for t, _ in cs]; pres = [p_ for p_ in pres1 for _ in range(M)]
-            us = [first_line(t) for (t, _), in sampler.sample([p_ + b + TERM for p_, b in zip(pres, bs)], 1, args.max_action, stop_think=False, adapter=own)]
+            zs = [(z, st) for z, st in cand for _ in range(M)]; pres = [p_ for p_ in pres1 for _ in range(M)]
+            if NO_BELIEF_LINE: bs = [""] * len(zs)                    # --no_belief_line: M actions after each thought, no line
+            else: bs = [first_line(t) for cs in sampler.sample(pres1, M, args.max_anchor, stop_think=False, adapter=own) for t, _ in cs]
+            us = [first_line(t) for (t, _), in sampler.sample([after_line(p_, b) for p_, b in zip(pres, bs)], 1, args.max_action, stop_think=False, adapter=own)]
             for (z, st), pre, b, u in zip(zs, pres, bs, us):
                 r, c = score_turn(prompt, pl, z, st, pre, b, u); rows.append(r); crit.append(c)
         return rows, crit
@@ -2505,7 +2825,7 @@ def train(args):
             reg = [belief_best(D_eval, pl["B"], pl) - belief_score(D_eval, pl["B"], a, pl) for a, pl in zip(anc, plans)]
             m.update({"belief_ok": statistics.fmean(r_ <= 1e-6 for r_ in reg), "belief_regret": statistics.fmean(reg)})
         if held_rel and all(hasattr(teacher_of(D_eval, pl), "line_belief") for pl in plans):   # the line by the act it implies
-            P_dec = Planner(D_eval, held_rel[0], args.tau, args.depth)
+            P_dec = Planner(D_eval, held_rel[0], args.tau, args.depth, args.tau_look, args.tau_look_play)
             dr = [decision_regret(D_eval, P_dec, pl, a) for a, pl in zip(anc, plans)]
             m.update({"decision_ok": statistics.fmean(r_ <= 1e-6 for r_ in dr), "decision_regret": statistics.fmean(dr)})
         if hasattr(D_eval, "family_of"):                 # per-family reading metrics for mixed training distributions
@@ -2550,12 +2870,12 @@ def train(args):
         # how far the model has moved from the base model, on its own sampled thoughts and belief lines: the mean NLL per token
         # (an entropy estimate) and the mean of log pi - log pi_0 per token (a KL(pi || pi_0) estimate); no forced </think>
         if model is not None:                                       # --role actor: no trainer model, no token log-probabilities
-            pairs = [(p, z + CLOSE + a + TERM, None if st else (len(z), len(z) + len(CLOSE)), len(z) + len(CLOSE)) for (p, _), (z, st), a in zip(held, zs_s, anc_s)]
+            pairs = [(p, z + CLOSE + ("" if NO_BELIEF_LINE else a + TERM), None if st else (len(z), len(z) + len(CLOSE)), len(z) + len(CLOSE)) for (p, _), (z, st), a in zip(held, zs_s, anc_s)]
             lp = dist_eval_score(pairs, per_token=True); lp0 = dist_eval_score(pairs, per_token=True, base=True)
             n = max(1, sum(len(x) for x in lp))
             out.update({"tok_nll": -sum(x.sum().item() for x in lp) / n, "tok_kl_base": sum((x - y).sum().item() for x, y in zip(lp, lp0)) / n})
         if args.policy_metrics and model is not None:               # the model's policy over every legal string (slow when there are hundreds)
-            pol = restricted_policy(model, tok, [p + a + TERM for p, a in zip(pres, anc)], [pl["legal"] for pl in plans], args.score_chunk)
+            pol = restricted_policy(model, tok, [after_line(p, a) for p, a in zip(pres, anc)], [pl["legal"] for pl in plans], args.score_chunk)
             act_ok, kl = [], []
             for pl, pi in zip(plans, pol):
                 legal = pl["legal"]; best = legal[int(np.argmax(pi))]; tstar = max(pl["tgt"], key=pl["tgt"].get)
@@ -2633,7 +2953,7 @@ def train(args):
         # warm-up histories do not depend on the model: a second environment session plays the next batch while this one
         # trains (in a simulator the weighings, not the GPUs, set the pace)
         import concurrent.futures as cf
-        D2 = Dmod.Domain(**dargs); P2 = Planner(D2, rel, args.tau, args.depth)
+        D2 = Dmod.Domain(**dargs); P2 = Planner(D2, rel, args.tau, args.depth, args.tau_look, args.tau_look_play, args.stall_cap, args.stall_play)
         rng2, nrng2 = random.Random(args.seed + 7), np.random.default_rng(args.seed + 7)
         def specs2():
             while True: yield D2.sample(rng2)
@@ -2730,22 +3050,27 @@ def train(args):
                     miss = [h for h in range(len(hist)) if not ok(h)]
                     if not miss: break
                     for h, r, c in zip(miss, *own_turns([hist[h] for h in miss], K, M, own)): rows_h[h] += r; crit_h[h] += c
+            n_trow = add_teacher_rows(rows_h, crit_h, [pl for _, pl in hist], args.accept,   # --teacher_row 1: the teacher's line and action
+                                      lambda r0, pl, b, u: score_turn(r0[0], pl, r0[1], r0[6], r0[2], b, u)) if args.teacher_row else 0   # join a group with no accepted own turn
             why = [no_target(crit_h[h], hist[h][1], args.accept, args.line_floor if args.line_score != "none" else None)
                    if args.accept_only else None for h in range(len(hist))]
             left = {h for h in range(len(hist)) if args.em_more and args.leave_out and not ok(h)} | {h for h, y in enumerate(why) if y}
             # no estimate of q there: no M-step (--leave_out 0: a history that is not covered is fitted with its accepted turns;
             # --accept_only: one with no accepted turn, or whose accepted lines all have none of the posterior, gets no weight; the
             # dump keeps it)
-            more = {"em_more_hist": sum(len(r) > KM for r in rows_h), "em_left_out": len(left),
+            more = {"em_more_hist": sum(own_rows(r) > KM for r in rows_h), "em_left_out": len(left), "teacher_rows": n_trow,
                     "em_no_accept": why.count("no_accept"), "em_wrong_line": why.count("wrong_line"),
                     "em_accepted_0": statistics.fmean(any(accepted(c["A"], pl, args.accept) for c in ch[:KM]) for ch, (_, pl) in zip(crit_h, hist)),
-                    "em_joint_0": statistics.fmean(any(accepted(c["A"], pl, args.accept) and c["S"] >= c["S_teacher"] - 1.0 for c in ch[:KM]) for ch, (_, pl) in zip(crit_h, hist))}
+                    "em_joint_0": statistics.fmean(any(accepted(c["A"], pl, args.accept) and c["S"] >= c["S_teacher"] - 1.0 for c in ch[:KM]) for ch, (_, pl) in zip(crit_h, hist)),
+                    **look_stats([pl for _, pl in hist], args.accept)}
+            if args.stall_cap > 0: more["stall_rejected"] = statistics.fmean([c.get("stall", False) for ch in crit_h for c in ch if not c.get("teacher")] or [0.0])   # --stall_cap: own turns rejected by the cap alone
             sizes = [0 if h in left else len(r) for h, r in enumerate(rows_h)]
-            rows_ = [x for h, r in enumerate(rows_h) if h not in left for x in r]; crit = [c for ch in crit_h for c in ch]
+            rows_ = [x for h, r in enumerate(rows_h) if h not in left for x in r]; crit = [c for ch in crit_h for c in ch if not c.get("teacher")]   # the logged means: own turns (--teacher_row: its turn is not one)
             if cells is not None:                      # --rho_rb: each own answer turn of the E-step, b(y) / U(b), into its history's cell
                 for h, rr in enumerate(rows_h):
                     B = hist[h][1]["B"]
                     for row in rr:
+                        if teacher_row(row): continue                    # the table measures the agent's answers only
                         y = answer_text(ordered(row[3], row[4])[1])      # the action line as the test reads it
                         if y is not None: cells.setdefault((hkey[h], B.cls()), []).append(ratio(D, B, y))
                 fields, rho_before, rho_after = rho_commit(cells); more.update(fields)
@@ -2835,7 +3160,7 @@ def train(args):
                 em.update({f"estep_read_{k}": fm([sum(r["kind"] == k for r in rs) / len(rs) for rs in rd]) for k in kinds})   # reads
                 em.update({"estep_read_no_exact": fm([not any(r["kind"] == "exact" for r in rs) for rs in rd]), "estep_read_hist": len(rd)})   # exactly
             if M > 1:                                                  # how many thoughts share the weight
-                em["em_ess_think"] = fm([1.0 / (w[h].reshape(-1, M).sum(1) ** 2).sum() for h in fit])
+                em["em_ess_think"] = fm([1.0 / (own_w(w[h], rows_h[h], M).reshape(-1, M).sum(1) ** 2).sum() for h in fit])
         else:
             em["em_target_ll"] = fm([lp2[h].sum(1).max() for h in fit])
         try: em.update(monitor_train_metrics(crit_h if crit else None, rows_h, w, fit, decs if args.episodes else None, eps if args.episodes else None))
@@ -2854,9 +3179,12 @@ def train(args):
     def save_lora(step, with_opt=True):
         if args.save:                                   # every evaluated step is kept, so any point of the curve can be re-evaluated
             sd = {k: v.detach().cpu() for k, v in model.named_parameters() if v.requires_grad}
-            torch.save(sd, os.path.join(args.out, f"{tag}-lora.pt")); torch.save(sd, os.path.join(args.out, f"{tag}-lora-{step}.pt"))
-            if opt is not None and with_opt: torch.save(opt.state_dict(), os.path.join(args.out, f"{tag}-opt-{step}.pt"))   # for --resume_step
-            if READOUT.get("head") is not None: torch.save(READOUT["head"].state_dict(), os.path.join(args.out, f"{tag}-readout-{step}.pt"))
+            def put(obj, name):                         # write, then rename (several ranks of a node write the same file;
+                f = os.path.join(args.out, name); t = f"{f}.{os.getpid()}.tmp"   # a reader or a stop never sees half a file)
+                torch.save(obj, t); os.replace(t, f)
+            put(sd, f"{tag}-lora.pt"); put(sd, f"{tag}-lora-{step}.pt")
+            if opt is not None and with_opt: put(opt.state_dict(), f"{tag}-opt-{step}.pt")   # for --resume_step
+            if READOUT.get("head") is not None: put(READOUT["head"].state_dict(), f"{tag}-readout-{step}.pt")
 
     # ---- --role actor / learner: two processes that share the folder --queue (batches, adapters, evaluations, progress)
     Q = args.queue
@@ -2916,11 +3244,12 @@ def train(args):
             from plearn.models.sampler import prompt_key
             pick = lambda xs: [xs[i] for i in idx]
             hist, sizes, rows_h = pick(s["hist"]), pick(s["sizes"]), pick(s["rows_h"]); crit_h = pick(s["crit_h"]) if s.get("crit_h") else None
-            more = {**(s["more"] if first else {}), "em_more_hist": sum(len(r) > s["KM"] for r in rows_h), "em_left_out": sum(z == 0 for z in sizes),
+            more = {**(s["more"] if first else {}), "em_more_hist": sum(own_rows(r) > s["KM"] for r in rows_h), "em_left_out": sum(z == 0 for z in sizes),
+                    "teacher_rows": sum(any(teacher_row(x) for x in r) for r in rows_h),   # --teacher_row: the histories of this batch with a teacher row
                     "set_size": len(s["hist"]), "set_new": int(first)}
             keys = {prompt_key(p) for p, _ in hist}
             return {**s, "hist": hist, "hkey": pick(s["hkey"]), "sizes": sizes, "rows_h": rows_h, "crit_h": crit_h,
-                    "rows_": [x for r, z in zip(rows_h, sizes) if z for x in r], "crit": [c for ch in crit_h for c in ch] if crit_h else s["crit"],
+                    "rows_": [x for r, z in zip(rows_h, sizes) if z for x in r], "crit": [c for ch in crit_h for c in ch if not c.get("teacher")] if crit_h else s["crit"],   # --teacher_row: own turns only
                     "more": more, "roll": s["roll"] if first else {}, "cells": s["cells"] if first else None,
                     "rho_tables": s["rho_tables"] if first else None, "agent_only": s["agent_only"] if first else {},
                     "imgs": {k: v for k, v in s["imgs"].items() if k in keys}, "gen_sec": s["gen_sec"] if first else 0.0}
@@ -2943,6 +3272,7 @@ def train(args):
                             "think_cost", "length_reward", "length_budget", "em_j", "kl_stop", "kl_probe", "kl_log", "lora_all_linear", "score_presence", "line_target",
                             "update", "grpo_clip", "grpo_eps", "grpo_norm", "attn"}   # run and speed only (lora_all_linear: LoRA B = 0 at the start, so the first set's policy is the same), and the learner's E-step weights, M-step
                                                                        # draws and step limit (no sample depends on them); --update grpo: the same sets as em, its weights the learner's
+                    free.add("teacher_row_cap")                       # --teacher_row_cap: the learner's weights only, as grpo_clip
                     mine = vars(args)
                     for k, v in meta["args"].items():
                         if k.startswith("wandb_") or k in free: continue
@@ -2950,6 +3280,20 @@ def train(args):
                     da = lambda s: {k: v for k, v in json.loads(s).items() if k != "bridges"}
                     assert da(args.domain_args) == da(meta["args"]["domain_args"]), "PL_SET_FROM: --domain_args differ (bridges aside)"
                     assert meta["args"].get("set_keep", 0) == args.set_keep, "PL_SET_FROM: the saved set has another --set_keep"
+                    assert (meta["args"].get("teacher_row", 0), meta["args"].get("rho_exact", 0)) == (args.teacher_row, args.rho_exact), \
+                        "PL_SET_FROM: the saved set has another --teacher_row or --rho_exact (a set saved before these switches has neither)"
+                    assert (float(meta["args"].get("stall_cap", 0.0)), int(meta["args"].get("stall_play", 0))) == (args.stall_cap, args.stall_play), \
+                        "PL_SET_FROM: the saved set has another --stall_cap or --stall_play (its plans hold the capped scores, and stall_play the teacher's moves; a set saved before them: 0)"
+                    assert (meta["args"].get("tau_look", 0.0), meta["args"].get("tau_look_play", 0)) == (args.tau_look, args.tau_look_play), \
+                        "PL_SET_FROM: the saved set has another --tau_look / --tau_look_play (its batches hold the own turns' scores and accepts; a set.json without them: 0)"
+                    assert not any(getattr(d, "name", None) == "frozenlake" for d in getattr(D, "subs", [D])) or meta["args"].get("fl_view_value", 1) == args.fl_view_value, \
+                        "PL_SET_FROM: the saved set's FrozenLake teacher has another --fl_view_value (a set made before the fix: 1; the module text)"
+                    assert not any(getattr(d, "name", None) == "sokoban" for d in getattr(D, "subs", [D])) or meta["args"].get("sk_guess_value", 1) == args.sk_guess_value, \
+                        "PL_SET_FROM: the saved set's Sokoban teacher has another --sk_guess_value (a set made before the fix: 1; the module text)"
+                    assert not any(getattr(d, "name", None) in ("minigrid", "minesweeper", "tabletop", "roboquest", "roboquest_img") for d in getattr(D, "subs", [D])) or meta["args"].get("plan_past_limit", 1) == args.plan_past_limit, \
+                        "PL_SET_FROM: the saved set's MiniGrid / MineSweeper / TableTop / RoboQuest teacher has another --plan_past_limit (a set made before the fix: 1; the module text)"
+                    assert int(meta["args"].get("no_belief_line", 0)) == args.no_belief_line, \
+                        "PL_SET_FROM: the saved set has another --no_belief_line (its prompts and own turns have or lack the belief line; a set saved before it: 0)"
                     for k, v in meta["env"].items():
                         assert os.environ.get(k) == v, f"PL_SET_FROM: {k}={os.environ.get(k)!r}, the saved set's {v!r}"
                     assert all(os.path.exists(os.path.join(set_from, f"batch_{u}.pkl")) for u in range(step, end + 1)), "PL_SET_FROM: a batch is missing"
@@ -3032,6 +3376,9 @@ def train(args):
         os.makedirs(Q, exist_ok=True); t_prev = time.time(); logged = {r["step"] for r in old_rows if "eval" in r}
         SAVE_STEPS = int(os.environ.get("PL_SAVE_STEPS") or 25)      # an adapter every 25 updates, not every update
         assert SAVE_STEPS >= 1, "PL_SAVE_STEPS must be >= 1"
+        KEEP_LAST = int(os.environ.get("PL_KEEP_LAST", "2"))           # + the full state of the last 2 updates
+        assert KEEP_LAST >= 0, "PL_KEEP_LAST must be >= 0 (0 = the old saves only)"
+        def kept_step(n): return n % args.eval_every == 0 or n % SAVE_STEPS == 0 or n == args.steps   # never removed by keep_last_saves
         if os.environ.get("PL_SAVE_EVERY"):                            # the old flag (an adapter every update) is not read
             print(f"PL_SAVE_EVERY={os.environ['PL_SAVE_EVERY']} IGNORED: adapters every PL_SAVE_STEPS={SAVE_STEPS} updates "
                   f"(+ every --eval_every={args.eval_every} with the optimizer state)", flush=True)
@@ -3083,8 +3430,11 @@ def train(args):
                     from plearn.models.sampler import IMAGES
                     for k in imgs: IMAGES.pop(k, None)
             t_prev = time.time()
-            if step % args.eval_every == 0 or step == args.steps: save_lora(step)
+            if step % args.eval_every == 0 or step == args.steps or KEEP_LAST: save_lora(step)   # PL_KEEP_LAST > 0 = the full state every update
             elif step % SAVE_STEPS == 0: save_lora(step, with_opt=False)   # one adapter every 25 updates (PL_SAVE_STEPS)
+            if KEEP_LAST and args.save:                                     # only the last KEEP_LAST of those stay (+ the kept steps)
+                gone = keep_last_saves(args.out, tag, step, KEEP_LAST, kept_step)
+                if gone and lead: print(f"KEEP LAST {KEEP_LAST}: removed the saves of updates {gone}", flush=True)
             if lead: keep_batch(q_path(f"batch_{step}.pkl"), args.dump_em, step, log)   # rank 0 only: every rank has read the batch (the
                                                                        # update's collectives); another rank's delete would race the move
             if args.colocate and (phase and step % phase == 0 or step == args.steps):   # the phase is trained and its adapter written:
@@ -3153,6 +3503,10 @@ if __name__ == "__main__":
     ap.add_argument("--weight_decay", type=float, default=0.0,
                     help="AdamW's weight decay of the LoRA (0: none; plearn/train.py METHOD: one LoRA adapter for every method, lr 1e-5 and weight decay 0.01)")
     ap.add_argument("--mix", type=float, default=0.5); ap.add_argument("--tau", type=float, default=0.02); ap.add_argument("--depth", type=int, default=2)
+    ap.add_argument("--tau_look", type=float, default=0.0, help="the temperature of pi*'s Boltzmann among the looks only (0: --tau); "
+                    "answer-or-look, the stop rule and the answers keep --tau; a domain with look_scale = False (mastermind) keeps --tau")
+    ap.add_argument("--tau_look_play", type=int, default=0, choices=[0, 1], help="1: the teacher's played moves (plan tgt) use --tau_look "
+                    "too (other histories); 0: only the scores of own turns and the accept rule")
     ap.add_argument("--kappa", type=float, default=4.0); ap.add_argument("--ucb_z", type=float, default=1.0)
     ap.add_argument("--rho", choices=["class", "fidelity"], default="class")   # the answer accuracy: per class, or U(b) * fidelity
     ap.add_argument("--role", choices=("both", "actor", "learner"), default="both",
@@ -3195,6 +3549,14 @@ if __name__ == "__main__":
                     help="critic: own (a decision's weight on its own thought) or share (each accepted own decision's weight over the K own "
                          "thoughts in proportion to pi_k(d | h, z_j), the balance-heuristic estimate)")
     ap.add_argument("--share_max", type=int, default=8, help="--credit share: at most this many distinct accepted own decisions per history, the highest R")
+    ap.add_argument("--act_score", type=int, choices=(0, 1), default=1,
+                    help="critic: 1 = the turn score R has the action's log pi* (the method); 0 = R is the belief line's part only (the "
+                         "ablation without the action reward; needs a scored line, and --accept_rule 0 to close the acceptance rule too)")
+    ap.add_argument("--accept_rule", type=int, choices=(0, 1), default=1,
+                    help="critic: 1 = the teacher's acceptance of the action counts (--update grpo: a rejected turn never gets a positive "
+                         "advantage; --length_reward: a correct turn has an accepted action); 0 = it does not count anywhere (the ablation "
+                         "without the action reward: the acceptance rule would give an action reward by another way); needs "
+                         "--accept_only 0, --set_keep 0, --em_more 0")
     ap.add_argument("--accept", type=float, default=20.0, help="critic: the teacher accepts an action with at least 1/A of its best action's probability")
     ap.add_argument("--leave_out", type=int, default=1,
                     help="critic, with --em_more: 1 = a history whose own turns never meet the rule after the more rounds is left out of the "
@@ -3257,6 +3619,19 @@ if __name__ == "__main__":
                     help="critic: the line's log score also costs --line_floor times the share of the line's options that "
                          "the teacher's exact line excludes, so a line too wide pays as a line too narrow (line_wide)")
     ap.add_argument("--carry", action="store_true", help="the agent's own belief line of its last turn enters its next prompt")
+    ap.add_argument("--no_belief_line", type=int, choices=(0, 1), default=0,
+                    help="1 (24 Nov 2026, the user): no belief line at all: the action-only rules (plearn/tasks/domain.py "
+                         "action_only, the one-line turn of the tests), no carried line (--carry has no effect), and each own turn is the thought, </think> and the action line "
+                         "(M actions after each thought). Needs --line_score none (no belief reward). 0: no change")
+    ap.add_argument("--fl_view_value", type=int, default=0,
+                    help="1: FrozenLake's teacher values a move by the view it opens, scored as an answer, as before the fix (with the goal "
+                         "known, a walk to fog is worth as much as reaching the goal: the module text); 0 (the fix): by the return it leads to")
+    ap.add_argument("--sk_guess_value", type=int, default=0,
+                    help="1: Sokoban's teacher values heading for a target as a guess among the candidates, as before the fix (pushes "
+                         "undervalued: the module text); 0 (the fix): a move by the return it leads to, an exact expectimax to the game's end")
+    ap.add_argument("--plan_past_limit", type=int, default=0,
+                    help="1: the MiniGrid and MineSweeper lookaheads also value plans that end after the game's action limit, as before "
+                         "the fix (the module text); 0 (the fix): a plan must end within the limit, with a turn left to answer")
     ap.add_argument("--proposal", choices=("base", "policy"), default="base",
                     help="critic: the prior that gives the samples, the base model (q ~ pi_0 exp(R / alpha)) or the current model (--phase 1)")
     ap.add_argument("--phase", type=int, default=0,
@@ -3315,6 +3690,30 @@ if __name__ == "__main__":
                     help="critic, with --length_reward: 0 (default) the term over all own turns as Kimi k1.5; B > 0: a correct turn "
                          "whose thought fits B tokens gets no length term and one over B a penalty up to -0.5 (the term only "
                          "where the test would cut the thought; one rule for every model; B = the test budget, 8192)")
+    ap.add_argument("--rho_exact", type=int, choices=(0, 1), default=0,
+                    help="1 (needs --rho fidelity): the answer accuracy of the teacher is the exact posterior U(b) for the whole "
+                         "run; the table measured from the agent's own answers keeps its prior (no update, no --rho_rb cell, no table "
+                         "read on a resume). 0 (default): the table is updated as before")
+    ap.add_argument("--teacher_row", type=int, choices=(0, 1), default=0,
+                    help="critic, 1: at a history where no own turn takes an action the teacher accepts, the teacher's exact "
+                         "belief line and its most likely action are added to the group as one more turn, after the history's first own "
+                         "thought; the history is kept, and that turn trains its two lines only (the thought's weight is 0). Needs --update grpo, "
+                         "--credit own, no --neg_answer / --neg_thought. 0 (default): "
+                         "such a history is left out as before")
+    ap.add_argument("--teacher_row_cap", type=float, default=0.0,
+                    help="--teacher_row 1, --update grpo: the largest advantage of the teacher's turn in nats (0, the default: no limit, "
+                         "so the own turns of the group lose in total what the teacher's turn gains)")
+    ap.add_argument("--stall_cap", type=float, default=0.0,
+                    help="critic, C > 0 (above log(--accept)): a look that is neither one of the "
+                         "teacher's best looks nor one with real expected evidence (some outcome of it changes the posterior of the answer: "
+                         "Planner look_info) gets a log pi* of at most the best action's minus C, and so does an action that is not legal; "
+                         "such a step is then rejected (MineSweeper: a cursor move off the way to the best cell; MiniGrid: turning on the "
+                         "spot). A value is only lowered. Log: stall_rejected. 0 (default): off, the scores as before")
+    ap.add_argument("--stall_play", type=int, choices=(0, 1), default=0,
+                    help="1 (needs --stall_cap): the teacher's own moves (plan tgt: its moves in the training games, "
+                         "--beta_expert) come from the capped scores too: a look the cap lowered keeps exp(new - old) of its probability "
+                         "(capped_tgt). At tau 0.1 the teacher otherwise draws a move the cap rejects at about a third of its steps in "
+                         "MineSweeper, MiniGrid, FrozenLake and Sokoban (offline check). 0 (default): its moves as before")
     ap.add_argument("--length_reward", default="",
                     help="critic: C, a comma list by phase like --think_cost: the E-step's R of each own turn gets C times its length term "
                          "(length_reward, Kimi k1.5's form over the history's own turns: the shorter correct thought gets more, a wrong "

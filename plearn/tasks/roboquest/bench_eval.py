@@ -62,6 +62,11 @@ def decode(images):
 
 
 class Episode:
+    # final_submit (off by default; --task_args roboquest.final_submit=1): an episode that has used its T + 2 decisions
+    # without a SUBMIT gets one more turn, whose prompt says that only SUBMIT is left (last_call). Without a SUBMIT in that turn
+    # the episode ends as before (no_answer). Nothing changes for an episode that submits within T + 2 decisions.
+    final_submit, last_call = False, False
+
     def __init__(self, task, iid, sid, bridge, rep=0, ep_dir=None):
         self.task, self.iid, self.sid, self.bridge, self.rep, self.ep_dir = task, iid, sid, bridge, rep, ep_dir
         self.log, self.turns, self.t, self.decisions, self.result = [], [], 0, 0, None
@@ -75,6 +80,9 @@ class Episode:
         head = f"Task: {self.goal}\n{self.intro}\nActions:\n{self.help}"
         so_far = "\nEvidence so far:" if self.log else "\nEvidence so far: none yet"
         tail = f"\nEvidence actions used: {self.t} of {self.T}. Decide now."
+        if self.last_call:                                             # final_submit: the one extra turn
+            tail = (f"\nEvidence actions used: {self.t} of {self.T}. No evidence action is left and this is the last turn: "
+                    "reply with ACTION: SUBMIT <answer>.")
         if version == "text":
             lines = [f"\n[{k}] {x['action']}: {' '.join(s for s in (x['status'], x['reading']) if s)}" for k, x in enumerate(self.log)]
             return head + so_far + "".join(lines) + tail, []
@@ -119,6 +127,8 @@ class Episode:
             else:
                 self.log.append(dict(action=body, status=r["status"], reading=r["reading"], images=decode(r["images"])))
         if self.decisions >= self.T + 2:
+            if self.final_submit and not self.last_call:
+                self.last_call = True; return False                    # one more turn, for the SUBMIT alone
             self.result = dict(self.bridge.call(op="finish", sid=self.sid), outcome="no_answer",
                                errors=["no SUBMIT within T + 2 decisions"])
             return True

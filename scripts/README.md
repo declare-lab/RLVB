@@ -11,6 +11,9 @@ to the repository root. `DRY=1` prints the commands and runs nothing. `SKIP_TEST
 | RLVB (EM) | `pl_qwen3vl_8b_thinking.sh` | `pl_qwen3vl_4b_thinking.sh` | `pl_qwen35_4b.sh` | two_line |
 | RLVB (GRPO) | `grpo_posterior_qwen3vl_8b_thinking.sh` | `grpo_posterior_qwen3vl_4b_thinking.sh` | `grpo_posterior_qwen35_4b.sh` | two_line |
 
+The RLVB (GRPO) ablation runs (no belief score, no action reward, pooled sample sets, phases of 5 updates, the reward repairs)
+have their own scripts in [ablation_scripts/](ablation_scripts/README.md), one for each run file.
+
 The test script without a model or adapter tests the base model: `TURN=two_line` (the default) gives the "Base (w/ belief)" row,
 `TURN=one_line` gives the "Base" row (action only). The training is described in [docs/training.md](../docs/training.md), the
 tests in [docs/evaluation.md](../docs/evaluation.md).
@@ -37,6 +40,9 @@ BENCH=proworlds EXPANSION=long scripts/eval_qwen3vl_8b_thinking.sh       # the b
 | `BENCH` | `all` | the tests: `all` (`test_suite`), `roboquest`, `proworlds`, `hidden_games` |
 | `EXPANSION` | `normal` | the tests: `long` tests the Pro-Worlds long board (`test_suite_long`) |
 | `TURN` | `two_line` | test scripts: `two_line` or `one_line` |
+| `MAX_THINK` | `8192` | test scripts: the thinking cap of the test (another value: output name `-think<N>`) |
+| `ASK_ONCE`, `FINAL_SUBMIT`, `ONLY`, `REPLAY` | off | test scripts: extra checks ([ablation_scripts/README.md](ablation_scripts/README.md)) |
+| `PL_SAVE_THOUGHTS` | off | test scripts: `1` keeps the thought text in the turn records |
 | `MODEL_REPO`, `ADAPTER`, `TAG` | none | test scripts: a full model, or an adapter (folder or Hugging Face id; none = the base model); the output name |
 | `SKIP_TESTS` | `0` | training scripts: `1` = no tests after the training |
 | `DRY` | `0` | `1`: print the commands, run nothing |

@@ -121,6 +121,51 @@ uses sdpa for the rest of the run. The log row has `attn_flash` (1/0), `attn_dlo
 python -m plearn train --config grpo_posterior_qwen3vl_8b_thinking
 ```
 
+`--tau_look`: the temperature of pi*'s Boltzmann among the looks only (default 0 = `--tau`). Among looks the values
+differ by about one step of time cost (0.02 in log value, 0.2 nats at tau 0.1), while an answer before the evidence is enough
+costs about 25 nats, so the score taught "do not answer early" far more strongly than "choose a good look". With `--tau_look 0.02`
+one wasted step costs 1 nat. The answer-or-look decision (pC), the stop rule, the choice among the answers and `wrong_lp` keep
+`--tau`. Mastermind keeps `--tau` (`Domain.look_scale = False`). `--tau_look_play 0` (default): the teacher's own moves (`tgt`) keep
+`--tau`, so the histories are as in RLVB (GRPO); 1: they use `--tau_look` too. PL_SET_FROM refuses a saved set with other values
+(the batches hold the scores). Logs: `look_gap`, `look_accept`, `tau_look_on`. Run file
+`configs/train/looks_nobelief_qwen3vl_4b_thinking.yaml` = the ablation without the belief score plus `tau_look: 0.02`
+(`scripts/ablation_scripts/looks_nobelief_qwen3vl_4b_thinking.sh`; tests: `tests/method/test_tau_look.py`).
+
+### The reward repair (three options, all off by default)
+
+Runs without the belief score drifted from about update 25: the agent kept taking harmless steps and stopped answering. Three
+options repair the action reward, each from the posterior alone:
+
+1. `--rho_exact 1`: the teacher values an answer by the exact posterior $U(b)$ for the whole run (the table of the agent's own
+   answers keeps its prior).
+2. `--teacher_row 1`: at a history where no own turn is accepted, the teacher's exact belief line and action join the group
+   (`tests/method/test_teacher_row.py`).
+3. `--stall_cap C`: a stalling step is rejected. A look that is neither one of the teacher's best looks nor one with real
+   expected evidence gets $\log\pi^*\le$ best $-\,C$, and so does an action that is not legal. The evidence of a look is the
+   expected drop of the answer's entropy over its outcomes (`look_info`: Mastermind, MineSweeper, MiniGrid, FrozenLake and
+   Sokoban compute it from their own outcome model, Tabletop from `Belief.outcomes`). Before, such a step lost only its time
+   cost (0.2 nats at $\tau=0.1$) and was accepted (the accept rule allows $\log 20\approx3.0$ nats); with $C=3.5$ it is rejected,
+   so a group of stalling own turns gets the teacher's row. The rule only lowers a value: the answers, the best looks, the looks
+   with evidence and the teacher's own moves are unchanged. In MineSweeper a cursor move counts only when it heads for the
+   teacher's best cell; in MiniGrid turning on the spot is rejected once it shows nothing new. Log: `stall_rejected`, the share
+   of own turns rejected by the cap alone (`tests/method/test_stall_cap.py`).
+   `--stall_play 1`: the teacher's own moves come from the capped scores too. At $\tau=0.1$ its choice among moves that differ by
+   one or two steps of time cost is soft, so without it the teacher itself takes a move the cap rejects at about a third of its
+   steps in MineSweeper, MiniGrid, FrozenLake and Sokoban; with it 3 to 5% (offline check).
+
+Run files: `configs/train/phase5_nobelief_trow_qwen35_4b.yaml` (parts 1 and 2) and `phase5_nobelief_trow_stall_qwen35_4b.yaml`
+(all three, `stall_cap: 3.5`, `stall_play: 1`); with phases of 25 updates on the two Qwen3-VL models:
+`pool_nobelief_trow_stall_qwen3vl_8b_thinking.yaml` and `pool_nobelief_trow_stall_qwen3vl_4b_thinking.yaml`.
+
+No belief line (`--no_belief_line 1`, with `--line_score none`): the turn has no belief line at all. The prompt has the
+action-only rules of the one-line turn (`plearn/tasks/domain.py` `action_only`) and no carried line; each own turn is the thought,
+`</think>` and the action line (M actions after each thought), scored by the action's log pi* alone. A guard stops a run whose
+prompt asks for or carries a belief line, and `PL_SET_FROM` refuses a sample set saved with another `--no_belief_line`. Run files:
+`configs/train/pool_nobeliefline_qwen3vl_8b_thinking.yaml`, `pool_nobeliefline_qwen3vl_4b_thinking.yaml` (the pooled runs without the
+belief score) and `phase5_nobeliefline_nolen_qwen35_4b.yaml` (phase 5, no length term, update 25): the RLVB (GRPO) run files of the tables plus `no_belief_line: 1`; they test with the one-line turn (tests: `tests/method/test_no_belief_line.py`).
+
+The other ablation run files and their start scripts: `scripts/ablation_scripts/README.md`.
+
 ## Measures
 
 | Measure | What it counts |

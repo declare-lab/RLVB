@@ -74,3 +74,16 @@ def turn(srv, prompt, g, use_adapter=True, priority=0, one_line=False):
     b, a = ordered(b, a)
     return z["text"], b, a, thought_rec(z)
 
+
+def submit_turn(srv, prompt, g, belief, use_adapter=True, priority=0):
+    """The turn for the SUBMIT alone, with no new thought (RoboQuest final_submit=prefill: the SUBMIT needs no
+    new thinking, it only follows the last turn): the thought is empty, the belief line is the agent's own last one (as
+    carried), and the action line is started as 'ACTION: SUBMIT'; the model writes only the answer after it. Returns the same
+    four values as turn()."""
+    b = first_line(belief) if belief else ""
+    head = "ACTION: SUBMIT"
+    txt = srv.complete([prompt + CLOSE + (b + TERM if b else "") + head], n=1, max_tokens=g["max_action"], temperature=g["line_temperature"],
+                       top_p=1.0, top_k=-1, use_adapter=use_adapter, priority=priority)[0][0]["text"]
+    rest = txt.strip("\n").split("\n")[0].strip() if txt.strip() else ""
+    return "", b, (head + " " + rest).strip(), {"thought_chars": 0, "thought_cut": False, "submit_prefill": True}
+

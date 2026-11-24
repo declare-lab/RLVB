@@ -1,0 +1,56 @@
+# RLVB (GRPO), Qwen3-VL-8B-Thinking, without the belief score and without a length term, phases of 25 updates (2 phases in 50 updates),
+# with the three reward repairs of the Qwen3.5-4B stall run: rho_exact 1, teacher_row 1, stall_cap 3.5, stall_play 1.
+# It is configs/train/pool_nobelief_qwen3vl_8b_thinking.yaml (phase 25 = the method; phase_set 1200, set_keep 800: the 25 updates draw
+# 32 histories each = 800, so every kept history is used once) plus the six lines of
+# configs/train/phase5_nobelief_trow_stall_qwen35_4b.yaml: length_budget 8000, length_reward 0, rho_exact 1, teacher_row 1,
+# stall_cap 3.5, stall_play 1 (see that file for each). beta_decay = the method's 0.93 per phase of 25 updates.
+# The first sample set cannot be taken from another run (PL_SET_FROM): rho_exact and stall_play change the teacher of the games,
+# and stall_cap the scores of the own turns.
+# Train, then the standard two-line test: scripts/ablation_scripts/pool_nobelief_trow_stall_qwen3vl_8b_thinking.sh.
+train: pool_nobelief_trow_stall_qwen3vl_8b_thinking
+model: qwen3-vl-8b-thinking
+train_tasks: train_suite              # HiddenGames, the 8 games (train split)
+eval_tasks: [train_suite]             # the validation split of the training tasks (deferred: PL_EVAL_DEFER)
+eval_n: 0
+output: ${PL_RUNS:-runs}/pool_nobelief_trow_stall_qwen3vl_8b_thinking
+env_sh: ${PL_ENV_SH:-/dev/null}
+gpus: {actor: "${PL_GPUS:-0,1,2,3}", learner: "${PL_GPUS:-0,1,2,3}", colocate: true}
+server:
+  PL_PRESENCE_PENALTY: "1.5"   # the model card setting
+  PL_EVAL_DEFER: "1"           # no validation in training: the runs test after training; eval_every still saves the adapters
+  PL_SKIP_EVAL0: "1"
+  PL_GPUS_PER_SERVER: "1"      # as the 8B: 1 GPU a server, no MTP
+  PL_MAX_NUM_SEQS: "${PL_SEQS:-96}"
+  PL_M_SPLIT: item             # speed
+  PL_ROUTE_SPILL: "2"
+  PL_ROUTE_SPILL_MIN: "96"
+method:
+  phase_set: 1200              # the histories of a phase's sample set (the method: 300)
+  set_keep: 800                # the histories with an accepted own turn that the 25 updates draw from, each once (the method: 200)
+  length_budget: 8000          # as the Qwen3.5-4B stall run (no effect with length_reward 0)
+  length_reward: "0"           # no length term (the method: 4)
+  rho_exact: 1                 # the answer accuracy of the teacher is the exact posterior (the table is not updated)
+  teacher_row: 1               # the teacher's line and action join a group with no accepted own turn (teacher_row_cap 0)
+  stall_cap: 3.5               # a stalling look or an action that is not legal: at most the best action's log pi* minus 3.5 nats (rejected)
+  stall_play: 1                # the teacher's own moves (tgt) from the capped scores too
+  update: grpo                 # RLVB (GRPO)
+  grpo_clip: 20                # scores raised to at least the group's best - 20, advantages in [-20, 20] nats
+  grpo_eps: 0.2                # PPO's clip rule against the phase prior
+  grpo_norm: 1                 # every batch's weights get RLVB (EM)'s total absolute size (one factor per batch)
+  attn: flash_attention_3      # FlashAttention 3 for speed (checked against sdpa at the first score)
+  score_presence: 1            # the learner's score has the sampler's presence penalty (PL_PRESENCE_PENALTY above)
+  max_think: 8192              # the tests' cap in training too (METHOD: 16,384 in training)
+  steps: 50
+  eval_every: 25
+  eval_split: validation
+  worlds: 4
+  temperature: 1.0             # thought sampler + decision T (METHOD 0.6)
+  line_score: none
+  line_wide: false
+  line_target: -1
+  em_more_joint: 0
+wandb:
+  name: "Qwen3-VL-8B-Thinking · RLVB (GRPO) ablation: no belief score, phase_set 1200 / set_keep 800, no length term, rho_exact 1, teacher_row 1, stall_cap 3.5, stall_play 1"
+  project: ${WANDB_PROJECT:-}
+  entity: ${WANDB_ENTITY:-}
+  group: suite

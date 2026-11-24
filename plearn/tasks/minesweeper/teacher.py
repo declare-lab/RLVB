@@ -11,7 +11,9 @@ each). Its policy pi* (with the value of Reliability.util): FIRE is worth E[u] o
 of mine sets has the answer accuracy U = 1 / |group| times phi) and a mine (the accuracy of knowing nothing, 1 / all sets); with
 depth 2 (at most DEPTH2_MAX sets), each count's group is worth its best next step, the answer or a second reveal reached by the
 shortest cursor path; a move is worth the best FIRE that a shortest cursor path starting with it reaches, with the time of its
-moves; the answer now is worth u(c(t), rho(b)). The belief line names the hidden cells the evidence decides, 'Possible: mines at B2, D5; safe at C3' ('Possible:
+moves; every FIRE of a plan by action 2 n^2 (popgym ends the game on a move that is action 2 n^2, not on a FIRE, and the
+answer comes on the next turn; such a move is worth the floor; plearn.tasks.PLAN_PAST_LIMIT, --plan_past_limit 1: no limit, as
+before the fix); the answer now is worth u(c(t), rho(b)). The belief line names the hidden cells the evidence decides, 'Possible: mines at B2, D5; safe at C3' ('Possible:
 any' when it decides none), scored as the set of mine sets it allows. Hard is a test only (teacher=False: no belief).
 """
 from __future__ import annotations
@@ -19,6 +21,7 @@ import itertools, math, os, re
 from functools import lru_cache
 import numpy as np
 from plearn.api.episode import carried
+import plearn.tasks as _tasks                                        # PLAN_PAST_LIMIT
 
 LEVELS = {"easy": (4, 2), "medium": (6, 6), "hard": (8, 10)}
 UP, DOWN, LEFT, RIGHT, FIRE = range(5)
@@ -94,29 +97,48 @@ class Belief:
     def U(self): return 0.0 if self.dead else 1.0 / self.k()
     def identified(self): return not self.dead and self.k() == 1
     def cls(self): return ("minesweeper", min(self.k(), 4))
+    def look_info(self, a):
+        """--stall_cap: the expected drop of the answer entropy (nats) of action a. A cursor move, and FIRE on a revealed
+        cell, show nothing (0). FIRE on a hidden cell: the counts it can show split the mine sets; a mine ends the game and counts
+        as showing nothing (the entropy stays log k)."""
+        if self.dead or a != FIRE: return 0.0
+        i = bit(self.n, self.x, self.y); k = self.k()
+        if self.revealed >> i & 1 or k <= 1: return 0.0
+        _, nb = tables(self.n, self.m); safe = self.A[((self.A >> np.uint64(i)) & np.uint64(1)) == 0]
+        if not len(safe): return 0.0
+        cnt = np.bincount(np.bitwise_count(safe & nb[i]).astype(np.int64)); cnt = cnt[cnt > 0]
+        return max(0.0, float(len(safe) / k * math.log(k) - (cnt / k * np.log(cnt)).sum()))
     def certain(self):
         """The hidden cells that are mines in every set, and those that are safe in every set."""
         allm = np.bitwise_and.reduce(self.A); anym = np.bitwise_or.reduce(self.A); hidden = (1 << self.n * self.n) - 1 & ~self.revealed
         return int(allm) & hidden, ~int(anym) & hidden
-    def reveal_values(self, rel, lam=None, T=None, depth=1):
-        """{hidden cell: its value relative to the time after its reveal} (values_one, or values_two at depth 2)."""
+    def reveal_values(self, rel, lam=None, T=None, depth=1, limit=None):
+        """{hidden cell: its value relative to the time after its reveal} (values_one, or values_two at depth 2). limit: the
+        game's last action (2 n^2); the second reveal must come by then, the first coming by the shortest cursor path from now."""
         two = depth >= 2 and lam is not None and self.k() <= DEPTH2_MAX
-        if self._rv is None or self._rv[0] != two:
-            self._rv = (two, values_two(self.A, self.revealed, self.n, self.m, rel, self.N, lam, T) if two
+        key = (two, lam, T, limit) if two else (two,)                     # (the values depend on the time left)
+        if self._rv is None or self._rv[0] != key:
+            left = None if limit is None else {i: limit - (self.t + 1 + abs(i % self.n - self.x) + abs(i // self.n - self.y)) for i in range(self.n * self.n)}
+            self._rv = (key, values_two(self.A, self.revealed, self.n, self.m, rel, self.N, lam, T, left) if two
                         else values_one(self.A, self.revealed, self.n, self.m, rel, self.N))
         return self._rv[1]
     def lookahead(self, rel, lam, T, depth, acts):
         if self.dead or not acts: return {a: rel.none for a in acts}
-        c = lambda t: math.exp(-lam * t / T); E = self.reveal_values(rel, lam, T, depth); here = bit(self.n, self.x, self.y); out = {}
+        # the game's limit (popgym, measured): a move as action 2 n^2 ends the game (no answer), a FIRE as action 2 n^2 does
+        # not, and the answer comes on the next turn; so a plan's FIRE must come by action 2 n^2 (PLAN_PAST_LIMIT: no limit, as before)
+        limit = None if _tasks.PLAN_PAST_LIMIT else 2 * self.n * self.n
+        c = lambda t: math.exp(-lam * t / T); E = self.reveal_values(rel, lam, T, depth, limit); here = bit(self.n, self.x, self.y); out = {}
         for a in acts:
             if a == FIRE:
                 out[a] = rel.with_cost(c(self.t + 1), E[here]) if here in E else rel.none
                 continue
             nx, ny = self.x + STEP[a][0], self.y + STEP[a][1]
             if not (0 <= nx < self.n and 0 <= ny < self.n): out[a] = rel.none; continue
+            if limit is not None and self.t + 1 >= limit: out[a] = rel.util(c(self.t + 1), 0.0); continue   # the game ends, lost
             best = rel.none
             for i, v in E.items():                                   # the best FIRE a shortest path that starts with this move reaches
                 cx, cy = i % self.n, i // self.n; d = abs(cx - nx) + abs(cy - ny)
+                if limit is not None and self.t + 1 + d + 1 > limit: continue
                 if abs(cx - self.x) + abs(cy - self.y) == d + 1: best = max(best, rel.with_cost(c(self.t + 1 + d + 1), v))
             out[a] = best
         return out
@@ -135,9 +157,10 @@ def values_one(A, revealed, n, m, rel, N):
     return out
 
 
-def values_two(A, revealed, n, m, rel, N, lam, T):
+def values_two(A, revealed, n, m, rel, N, lam, T, left=None):
     """Two reveals ahead: each count's group of sets is worth the better of the answer then and the best second reveal (values_one
-    of the group), reached by the shortest cursor path from the first cell; a mine is worth knowing nothing."""
+    of the group), reached by the shortest cursor path from the first cell; a mine is worth knowing nothing. left: {first
+    cell: the actions the game still allows after its reveal}; a second reveal must fit in them (None: no limit, as before)."""
     _, nb = tables(n, m); k = len(A); dead = rel.f(rel.mean(_GB(N))); out = {}
     for i in range(n * n):
         if revealed >> i & 1: continue
@@ -148,7 +171,8 @@ def values_two(A, revealed, n, m, rel, N, lam, T):
                 group = safe[counts == cv]; best = rel.f(rel.mean(_GB(len(group))))        # the answer after the first reveal
                 if len(group) > 1:
                     for j, vj in values_one(group, rev2, n, m, rel, N).items():
-                        d = abs(j % n - xi) + abs(j // n - yi); best = max(best, rel.with_cost(math.exp(-lam * (d + 1) / T), vj))
+                        d = abs(j % n - xi) + abs(j // n - yi)
+                        if left is None or d + 1 <= left[i]: best = max(best, rel.with_cost(math.exp(-lam * (d + 1) / T), vj))
                 v += len(group) / k * best
         out[i] = v
     return out

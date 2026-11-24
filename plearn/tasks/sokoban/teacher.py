@@ -11,18 +11,30 @@ factor); the prompt shows the room at the start and after each action, in order.
 wins; T_ACTIONS actions (VAGEN's evaluation budget: 5 turns of up to 3 actions). There is no answer line: the box on the target is
 the answer.
 
-The teacher's belief is exact: the target cells no view has excluded, all equally likely. Its policy pi* (Reliability.util): with the
-target known, an action is worth the time of the shortest solution after it (exact, a search over player and box; a dead box is
-worth the floor); before that, the best of committing (pushing toward the most likely target: its probability times phi, with the
-time of the solution) and exploring (a walk that does not push, to a cell whose view shows candidates: E[u] over 'the target is in
-view' and 'it is not'). The belief line names the cells that may hold the target, 'Possible: target at B3, D4' ('Possible: any' at
+The teacher's belief is exact: the target cells no view has excluded, all equally likely. Its policy pi* (Reliability.util of the
+return: the box on the target after n actions is worth u(c(n), phi), the action limit u(c(T), 0)): a move is worth the return it
+leads to (Belief.lookahead), an exact expectimax over the posterior to the end of the game: after each move the box on a
+cell that may hold the target wins with its chance, else the view from the player's new cell shows the target (its cell is then
+known) or excludes the cells it shows; with the target known, the return of its shortest solution (Ep.dist: exact, a search over
+player and box; a dead box or past the limit: the floor). The game is at most T_ACTIONS actions, so the expectimax goes to its end
+(not to the run's depth: with depth 2 and each candidate's solution at the leaf the greedy teacher stood still where a view or a
+push had to come first, won 88% from start states). Its table of values depends only on (state, possible targets, time) and is
+shared by the plans of an episode (a room's first plan ~27 ms on average, the later ones ~0.15 ms).
+Before the fix (plearn.tasks.SK_GUESS_VALUE, --sk_guess_value 1: _guess_lookahead): with the target known, an action was worth the
+time of the shortest solution after it; before that, the best of committing (pushing toward a target: its probability 1 / k as the
+accuracy of a guess, with the time of the solution) and exploring (a walk that does not push, to a cell whose view shows candidates:
+E[u] over 'the target is in view' and 'it is not', the rest again a guess). The game has no guess: a box on another cell only shows
+that cell is not the target, and the search goes on, so log(1 / k) undervalued every plan that leaves candidates to be found later
+(pushes above all; the views on the way and the box landing on the target counted for nothing) (the trainer's module text).
+The belief line names the cells that may hold the target, 'Possible: target at B3, D4' ('Possible: any' at
 the start), scored as a set.
 """
 from __future__ import annotations
-import hashlib, math, re
+import copy, hashlib, math, re
 from collections import deque
 import numpy as np
 from plearn.api.episode import carried
+import plearn.tasks as _tasks                                        # SK_GUESS_VALUE
 
 DIM, T_ACTIONS, MOVE_COST, MISS = 6, 15, 0.98, 50.0
 BAND, VIEW = (1, 5), "plus"                                         # VAGEN's band; the player's cell and its neighbours
@@ -154,7 +166,49 @@ class Belief:
     def identified(self): return len(self.alive) == 1
     def cls(self): return ("sokoban", min(len(self.alive), 4))
     def post(self): return {name(c): 1.0 / len(self.alive) for c in self.alive}
+    def look_info(self, a):
+        """--stall_cap: the expected drop of the target's entropy (nats) of move a, as _q splits the cells that may hold
+        it: the box pushed onto one of them, or one of them in the view from the new cell, makes the target known; the others stay
+        equally likely. 0 when the move shows none of them (a step into a wall too), and once the target is known."""
+        ep = self.ep; A = frozenset(self.alive); k = len(A)
+        if k <= 1: return 0.0
+        s1 = ep.graph.step(ep.state, a); view = window(s1[0], ep.view)
+        hidden = sum(1 for c in A - {s1[1]} if c not in view)
+        return max(0.0, math.log(k) - (hidden / k * math.log(hidden) if hidden else 0.0))
     def lookahead(self, rel, lam, T, depth, acts):
+        """Q(a): the return move a leads to (see the module text); SK_GUESS_VALUE: the old value, heading for a target as a guess."""
+        if _tasks.SK_GUESS_VALUE: return self._guess_lookahead(rel, lam, T, depth, acts)
+        cost = lambda n: math.exp(-lam * n / T); acc = rel.mean(_GB(1.0, 1))
+        tab = tuple([rel.util(cost(n), acc) for n in range(T + 1)] + [rel.util(cost(T), 0.0)])   # the box on the target at n; T + 1: never
+        ep = self.ep; vals = getattr(ep, "_vals", None)
+        key = (ep.view, T, tab); memo = {} if vals is None else vals.get(key)   # V depends on nothing else: shared by the episode's
+        if memo is None: vals.clear(); memo = vals[key] = {}                    # plans (one table: the latest accuracy and time cost)
+        A = frozenset(self.alive)
+        return {a: self._q(ep, tab, T, memo, ep.state, A, self.t, a) for a in acts}
+    def _v(self, ep, tab, T, memo, s, A, t):
+        """The best return from state s at time t with the target among A (each equally likely); with the target known, its exact
+        shortest solution (Ep.dist; a dead box or past the action limit: the floor)."""
+        if len(A) == 1:
+            (c,) = A; L = ep.dist(c).get(s); return tab[T + 1 if L is None else min(t + L, T + 1)]
+        if t >= T: return tab[T + 1]
+        k = (s, A, t); v = memo.get(k)
+        if v is None: v = memo[k] = max(self._q(ep, tab, T, memo, s, A, t, a) for a in ACTIONS)
+        return v
+    def _q(self, ep, tab, T, memo, s, A, t, a):
+        """Move a from state s at time t: the box on a cell that may hold the target wins with its chance; otherwise the view from
+        the new cell shows the target (its cell is then known) or excludes the cells it shows; then the best play after each."""
+        s1 = ep.graph.step(s, a); t1 = t + 1; k = len(A); b1 = s1[1]
+        if k == 1: return self._v(ep, tab, T, memo, s1, A, t1)
+        v = tab[t1] / k if b1 in A else 0.0                                      # the box on the target: the game is won at t1
+        rest = A - {b1}
+        if not rest: return v
+        view = window(s1[0], ep.view); hidden = frozenset(c for c in rest if c not in view)
+        for c in rest:
+            if c in view: v += self._v(ep, tab, T, memo, s1, frozenset((c,)), t1) / k
+        if hidden: v += len(hidden) / k * self._v(ep, tab, T, memo, s1, hidden, t1)
+        return v
+    def _guess_lookahead(self, rel, lam, T, depth, acts):
+        """Before the fix (SK_GUESS_VALUE): committing to a target valued as a guess among the candidates (see the module text)."""
         ep = self.ep; cost = lambda n: math.exp(-lam * n / T); out = {}
         def solve(state, n, c, acc):                                  # the box onto c from state at time n, with accuracy acc
             L = ep.dist(c).get(state)
@@ -209,7 +263,7 @@ class Ep:
         env = SokobanEnv(dim_room=(DIM, DIM), max_steps=10 ** 6, num_boxes=1, reset=False)
         env.room_fixed, env.room_state, env.player_position = fixed, state, np.array(p0)
         env.num_env_steps, env.reward_last, env.boxes_on_target = 0, 0, 0; self.env = env
-        self.seen_cells = set(); self._dist = {}
+        self.seen_cells = set(); self._dist = {}; self._vals = {}                 # Belief.lookahead's tables
         self.t, self.done, self.correct, self.turns_used, self.invalid, self.note, self.answer, self.log, self.won = 0, False, None, 0, 0, None, None, [], False
         self.see(); self.pictures = [self.picture()]                                # the room at the start, then after each action
     def dist(self, c):
@@ -286,6 +340,11 @@ class Domain:
         if not e.done and e.turns_used >= self.turns: e.done, e.correct = True, False
 
     def belief(self, e): return Belief(e, e.alive(), e.t)
+    def freeze(self, B):
+        """B with its game frozen at B's history: a plan keeps B, and the own turns of a history are scored
+        after the game has gone on, so the lookahead of a stated line (decision_score) must read the agent's place and what it has
+        seen at the history, not at the game's end. The plan made at the history is unchanged: it ran on the live game then."""
+        s = copy.copy(B.ep); s.seen_cells = set(B.ep.seen_cells); s.log = list(B.ep.log); return Belief(s, B.alive, B.t)   # state: a tuple
     def label(self, e): return name(e.target)
     def answer_posterior(self, e): return self.belief(e).post()
     def answer_prob(self, B, y): return B.post().get(str(y).strip().upper(), 0.0)

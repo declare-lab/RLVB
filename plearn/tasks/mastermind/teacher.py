@@ -85,6 +85,13 @@ class Belief:
         return out
     def post(self):
         alive = np.nonzero(self.M)[0]; return {code_str(i): 1.0 / len(alive) for i in alive}
+    def look_info(self, g):
+        """--stall_cap: the expected drop of the answer entropy (nats) of guess g, log N - sum_f (n_f / N) log n_f over
+        its feedback groups; 0 for a guess that splits nothing."""
+        alive = np.nonzero(self.M)[0]; N = len(alive)
+        if N <= 1: return 0.0
+        cnt = np.bincount(FB[g, alive].astype(np.int64)); cnt = cnt[cnt > 0]
+        return max(0.0, float(math.log(N) - (cnt / N * np.log(cnt)).sum()))
     def answer_counts(self): return {code_str(i): 1 for i in np.nonzero(self.M)[0]}
     def U(self): return 1.0 / self.n()
     def identified(self): return self.n() == 1
@@ -170,6 +177,8 @@ class Domain:
     name = "mastermind"
     images = False
     value_modes = ("accuracy", "log")                                # Belief.lookahead computes both (Reliability.util)
+    look_scale = False     # --tau_look is ignored here (tau): the lookahead separates guesses whose real difference is tiny (about a
+                           # third of a guess), so a sharper scale would amplify a ranking that barely matters (plearn/method/trainer.py)
 
     def __init__(self, split="test", **_):
         self.split = split; self.T = TURNS - 1; self.turns = TURNS; self.lam = self.T * math.log(1 / MOVE_COST)

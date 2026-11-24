@@ -1,0 +1,49 @@
+# RLVB (GRPO), pooled, with no belief line at all, Qwen3-VL-8B-Thinking.
+# It is configs/train/pool_nobelief_qwen3vl_8b_thinking.yaml (no belief score: line_score none; pooled: phase_set 1200, set_keep 800) plus one
+# line: no_belief_line 1 (plearn/method/trainer.py --no_belief_line). The prompt has the action-only rules of the one-line
+# turn (plearn/tasks/domain.py action_only) and no carried line; each own turn is the thought, </think> and the action line
+# (M actions after each thought), scored by the action's log pi* alone. The first sample set is a new one: the sets of the
+# pooled run have belief lines in their prompts and turns (PL_SET_FROM refuses a set with another no_belief_line).
+# Train, then the one-line test (no belief line, as in training): scripts/ablation_scripts/pool_nobeliefline_qwen3vl_8b_thinking.sh.
+train: pool_nobeliefline_qwen3vl_8b_thinking
+model: qwen3-vl-8b-thinking
+train_tasks: train_suite              # HiddenGames, the 8 games (train split)
+eval_tasks: [train_suite]             # the validation split of the training tasks (deferred: PL_EVAL_DEFER)
+eval_n: 0
+output: ${PL_RUNS:-runs}/pool_nobeliefline_qwen3vl_8b_thinking
+env_sh: ${PL_ENV_SH:-/dev/null}
+gpus: {actor: "${PL_GPUS:-0,1,2,3}", learner: "${PL_GPUS:-0,1,2,3}", colocate: true}
+server:
+  PL_PRESENCE_PENALTY: "1.5"   # the model card setting
+  PL_EVAL_DEFER: "1"           # no validation in training: the runs test after training; eval_every still saves the adapters
+  PL_SKIP_EVAL0: "1"
+  PL_GPUS_PER_SERVER: "1"      # as the 8B: 1 GPU a server, no MTP
+  PL_MAX_NUM_SEQS: "${PL_SEQS:-96}"
+  PL_M_SPLIT: item             # speed
+  PL_ROUTE_SPILL: "2"
+  PL_ROUTE_SPILL_MIN: "96"
+method:
+  phase_set: 1200              # the histories of a phase's sample set (the method: 300)
+  set_keep: 800                # the histories with an accepted own turn that the 25 updates draw from (the method: 200)
+  update: grpo                 # RLVB (GRPO)
+  grpo_clip: 20                # scores raised to at least the group's best - 20, advantages in [-20, 20] nats
+  grpo_eps: 0.2                # PPO's clip rule against the phase prior
+  grpo_norm: 1                 # every batch's weights get RLVB (EM)'s total absolute size (one factor per batch)
+  attn: flash_attention_3      # FlashAttention 3 for speed (checked against sdpa at the first score)
+  score_presence: 1            # the learner's score has the sampler's presence penalty (PL_PRESENCE_PENALTY above)
+  max_think: 8192              # the tests' cap in training too (METHOD: 16,384 in training)
+  steps: 50
+  eval_every: 25
+  eval_split: validation
+  worlds: 4
+  temperature: 1.0             # thought sampler + decision T (METHOD 0.6)
+  line_score: none
+  line_wide: false
+  line_target: -1
+  em_more_joint: 0
+  no_belief_line: 1            # no belief line at all: the action-only prompt, no carried line, no line in the turn
+wandb:
+  name: "Qwen3-VL-8B-Thinking · RLVB (GRPO) ablation: no belief line, no belief score, phase_set 1200 / set_keep 800"
+  project: ${WANDB_PROJECT:-}
+  entity: ${WANDB_ENTITY:-}
+  group: suite

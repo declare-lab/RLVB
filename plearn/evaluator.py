@@ -12,14 +12,45 @@ from __future__ import annotations
 import importlib, json, os, threading, time
 from concurrent.futures import ThreadPoolExecutor
 
-from plearn.api.episode import turn
+from plearn.api.episode import turn, submit_turn
 from plearn.api.registry import registry
 from plearn.api.task import Task
 
 
-def prompt_of(proc, ep, carry):
+ASK_ONCE = ("\nYou replied:\n{reply}\nBefore this answer is accepted, check once more whether the evidence identifies the answer. "
+            "If it does, give the same answer again. If it does not, continue with an evidence action.")
+ASK_THOUGHT = "\nYour reasoning for this reply was:\n{thought}\n"          # PL_ASK_ONCE=think: the agent also sees its own thought
+
+
+def is_submit(action):
+    t = (action or "").strip(); t = t[len("ACTION:"):].strip() if t.upper().startswith("ACTION:") else t
+    return t.upper().startswith("SUBMIT")
+
+
+def ask_once(srv, proc, ep, g, belief, action, rec, use_adapter=True, priority=0, thought=None, **kw):
+    """The ask-once baseline (PL_ASK_ONCE=1; a harness check, not part of any method): the first SUBMIT of an episode
+    is not carried out. The agent gets the same prompt again with ASK_ONCE after it (its own reply: the belief line, when the turn
+    has one, and the answer; then one request to check whether the evidence identifies the answer) and plays that turn again;
+    whatever it replies is carried out. thought (PL_ASK_ONCE=think): the reasoning of the first reply is shown too, before the
+    reply; by default it is not, as no turn of these tests shows the agent its earlier reasoning. The check tells
+    nothing about the answer, and it does not use a turn or an action of the task. Returns (belief, action, record, info)."""
+    from plearn.models.sampler import IMAGES, prompt_key
+    reply = "\n".join(x.strip() for x in (belief, action) if x and x.strip())
+    note = (ASK_THOUGHT.format(thought=thought.strip()) if thought and thought.strip() else "") + ASK_ONCE.format(reply=reply)
+    p = prompt_of(proc, ep, g["carry"], note)
+    try:
+        _, b2, a2, rec2 = turn(srv, p, g, use_adapter, priority, **kw)
+    finally:
+        IMAGES.pop(prompt_key(p), None)
+    info = {"first": action, "final": a2, "kept": is_submit(a2) and " ".join(a2.split()).upper() == " ".join(action.split()).upper(),
+            "changed_answer": is_submit(a2) and " ".join(a2.split()).upper() != " ".join(action.split()).upper(), "went_on": not is_submit(a2)}
+    return b2, a2, dict(rec2, asked=True, first_action=action, first_belief=belief), info
+
+
+def prompt_of(proc, ep, carry, note=None):
     from plearn.models.sampler import tag_prompt
     system, parts, images = ep.messages(carry)
+    if note: parts = parts + note if isinstance(parts, str) else list(parts) + [{"type": "text", "text": note}]
     text = proc.apply_chat_template([{"role": "system", "content": system}, {"role": "user", "content": parts}], tokenize=False,
                                     add_generation_prompt=True)
     return tag_prompt(text, images)
@@ -66,15 +97,23 @@ def play(srv, proc, tasks, n=None, split=None, out_dir=None, threads=256, use_ad
 
     def one(job):
         t, spec, part = job
-        g = {**t.generation_kwargs, **(gen or {})}; ep = None
+        g = {**t.generation_kwargs, **(gen or {})}; ep = None; asked = None
         try:
             ep = t.episode(spec, out_dir=out_dir)
             while not ep.done:
                 p = prompt_of(proc, ep, g["carry"])
-                _, b, a, rec = turn(srv, p, g, use_adapter, priority, one_line=bool(getattr(ep, "one_line", False)))
+                if getattr(ep, "submit_only", False):                # RoboQuest final_submit=prefill: the SUBMIT turn, no new thought
+                    _, b, a, rec = submit_turn(srv, p, g, getattr(ep, "note", None), use_adapter, priority)
+                    ep.step(b, a, rec); IMAGES.pop(prompt_key(p), None); continue
+                kw = dict(one_line=bool(getattr(ep, "one_line", False)))
+                z, b, a, rec = turn(srv, p, g, use_adapter, priority, **kw)
+                if asked is None and os.environ.get("PL_ASK_ONCE") in ("1", "think") and is_submit(a):   # the ask-once baseline: the first SUBMIT is checked once
+                    b, a, rec, asked = ask_once(srv, proc, ep, g, b, a, rec, use_adapter, priority,
+                                                thought=z if os.environ.get("PL_ASK_ONCE") == "think" else None, **kw)
                 ep.step(b, a, rec)
                 IMAGES.pop(prompt_key(p), None)
             row = {"spec": spec, **ep.row()}
+            if asked is not None: row["ask_once"] = asked
         except Exception as e:                                       # one failed episode must not stop the others
             row = {"spec": spec, "correct": False, "error": repr(e)[:400]}
         finally:

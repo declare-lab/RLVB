@@ -7,18 +7,27 @@ allows 25 actions. There is no answer line: reaching the goal is the answer. Thi
 search.
 
 The teacher's belief is exact: the (goal cell, hole cells) pairs that the generator draws for this start (15 x 16,384, each with its
-weight 0.8^frozen 0.2^holes, kept when a path exists), that agree with every cell seen. Its policy pi* (Reliability.util): a move is
-worth the best plan through the cells known to be safe that starts with it: walking to a cell whose new neighbours the agent then
-sees, worth E[u] over what they show, the answer accuracy of the best guess of the goal (U = its probability, times phi) then; or,
-when the goal is known, walking onto it (accuracy phi); each with the time of its moves. A step into a known hole is worth the floor.
+weight 0.8^frozen 0.2^holes, kept when a path exists), that agree with every cell seen. Its policy pi* (Reliability.util of the
+return: reaching the goal after n actions is worth u(c(n), phi), a hole or the action limit u(c, 0)): a move is worth what it leads
+to (Belief.lookahead). When the goal is known (and reachable through seen cells), the return of walking to it along a safe
+shortest route from the cell the move leaves the agent on. Otherwise an exact expectimax over the posterior, `depth` moves deep
+(each move splits the hypotheses by what the cells it shows hold; the best move after each outcome), whose leaf is the remaining
+walk of each hypothesis: its shortest route to its goal through its own frozen cells (walks(); a hole or past the action limit:
+the floor). A step into a known hole is worth the floor.
+Before the fix (plearn.tasks.FL_VIEW_VALUE, --fl_view_value 1: _view_lookahead): a move was worth the best plan through the cells
+known to be safe that starts with it: walking to a cell whose new neighbours the agent then sees, worth E[u] over what they show,
+the answer accuracy of the best guess of the goal (U = its probability, times phi) then; or, when the goal is known, walking onto it
+(accuracy phi); each with the time of its moves. That valued a view as if the game ended there, so with the goal known a walk to any
+fog was worth as much as reaching the goal in as many moves (the trainer's module text).
 The belief line names the cells that may hold the goal, 'Possible: goal at B3, D4' ('Possible: any' at the start), scored as a set.
 """
 from __future__ import annotations
-import math, os, re
+import copy, math, os, re
 from functools import lru_cache
 import numpy as np
 from vagen.envs.frozenlake.utils.utils import generate_random_map         # VAGEN's map of a seed (benchmarks/vagen)
 from plearn.api.episode import carried
+import plearn.tasks as _tasks                                        # FL_VIEW_VALUE
 
 SIZE, P_FROZEN, T_ACTIONS = 4, 0.8, 25
 TEST_SEEDS = range(20000, 20128)                                     # VAGEN's evaluation seeds
@@ -71,6 +80,25 @@ def hypotheses(start):
     return np.concatenate(G), np.concatenate(Hm), np.concatenate(W)
 
 
+NO_WALK = 255
+@lru_cache(maxsize=None)
+def _walks(start):
+    G, Hm, _ = hypotheses(start); n = SIZE * SIZE; full = (1 << n) - 1
+    left = sum(1 << i for i in range(n) if i % SIZE == 0); right = sum(1 << i for i in range(n) if i % SIZE == SIZE - 1)
+    free = (full & ~Hm).astype(np.int32); reach = (np.int64(1) << G).astype(np.int32)   # from each goal through its frozen cells
+    d = np.zeros((n, len(G)), dtype=np.uint8)
+    for _ in range(n):                                                 # d[c] = the steps after which c is not yet reached
+        for c in range(n): d[c] += (reach >> c) & 1 == 0
+        reach = (reach | (reach << SIZE) | (reach >> SIZE) | ((reach << 1) & ~left) | ((reach >> 1) & ~right)) & free
+    d[d >= n] = NO_WALK; d.setflags(write=False); return d
+
+
+def walks(start, cell):
+    """Per hypothesis of the start's table: the moves of the shortest route from `cell` to its goal through its frozen cells (0 at
+    the goal, NO_WALK when `cell` is one of its holes), uint8. Made once per start (16 x ~2 x 10^5 bytes, ~1/10 s)."""
+    return _walks(start)[cell]
+
+
 def rules_text():
     return ("You are on a frozen lake of 4 x 4 cells (columns A to D from the left, rows 1 to 4 from the top). The goal is hidden in "
             "one of the cells. Holes are in the ice: each cell other than the start and the goal is a hole with chance 0.2, and a path "
@@ -109,6 +137,22 @@ class Belief:
         p = self.goal_post(); return {name(i): float(v) for i, v in enumerate(p) if v > 1e-12}
     def _rho(self, rel, M):
         p = self.goal_post(M); return rel.mean(_GB(float(p.max()), int((p > 1e-12).sum())))
+    def look_info(self, a):
+        """--stall_cap: the expected drop of the entropy of the goal's cell (nats) of move a: what the unseen cells next
+        to the cell it leads to hold (frozen, a hole, the goal), as view_value groups them. 0 when they are all seen (a step into a
+        wall too), for a step into a known hole, and once the goal is known."""
+        ep = self.ep; nxt = ep.move(ep.pos, a)
+        if ep.known_hole(nxt): return 0.0
+        new = [j for j in neighbours(nxt) + [nxt] if not ep.seen >> j & 1]
+        ent = lambda p: float(-(p[p > 1e-12] * np.log(p[p > 1e-12])).sum())
+        h0 = ent(self.goal_post())
+        if not new or h0 <= 0: return 0.0
+        G, Hm, W = hypotheses(ep.start); idx = np.nonzero(self.M)[0]; key = np.zeros(len(idx), dtype=np.int64)
+        for j in new: key = key * 3 + np.where(G[idx] == j, 2, (Hm[idx] >> j) & 1)   # each cell: 0 frozen, 1 hole, 2 the goal
+        tot = W[idx].sum(); h1 = 0.0
+        for kv in np.unique(key):
+            sel = idx[key == kv]; h1 += W[sel].sum() / tot * ent(self.goal_post(self._mask(sel)))
+        return max(0.0, float(h0 - h1))
     def view_value(self, rel, cell):
         """E[f(rho)] after standing on `cell`: what its unseen neighbours show (holes, the goal), grouped; None if nothing is new."""
         ep = self.ep; new = [j for j in neighbours(cell) + [cell] if not ep.seen >> j & 1]
@@ -124,7 +168,49 @@ class Belief:
     def _mask(self, sel):
         M = np.zeros_like(self.M); M[sel] = True; return M
     def lookahead(self, rel, lam, T, depth, acts):
-        """Q(a): the best plan through known-safe cells that starts with move a (see the module text)."""
+        """Q(a): the value of what move a leads to (see the module text); FL_VIEW_VALUE: the old value of a view."""
+        if _tasks.FL_VIEW_VALUE: return self._view_lookahead(rel, lam, T, depth, acts)
+        ep = self.ep; cost = lambda n: math.exp(-lam * n / T)
+        acc = rel.mean(_GB(1.0, 1)); fail = rel.util(cost(T), 0.0)
+        tab = np.array([rel.util(cost(n), acc) for n in range(T + 1)] + [fail])   # the return of reaching the goal at n; T + 1: never
+        goal = ep.known_goal(self); out = {}
+        idx = None
+        for a in acts:
+            nxt = ep.move(ep.pos, a)
+            if ep.known_hole(nxt): out[a] = fail; continue
+            if goal is not None:
+                d = ep.safe_reach(nxt).get(goal)
+                if d is not None: out[a] = float(tab[min(self.t + 1 + d, T + 1)]); continue
+            if idx is None:
+                G, Hm, W = hypotheses(ep.start); idx = np.nonzero(self.M)[0]
+                ctx = (G, Hm, W, T, tab, {})
+            out[a] = self._q(ctx, idx, ep.pos, ep.seen, self.t, a, max(1, int(depth)))
+        return out
+    def _leaf(self, ctx, sel, cell, t):
+        """E over the hypotheses sel of the return of walking from `cell` at time t to the goal by its shortest route."""
+        G, Hm, W, T, tab, by_t = ctx
+        v = by_t.get(t)
+        if v is None: v = by_t[t] = tab[np.minimum(t + np.arange(256), T + 1)]
+        w = W[sel]; return float((w * v[walks(self.ep.start, cell)[sel]]).sum() / w.sum())
+    def _q(self, ctx, sel, pos, seen, t, a, rem):
+        """Move a from pos at time t, then the best of the next rem - 1 moves after each outcome, then the walk (the leaf)."""
+        G, Hm, W, T, tab, _ = ctx; nxt = self.ep.move(pos, a); t1 = t + 1
+        if rem <= 1: return self._leaf(ctx, sel, nxt, t1)                # (a hole at nxt: no walk, the floor; the goal: walk 0)
+        cells = [nxt] + [j for j in neighbours(nxt) if not seen >> j & 1 and j != nxt]
+        key = np.zeros(len(sel), dtype=np.int64)
+        for j in cells: key = key * 3 + np.where(G[sel] == j, 2, (Hm[sel] >> j) & 1)   # each cell: 0 frozen, 1 hole, 2 the goal
+        seen2 = seen
+        for j in cells: seen2 |= 1 << j
+        keys, inv = np.unique(key, return_inverse=True); w = W[sel]; tot = w.sum(); v = 0.0
+        for g, kv in enumerate(keys):
+            m = inv == g; s = sel[m]; p = w[m].sum() / tot; here = int(kv) // 3 ** (len(cells) - 1)   # what nxt holds
+            if here == 1: v += p * tab[T + 1]
+            elif here == 2: v += p * tab[min(t1, T + 1)]
+            elif t1 >= T: v += p * tab[T + 1]
+            else: v += p * max(self._q(ctx, s, nxt, seen2, t1, b, rem - 1) for b in MOVE)
+        return float(v)
+    def _view_lookahead(self, rel, lam, T, depth, acts):
+        """Before the fix (FL_VIEW_VALUE): the best plan through known-safe cells that starts with move a (see the module text)."""
         ep = self.ep; cost = lambda n: math.exp(-lam * n / T); out = {}
         goal = ep.known_goal(self)
         for a in acts:
@@ -256,6 +342,11 @@ class Domain:
         if not e.done and e.turns_used >= self.turns: e.done, e.correct = True, False
 
     def belief(self, e): return Belief(e, e.M.copy(), e.t)
+    def freeze(self, B):
+        """B with its game frozen at B's history: a plan keeps B, and the own turns of a history are scored
+        after the game has gone on, so the lookahead of a stated line (decision_score) must read the agent's place and what it has
+        seen at the history, not at the game's end. The plan made at the history is unchanged: it ran on the live game then."""
+        s = copy.copy(B.ep); s.M = B.ep.M.copy(); s.log = list(B.ep.log); return Belief(s, B.M, B.t)   # pos, seen: ints
     def label(self, e): return name(e.goal)
     def answer_posterior(self, e): return self.belief(e).post()
     def answer_prob(self, B, y): return B.post().get(str(y).strip().upper(), 0.0)

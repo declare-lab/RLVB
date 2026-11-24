@@ -1,0 +1,47 @@
+# RLVB (GRPO) without the belief score and with a sharper scale for the choice among looks.
+# It is configs/train/abl_grpo_nobelief_qwen3vl_4b_thinking.yaml (the no-belief-score ablation: line_score none, line_wide off, line_target -1 and em_more_joint 0 (the turn score R is the
+# action's log pi* only; the belief line is still written and carried, but not scored)),
+# plus one line: tau_look 0.02. With the belief score off the action reward is the only signal, so the scale among looks decides
+# how the reward is shared between 'do not answer early' and 'choose a good look': at 0.02 one wasted step costs 1 nat (0.2 at
+# tau 0.1). The teacher fixes of plearn/method/trainer.py (the module text) are on.
+# Train, then the standard two-line test: scripts/ablation_scripts/looks_nobelief_qwen3vl_4b_thinking.sh.
+train: looks_nobelief_qwen3vl_4b_thinking
+model: qwen3-vl-4b-thinking
+train_tasks: train_suite              # HiddenGames, the 8 games (train split)
+eval_tasks: [train_suite]             # the validation split of the training tasks (deferred: PL_EVAL_DEFER)
+eval_n: 0
+output: ${PL_RUNS:-runs}/looks_nobelief_qwen3vl_4b_thinking
+env_sh: ${PL_ENV_SH:-/dev/null}
+gpus: {actor: "${PL_GPUS:-0,1,2,3}", learner: "${PL_GPUS:-0,1,2,3}", colocate: true}
+server:
+  PL_PRESENCE_PENALTY: "1.5"   # the model card setting
+  PL_EVAL_DEFER: "1"           # no validation in training: the runs test after training; eval_every still saves the adapters
+  PL_SKIP_EVAL0: "1"
+  PL_GPUS_PER_SERVER: "1"      # as the 8B: 1 GPU a server, no MTP
+  PL_MAX_NUM_SEQS: "${PL_SEQS:-96}"
+  PL_M_SPLIT: item             # speed
+  PL_ROUTE_SPILL: "2"
+  PL_ROUTE_SPILL_MIN: "96"
+method:
+  tau_look: 0.02               # pi*'s temperature among the looks (--tau stays 0.1)
+  update: grpo                 # RLVB (GRPO)
+  grpo_clip: 20                # scores raised to at least the group's best - 20, advantages in [-20, 20] nats
+  grpo_eps: 0.2                # PPO's clip rule against the phase prior
+  grpo_norm: 1                 # every batch's weights get RLVB (EM)'s total absolute size (one factor per batch)
+  attn: flash_attention_3      # FlashAttention 3 for speed (checked against sdpa at the first score)
+  score_presence: 1            # the learner's score has the sampler's presence penalty (PL_PRESENCE_PENALTY above)
+  max_think: 8192              # the tests' cap in training too (METHOD: 16,384 in training)
+  steps: 50
+  eval_every: 25
+  eval_split: validation
+  worlds: 4
+  temperature: 1.0             # thought sampler + decision T (METHOD 0.6)
+  line_score: none
+  line_wide: false
+  line_target: -1
+  em_more_joint: 0
+wandb:
+  name: "Qwen3-VL-4B-Thinking · RLVB (GRPO) ablation: no belief score, tau_look 0.02"
+  project: ${WANDB_PROJECT:-}
+  entity: ${WANDB_ENTITY:-}
+  group: suite

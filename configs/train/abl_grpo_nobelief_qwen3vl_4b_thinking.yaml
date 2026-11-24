@@ -1,0 +1,48 @@
+# Ablation of RLVB (GRPO) with Qwen3-VL-4B-Thinking: the belief score OFF, the action reward ON.
+# The same run as configs/train/grpo_posterior_qwen3vl_4b_thinking.yaml (train_suite, 50 updates, cap 8,192, T 1.0, presence 1.5,
+# lr 1e-5) with these changes only:
+#   line_score none     the turn score R is the action's log pi* only; the belief line is still written and carried, not scored
+#   line_wide off       (a belief term)
+#   line_target -1      off: no belief line is masked by the teacher's check of the line (a belief signal by another way)
+#   em_more_joint 0     the extra sample round and the length reward's "correct" read the action only, not the belief line
+# The acceptance rule stays on (it reads the action): --accept_only 1, --set_keep 200, --em_more 1, min(A, 0) for a rejected action.
+# Train, then the standard two-line test: scripts/ablation_scripts/abl_grpo_nobelief_qwen3vl_4b_thinking.sh.
+train: abl_grpo_nobelief_qwen3vl_4b_thinking
+model: qwen3-vl-4b-thinking
+train_tasks: train_suite              # HiddenGames, the 8 games (train split)
+eval_tasks: [train_suite]             # the validation split of the training tasks (deferred: PL_EVAL_DEFER)
+eval_n: 0
+output: ${PL_RUNS:-runs}/abl_grpo_nobelief_qwen3vl_4b_thinking
+env_sh: ${PL_ENV_SH:-/dev/null}
+gpus: {actor: "${PL_GPUS:-0,1,2,3}", learner: "${PL_GPUS:-0,1,2,3}", colocate: true}
+server:
+  PL_PRESENCE_PENALTY: "1.5"   # the model card setting
+  PL_EVAL_DEFER: "1"           # no validation in training: the runs test after training; eval_every still saves the adapters
+  PL_SKIP_EVAL0: "1"
+  PL_GPUS_PER_SERVER: "1"      # as the 8B: 1 GPU a server, no MTP
+  PL_MAX_NUM_SEQS: "${PL_SEQS:-96}"
+  PL_M_SPLIT: item             # speed
+  PL_ROUTE_SPILL: "2"
+  PL_ROUTE_SPILL_MIN: "96"
+method:
+  update: grpo                 # RLVB (GRPO)
+  grpo_clip: 20                # scores raised to at least the group's best - 20, advantages in [-20, 20] nats
+  grpo_eps: 0.2                # PPO's clip rule against the phase prior
+  grpo_norm: 1                 # every batch's weights get RLVB (EM)'s total absolute size (one factor per batch)
+  attn: flash_attention_3      # FlashAttention 3 for speed (checked against sdpa at the first score)
+  score_presence: 1            # the learner's score has the sampler's presence penalty (PL_PRESENCE_PENALTY above)
+  max_think: 8192              # the tests' cap in training too (METHOD: 16,384 in training)
+  steps: 50
+  eval_every: 25
+  eval_split: validation
+  worlds: 4
+  temperature: 1.0             # thought sampler + decision T (METHOD 0.6)
+  line_score: none
+  line_wide: false
+  line_target: -1
+  em_more_joint: 0
+wandb:
+  name: "Qwen3-VL-4B-Thinking · RLVB (GRPO) ablation: no belief score"
+  project: ${WANDB_PROJECT:-}
+  entity: ${WANDB_ENTITY:-}
+  group: suite

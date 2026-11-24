@@ -1,0 +1,49 @@
+# RLVB (GRPO), pooled, Qwen3.5-4B, with the length term only for thoughts that reach the cap, at the same training cap
+# as every baseline (8,192). It is configs/train/pool_nobelief_qwen35_4b.yaml plus one line:
+# length_budget 8000: only a thought that the cap of 8,192 tokens cuts, or that ends in the last 192 tokens before the cap,
+# pays the length term; a correct thought of at most 8,000 tokens gets no length term (length_reward in plearn/method/trainer.py).
+# max_think stays 8192, as in all runs. Without the budget the reasoning of this model collapsed to a few hundred tokens.
+# B = 8192 would not do this: no training thought is longer than 8,192 tokens, so the term would be off for every correct turn.
+# Train, then the standard two-line test: scripts/ablation_scripts/pool_nobelief_lb8000_qwen35_4b.sh.
+train: pool_nobelief_lb8000_qwen35_4b
+model: qwen3.5-4b
+train_tasks: train_suite              # HiddenGames, the 8 games (train split)
+eval_tasks: [train_suite]             # the validation split of the training tasks (deferred: PL_EVAL_DEFER)
+eval_n: 0
+output: ${PL_RUNS:-runs}/pool_nobelief_lb8000_qwen35_4b
+env_sh: ${PL_ENV_SH:-/dev/null}
+gpus: {actor: "${PL_GPUS:-0,1,2,3}", learner: "${PL_GPUS:-0,1,2,3}", colocate: true}
+server:
+  PL_PRESENCE_PENALTY: "1.5"   # the model card setting
+  PL_EVAL_DEFER: "1"           # no validation in training: the runs test after training; eval_every still saves the adapters
+  PL_SKIP_EVAL0: "1"
+  PL_GPUS_PER_SERVER: "1"      # as the 8B: 1 GPU a server, no MTP
+  PL_MAX_NUM_SEQS: "${PL_SEQS:-96}"
+  PL_M_SPLIT: item             # speed
+  PL_ROUTE_SPILL: "2"
+  PL_ROUTE_SPILL_MIN: "96"
+method:
+  phase_set: 1200              # the histories of a phase's sample set (the method: 300)
+  set_keep: 800                # the histories with an accepted own turn that the 25 updates draw from (the method: 200)
+  length_budget: 8000          # only a thought that is cut at 8,192 (or ends just before it) pays the length term
+  update: grpo                 # RLVB (GRPO)
+  grpo_clip: 20                # scores raised to at least the group's best - 20, advantages in [-20, 20] nats
+  grpo_eps: 0.2                # PPO's clip rule against the phase prior
+  grpo_norm: 1                 # every batch's weights get RLVB (EM)'s total absolute size (one factor per batch)
+  attn: flash_attention_3      # FlashAttention 3 for speed (checked against sdpa at the first score)
+  score_presence: 1            # the learner's score has the sampler's presence penalty (PL_PRESENCE_PENALTY above)
+  max_think: 8192              # the tests' cap in training too (METHOD: 16,384 in training)
+  steps: 50
+  eval_every: 25
+  eval_split: validation
+  worlds: 4
+  temperature: 1.0             # thought sampler + decision T (METHOD 0.6)
+  line_score: none
+  line_wide: false
+  line_target: -1
+  em_more_joint: 0
+wandb:
+  name: "Qwen3.5-4B · RLVB (GRPO) ablation: no belief score, phase_set 1200 / set_keep 800, length_budget 8000"
+  project: ${WANDB_PROJECT:-}
+  entity: ${WANDB_ENTITY:-}
+  group: suite

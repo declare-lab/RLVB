@@ -57,6 +57,7 @@ class Reliability:
     def __init__(self, kappa=4.0, z=1.0, fidelity=False, value="accuracy"):
         self.kappa, self.z, self.fidelity = kappa, z, fidelity; self.s, self.n, self.seen = {}, {}, set()
         assert value in VALUES, value; self.value = value
+        self.frozen = False                                           # --rho_exact 1: the table keeps its prior, update / add do nothing
     # the teacher's value of a belief reached at time cost c (= exp(-lam t / T)) with answer accuracy r: the average over the
     # outcomes of u(c, r) = c r (value 'accuracy': the average accuracy) or log c + log r (value 'log': the average log accuracy;
     # each halving of the possible answers is worth log 2 at any time, so the values differ from the first action even when
@@ -79,12 +80,14 @@ class Reliability:
         a, b = self.beta(B); m = a / (a + b); v = a * b / ((a + b) ** 2 * (a + b + 1)); m = m + self.z * math.sqrt(max(v, 0.0))
         return min(1.0, B.U() * m if self.fidelity else m)
     def update(self, B, correct, key, ratio=None):
+        if self.frozen: return
         tag = (key, B.cls())
         if key is not None and tag in self.seen: return
         x = float(ratio) if (self.fidelity and ratio is not None) else float(correct)
         self.seen.add(tag); k = B.cls(); self.s[k] = self.s.get(k, 0.0) + x; self.n[k] = self.n.get(k, 0) + 1
     def add(self, k, s, n):
         """A measurement of class k given as its sum s and its count n (n may be a fraction: --rho_rb weighs a cell by its answers)."""
+        if self.frozen: return
         self.s[k] = self.s.get(k, 0.0) + float(s); self.n[k] = self.n.get(k, 0) + float(n)
     def table(self):
         return {str(k): [self.s[k], self.n[k]] for k in self.n}
@@ -126,9 +129,11 @@ def tie_merge(per, z=2.0):
     return {a: float(np.mean([mean[b] for b in g])) for g in groups for a in g}
 
 
-def targets(B, look_strings, answer_opts, commit_strings, post, rel, lam, T, tau, depth):
+def targets(B, look_strings, answer_opts, commit_strings, post, rel, lam, T, tau, depth, tau_look=None):
     """Two-level Boltzmann target over the legal strings; looks with equal value form one group. Also returns the looks'
-    values Q, the probability of answering now pC and the answers' values qy."""
+    values Q, the probability of answering now pC and the answers' values qy. tau_look (None or 0: tau) is the temperature of
+    the Boltzmann among the looks only; answer-or-look (pC), the stop rule and the Boltzmann among the answers keep tau."""
+    tl = tau_look if tau_look else tau
     Q = lookahead_Q(B, rel, lam, T, depth, acts=list(look_strings))
     c0 = math.exp(-lam * B.t / T); r = rel.mean(B)
     out = {}
@@ -145,9 +150,9 @@ def targets(B, look_strings, answer_opts, commit_strings, post, rel, lam, T, tau
         qL = max(groups)
         pC = 0.0 if qC is None else 1.0 / (1.0 + math.exp(-(qC - qL) / tau))
         if B.identified() and qC is not None: pC = 1.0       # the answer is certain: every look only costs time, so the target stops
-        z = sum(math.exp((q - qL) / tau) for q in groups)
+        z = sum(math.exp((q - qL) / tl) for q in groups)
         for q, mem in groups.items():
-            for s in mem: out[s] = (1 - pC) * math.exp((q - qL) / tau) / z / len(mem)
+            for s in mem: out[s] = (1 - pC) * math.exp((q - qL) / tl) / z / len(mem)
     else:
         pC = 1.0
     if qy:

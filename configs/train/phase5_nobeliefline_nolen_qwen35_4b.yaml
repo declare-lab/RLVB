@@ -1,0 +1,55 @@
+# RLVB (GRPO), Qwen3.5-4B, with no belief line at all: phase 5, no length term.
+# It is configs/train/phase5_nobelief_nolen_qwen35_4b.yaml (the Qwen3.5-4B RLVB (GRPO) run file of the tables: no belief score,
+# line_score none; phase 5, phase_set 240, set_keep 160, no length term) plus one line, no_belief_line 1 (plearn/method/trainer.py
+# --no_belief_line), and steps 25 (the tables test the update-25 adapter; phase ends and beta_decay depend only on the update
+# number). The prompt has the action-only rules of the one-line turn (plearn/tasks/domain.py action_only) and no carried line;
+# each own turn is the thought, </think> and the action line (M actions after each thought), scored by the action's log pi* alone.
+# The first sample set is a new one: the sets of the run file above have belief lines in their prompts and turns (PL_SET_FROM
+# refuses a set with another no_belief_line).
+# Train, then the one-line test (no belief line, as in training): scripts/ablation_scripts/phase5_nobeliefline_nolen_qwen35_4b.sh.
+train: phase5_nobeliefline_nolen_qwen35_4b
+model: qwen3.5-4b
+train_tasks: train_suite              # HiddenGames, the 8 games (train split)
+eval_tasks: [train_suite]             # the validation split of the training tasks (deferred: PL_EVAL_DEFER)
+eval_n: 0
+output: ${PL_RUNS:-runs}/phase5_nobeliefline_nolen_qwen35_4b
+env_sh: ${PL_ENV_SH:-/dev/null}
+gpus: {actor: "${PL_GPUS:-0,1,2,3}", learner: "${PL_GPUS:-0,1,2,3}", colocate: true}
+server:
+  PL_PRESENCE_PENALTY: "1.5"   # the model card setting
+  PL_EVAL_DEFER: "1"           # no validation in training: the runs test after training; eval_every still saves the adapters
+  PL_SKIP_EVAL0: "1"
+  PL_GPUS_PER_SERVER: "1"      # as the 8B: 1 GPU a server, no MTP
+  PL_MAX_NUM_SEQS: "${PL_SEQS:-96}"
+  PL_M_SPLIT: item             # speed
+  PL_ROUTE_SPILL: "2"
+  PL_ROUTE_SPILL_MIN: "96"
+method:
+  phase: 5                     # a new sample set every 5 updates (the method: 25)
+  phase_set: 240               # the histories of a phase's sample set (the method: 300 per phase of 25 updates)
+  set_keep: 160                # the histories with an accepted own turn that the 5 updates draw from, each once (the method: 200)
+  length_budget: 8000          # only a thought that is cut at 8,192 (or ends just before it) pays the length term
+  length_reward: "0"           # no length term (the method: 4); length_budget then has no effect
+  beta_decay: 0.9856           # the teacher's share of the moves per phase, 0.93^(1/5): the method's 0.5 and 0.465 at updates 1 and 26
+  update: grpo                 # RLVB (GRPO)
+  grpo_clip: 20                # scores raised to at least the group's best - 20, advantages in [-20, 20] nats
+  grpo_eps: 0.2                # PPO's clip rule against the phase prior
+  grpo_norm: 1                 # every batch's weights get RLVB (EM)'s total absolute size (one factor per batch)
+  attn: flash_attention_3      # FlashAttention 3 for speed (checked against sdpa at the first score)
+  score_presence: 1            # the learner's score has the sampler's presence penalty (PL_PRESENCE_PENALTY above)
+  max_think: 8192              # the tests' cap in training too (METHOD: 16,384 in training)
+  steps: 25                    # the tables test the update-25 adapter
+  eval_every: 25
+  eval_split: validation
+  worlds: 4
+  temperature: 1.0             # thought sampler + decision T (METHOD 0.6)
+  line_score: none
+  line_wide: false
+  line_target: -1
+  em_more_joint: 0
+  no_belief_line: 1            # no belief line at all: the action-only prompt, no carried line, no line in the turn
+wandb:
+  name: "Qwen3.5-4B · RLVB (GRPO) ablation: no belief line, no belief score, phase 5 / phase_set 240 / set_keep 160, no length term"
+  project: ${WANDB_PROJECT:-}
+  entity: ${WANDB_ENTITY:-}
+  group: suite

@@ -59,6 +59,7 @@ class SettingTests(unittest.TestCase):
             with self.subTest(run=f.name):
                 m = {**METHOD, **(c.get("method") or {})}
                 if f.name.startswith("abl_pl_4b"): self.assertEqual(m["line_score"], "decision" if "_dec" in f.name else "none" if "naive" in f.name else "exact")
+                elif f.name.startswith(("abl_grpo_nobelief_", "looks_nobelief_", "pool_nobelief_", "onpolicy_nobelief_", "phase5_nobelief_", "pool_nobeliefline_", "phase5_nobeliefline_")): self.assertEqual(m["line_score"], "none")   # the RLVB (GRPO) ablations without the belief score (pool_nobeliefline_: and without the belief line)
                 else: self.assertEqual(m["line_score"], "decision")
 
 

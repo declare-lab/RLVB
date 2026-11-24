@@ -27,6 +27,7 @@ from __future__ import annotations
 import itertools, math, random, re
 import numpy as np
 from plearn.api.episode import carried
+import plearn.tasks as _tasks                                        # PLAN_PAST_LIMIT
 
 MOVE_COST, MISS, VIEWS = 0.98, 50.0, 8                              # 0.02 nats an action; the newest VIEWS pairs of pictures
 LETTERS = "ABCDE"
@@ -67,7 +68,11 @@ class Belief:
     def cls(self): return ("tabletop-" + self.fam, min(len(self.alive), 4))
     def answer_counts(self): return {answer_of(self.fam, h): 1 for h in self.alive}
     def post(self): return {answer_of(self.fam, h): 1.0 / len(self.alive) for h in sorted(self.alive)}
-    def looks(self): return [a for a in range(self.n) if a not in self.done]   # a look done shows nothing new: each helper once
+    def looks(self):
+        """The looks not done (a look done shows nothing new: each helper once), while the episode's budget (n looks) lasts (
+        an invalid turn counts in t, so the looks left could outlast the budget; PLAN_PAST_LIMIT: no check, as before)."""
+        if self.t >= self.n and not _tasks.PLAN_PAST_LIMIT: return []
+        return [a for a in range(self.n) if a not in self.done]
     def outcomes(self, a):
         """(probability, the belief after the pictures) for look a: the hypotheses split by what the pictures would show."""
         groups = {}

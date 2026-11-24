@@ -40,12 +40,13 @@ class ScoreTests(unittest.TestCase):
 class SettingTests(unittest.TestCase):
     def test_the_three_pl_run_files_turn_it_on(self):
         """line_wide is on in the run files of the 3 RLVB (EM) training scripts (scripts/pl_qwen3vl_4b_thinking.sh,
-        pl_qwen3vl_8b_thinking.sh, pl_qwen35_4b.sh default RUN_FILE) and in the RLVB (GRPO) ablations' run files (the RLVB (EM) files
-        with --update grpo); no other run file, and not in METHOD (the default stays off)."""
+        pl_qwen3vl_8b_thinking.sh, pl_qwen35_4b.sh default RUN_FILE), in the RLVB (GRPO) run files (the RLVB (EM) files
+        with --update grpo) and in the ablation without the action reward; no other run file, and not in METHOD (the default stays off)."""
         from plearn.api.registry import REPO_ROOT, load_yaml
         runs = Path(REPO_ROOT) / "configs" / "train"
         on = {"suite_qwen3vl_4b_thinking", "suite_qwen3vl_8b_thinking", "suite_qwen35_4b_presence_8k",
-              "grpo_posterior_qwen3vl_8b_thinking", "grpo_posterior_qwen3vl_4b_thinking", "grpo_posterior_qwen35_4b"}   # the RLVB (GRPO) ablations (the RLVB (EM) run files with --update grpo)
+              "grpo_posterior_qwen3vl_8b_thinking", "grpo_posterior_qwen3vl_4b_thinking", "grpo_posterior_qwen35_4b",   # the RLVB (GRPO) run files
+              "abl_grpo_noaction_qwen3vl_4b_thinking"}   # the RLVB (GRPO) ablation without the action reward keeps the belief terms
         got = {f.stem for f in runs.glob("*.yaml") if (load_yaml(f).get("method") or {}).get("line_wide") is True}
         self.assertEqual(got, on)
         for f in (runs / f"{n}.yaml" for n in on):
