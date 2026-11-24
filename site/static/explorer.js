@@ -81,7 +81,13 @@ function howto() {
                 ["Budget", g.budget && `at most ${g.budget}`], ["What to watch", g.tip]]
     .filter(r => r[1]).map(r => `<dt>${r[0]}</dt><dd>${fmt(r[1])}</dd>`).join("");
   let cands = "";
-  if (g.members && g.members.length) {
+  const legend = g.bench === "proworlds" ? pwLegend(d.text, g.members) : null;
+  if (legend) {
+    // Pro-Worlds: where the parts sit, and the parts of each candidate (from the prompt the agent reads)
+    cands = (legend.places ? `<dt>Where the parts are</dt><dd>${esc(legend.places)}</dd>` : "") +
+      `<dt>Candidates</dt><dd><table class="legend"><tbody>${legend.rows.map(([m, parts], i) =>
+        `<tr><td class="num">${i + 1}</td><td><span class="cand ${m === g.truth ? "truth" : ""}">${esc(m)}</span></td><td>${esc(parts)}</td></tr>`).join("")}</tbody></table></dd>`;
+  } else if (g.members && g.members.length) {
     cands = `<dt>Candidates</dt><dd><div class="cands">${g.members.map((m, i) =>
       `<span class="cand ${m === g.truth ? "truth" : ""}">${i + 1}. ${esc(m)}</span>`).join("")}</div></dd>`;
   }
@@ -98,6 +104,24 @@ function howto() {
     $("reveal").innerHTML = `Hidden answer of this episode: <span class="ans">${esc(g.truth)}</span>`;
     document.querySelectorAll(".cand.truth").forEach(el => el.classList.add("revealed"));
   };
+}
+
+// Pro-Worlds prompt -> { places: where the parts sit, rows: [[candidate, its parts], ...] }; null if the prompt has another form
+function pwLegend(text, members) {
+  const t = String(text || "").split("\nThe answers:")[0];
+  const q = t.indexOf("Question:");
+  if (q < 0 || !members || !members.length) return null;
+  const re = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const rows = [];
+  for (let i = 0; i < members.length; i++) {
+    const next = members[i + 1];
+    const m = t.slice(q).match(new RegExp("[:;] " + re(members[i]) + " = (.+?)" + (next ? "; " + re(next) + " = " : "\\. Answer")));
+    if (!m) return null;
+    rows.push([members[i], m[1]]);
+  }
+  const mv = "each move goes to the next site (up, down, left or right). ";
+  const a = t.indexOf(mv), b = t.indexOf(" Question:");
+  return { places: a >= 0 && b > a ? t.slice(a + mv.length, b) : "", rows };
 }
 
 // command words in the rules as code
