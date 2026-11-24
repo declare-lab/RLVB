@@ -6,19 +6,22 @@ colorTo: blue
 sdk: static
 app_file: index.html
 pinned: false
-short_description: Step through test episodes of RLVB and seven baselines
+short_description: Lazy agents answer against their own beliefs
 ---
 
-# RLVB: Turning Agents from Lazy Guessers into Evidence Seekers with Verifiable Beliefs as Process Rewards
+# Lazy Agents Answer Against Their Own Beliefs: Reinforcement Learning with Verifiable Beliefs Teaches Them to Act on What They Believe
 
 Richmond Sin Jing Xuan, Peilin Feng, Wenbin Wang, Soujanya Poria. DeCLaRe Lab, Nanyang Technological University. Code: https://github.com/declare-lab/RLVB
 
-Project page of the paper. Each game of HiddenGames, Pro-Worlds and RoboQuest has one test episode played by the eight methods
-of the main table (Qwen3-VL-4B, seed 0). The page explains how each game is played and replays every method step by step: the
+Project page of the paper. Each game of HiddenGames, Pro-Worlds and RoboQuest has one test episode played by eight methods
+(seven of the main table and RLVB trained with the belief term) (Qwen3-VL-4B, seed 0). The page explains how each game is played and replays every method step by step: the
 frame the agent saw, its belief, the exact posterior from the simulator, its action and the environment's reply.
 
-Static site: `index.html`, `static/` (style and the explorer), `data/` (one JSON per game, plus `games.json`), `frames/`
-(the rendered steps), `boards/` (the whole board of each Pro-Worlds case). `tools/build_games.py` rebuilds `data/games.json`.
+Static site: `index.html`, `static/` (the style, the explorer in `explorer.js`, the result charts and the hero animation of the idea in
+`page.js`, the animation of the three rewards in `credit.js`, the figures), `data/` (one JSON per game, plus `games.json`), `frames/`
+(the rendered steps), `thumbs/` (the small pictures of the games), `boards/` (the whole board of each Pro-Worlds case).
+
+To view it on your machine, run `python3 -m http.server 8765 --directory site` and open http://localhost:8765.
 
 To publish it as a Hugging Face Space (static SDK), from the folder above `site/`:
 

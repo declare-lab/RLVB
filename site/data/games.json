@@ -426,7 +426,7 @@
     "haze"
    ],
    "goal": "Find which of the 8 candidates the picture shows. The parts to find are its upper corners (a pointed or a round flap), its middle panels (a ring or a plus emblem), its ropes (straight or crossed) and its basket (square or a cone).",
-   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the framed square is its window.",
    "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
    "answer": "The name of a candidate, at any time.",
    "board": "10 x 10 sites",
@@ -484,7 +484,7 @@
     "rhys"
    ],
    "goal": "Find which of the 8 candidates the picture shows. The parts to find are its roof marks, its loft marks, its door marks and its weather vane, each a large black shape.",
-   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the framed square is its window.",
    "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
    "answer": "The name of a candidate, at any time.",
    "board": "10 x 10 sites",
@@ -542,7 +542,7 @@
     "sepia"
    ],
    "goal": "Find which of the 8 candidates the picture shows. The parts to find are its antennae (a plus or a diamond), its wings (a star or a ring), its legs (a flat bar or a V) and its stinger (a square or a thin bar).",
-   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the framed square is its window.",
    "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
    "answer": "The name of a candidate, at any time.",
    "board": "10 x 10 sites",
@@ -600,7 +600,7 @@
     "sonata"
    ],
    "goal": "Find which of the 8 candidates the picture shows. The parts to find are its loop (a disc or a triangle), the ends of its rim (a triangle or a square), its bands (a thin bar or three stripes) and its clapper (a plus or a diamond).",
-   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the framed square is its window.",
    "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
    "answer": "The name of a candidate, at any time.",
    "board": "10 x 10 sites",
@@ -658,7 +658,7 @@
     "robin"
    ],
    "goal": "Find which of the 8 candidates the picture shows. The parts to find are the top of its head (a crest of spikes or a smooth arc), its beak (a long thin spike or a short wedge) and its tail (two long points or a fan of feathers).",
-   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the framed square is its window.",
    "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
    "answer": "The name of a candidate, at any time.",
    "board": "10 x 10 sites",
@@ -716,7 +716,7 @@
     "foehn"
    ],
    "goal": "Find which of the 8 candidates the picture shows. The parts to find are its flame (a star or a square), its wax drips (a ring or a diamond), its handles (a V or a disc) and its feet (a triangle or a flat bar).",
-   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the framed square is its window.",
    "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
    "answer": "The name of a candidate, at any time.",
    "board": "10 x 10 sites",
@@ -774,7 +774,7 @@
     "laughing"
    ],
    "goal": "Find which of the 8 candidates the picture shows. The parts to find are the brows (raised or lowered), the eyes (open or closed), the mouth corners (up or down) and the middle of the mouth (open or closed).",
-   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the framed square is its window.",
    "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
    "answer": "The name of a candidate, at any time.",
    "board": "10 x 10 sites",
@@ -832,7 +832,7 @@
     "bobo"
    ],
    "goal": "Find which of the 8 candidates the picture shows. The parts to find are its back fin, its tail and a patch of its orange side.",
-   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the framed square is its window.",
    "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
    "answer": "The name of a candidate, at any time.",
    "board": "9 x 9 sites",
@@ -892,7 +892,7 @@
     "snowfield"
    ],
    "goal": "Find which of the 10 candidates the picture shows. The parts to find are the ground piece (water or plain land), the plant piece (trees or only grass), the building piece (a building or blank) and the sky piece (falling snow or the sun).",
-   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the framed square is its window.",
    "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
    "answer": "The name of a candidate, at any time.",
    "board": "8 x 8 sites",
@@ -950,7 +950,7 @@
     "ring"
    ],
    "goal": "Find which of the 8 candidates the picture shows. The parts to find are its centre (a solid dot or a hollow circle), its spokes (straight or curved) and its rim (points or round bumps).",
-   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the framed square is its window.",
    "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
    "answer": "The name of a candidate, at any time.",
    "board": "9 x 9 sites",
@@ -1008,7 +1008,7 @@
     "zorla"
    ],
    "goal": "Find which of the 8 candidates the picture shows. The parts to find are its handle, its hooks, its flame window, its side panes and its base.",
-   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the framed square is its window.",
    "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
    "answer": "The name of a candidate, at any time.",
    "board": "10 x 10 sites",
@@ -1066,7 +1066,7 @@
     "pizza"
    ],
    "goal": "Find which of the 8 candidates the picture shows. The parts to find are the cheese, tomato and bread places, each showing its ingredient or an empty ring; a small side plate in the corner shows a random ingredient and does not count.",
-   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the framed square is its window.",
    "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
    "answer": "The name of a candidate, at any time.",
    "board": "9 x 9 sites",
@@ -1124,7 +1124,7 @@
     "swift"
    ],
    "goal": "Find which of the 8 candidates the picture shows. The parts to find are its nose (a disc or a triangle), its windows (a flat bar or a V), its fins (a star or a ring) and its flame (a thin bar or three stripes).",
-   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the framed square is its window.",
    "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
    "answer": "The name of a candidate, at any time.",
    "board": "10 x 10 sites",
@@ -1182,7 +1182,7 @@
     "vessa"
    ],
    "goal": "Find which of the 8 candidates the picture shows. The parts to find are its mast marks, its sail marks, its hull marks and its flag.",
-   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the framed square is its window.",
    "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
    "answer": "The name of a candidate, at any time.",
    "board": "10 x 10 sites",
@@ -1240,7 +1240,7 @@
     "imbra"
    ],
    "goal": "Find which of the 8 candidates the picture shows. The parts to find are its head, its front legs, the middle of its shell, its back legs and its tail.",
-   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the blue square is its window.",
+   "see": "One site of the board through the window. Here the board is drawn under fog: the sites the agent has seen are uncovered, and the framed square is its window.",
    "act": "UP, DOWN, LEFT and RIGHT move the window to the next site.",
    "answer": "The name of a candidate, at any time.",
    "board": "10 x 10 sites",

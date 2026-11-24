@@ -3,132 +3,384 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RLVB: Turning Agents from Lazy Guessers into Evidence Seekers with Verifiable Beliefs as Process Rewards</title>
-<meta name="description" content="RLVB rewards every step with the exact posterior that the simulator computes. Watch RLVB and seven baselines play HiddenGames, Pro-Worlds and RoboQuest, step by step.">
+<title>RLVB: Reinforcement Learning with Verifiable Beliefs</title>
+<meta name="description" content="Lazy agents answer against their own beliefs. RLVB rewards every step with the exact posterior from the simulator and teaches agents to act on what they believe.">
+<meta property="og:title" content="Lazy Agents Answer Against Their Own Beliefs">
+<meta property="og:description" content="Reinforcement Learning with Verifiable Beliefs (RLVB) teaches agents to act on what they believe.">
+<meta name="theme-color" content="#ffffff">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="static/style.css?v=3">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="static/style.css?v=91">
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 
-<nav class="topnav" id="topnav">
-  <div class="topnav-inner">
-    <a class="brand" href="#top">RLVB</a>
-    <div class="navlinks">
-      <a href="#cases">Episodes</a>
-      <a href="#method">How it works</a>
-      <a href="#bibtex">BibTeX</a>
-    </div>
-  </div>
-</nav>
-
-<header class="hero" id="top">
-  <div class="hero-inner">
-    <h1><span class="acronym">RLVB</span><br>Turning Agents from Lazy Guessers into Evidence Seekers with Verifiable Beliefs as Process Rewards</h1>
-    <p class="authors"><span>Richmond Sin Jing Xuan</span><span>Peilin Feng</span><span>Wenbin Wang</span><span>Soujanya Poria</span></p>
-    <p class="affil">DeCLaRe Lab, Nanyang Technological University, Singapore</p>
-    <div class="buttons">
-      <a class="btn" href="#" aria-disabled="true"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z M14 2v6h6" /></svg>Paper (arXiv soon)</a>
-      <a class="btn" href="https://github.com/declare-lab/RLVB" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M9 18l-6-6 6-6 M15 6l6 6-6 6" /></svg>Code</a>
-      <a class="btn" href="#cases"><svg viewBox="0 0 24 24"><path d="M5 4l14 8-14 8z" /></svg>Watch episodes</a>
-    </div>
-    <p class="tldr">The simulator knows the hidden answer, so it can score every step with the exact posterior.
-      Rewarded this way, agents stop guessing and look until the evidence is enough.</p>
-    <div class="stats">
-      <div class="stat"><b>+12.9</b><span>points over the base model,<br>RLVB with GRPO</span></div>
-      <div class="stat"><b>+10.4</b><span>points over the base model,<br>RLVB with EM</span></div>
-      <div class="stat"><b>3&ndash;6%</b><span>of turns answered too early,<br>against 11&ndash;20% for the base model</span></div>
-    </div>
-  </div>
-  <div class="teaser" aria-label="Games of the three benchmarks">
-    <figure data-task="tabletop_cups" title="Open Cups"><img src="static/img/teaser/cups.jpg" alt="Cups"><figcaption>Cups</figcaption></figure>
-    <figure data-task="tabletop_lamps" title="Open Lamps"><img src="static/img/teaser/lamps.jpg" alt="Lamps"><figcaption>Lamps</figcaption></figure>
-    <figure data-task="minesweeper_easy" title="Open MineSweeper"><img class="pixel" src="static/img/teaser/minesweeper.png" alt="MineSweeper"><figcaption>MineSweeper</figcaption></figure>
-    <figure data-task="sokoban_hidden_target" title="Open Sokoban"><img class="pixel" src="static/img/teaser/sokoban.png" alt="Sokoban"><figcaption>Sokoban</figcaption></figure>
-    <figure data-task="proworlds_expansion_bell" title="Open Bell"><img class="pixel" src="static/img/teaser/bell_board.png" alt="Bell"><figcaption>Bell</figcaption></figure>
-    <figure data-task="proworlds_expansion_candle" title="Open Candle"><img class="pixel" src="static/img/teaser/candle_board.png" alt="Candle"><figcaption>Candle</figcaption></figure>
-    <figure data-task="roboquest_text_painted_cubes" title="Open Painted cubes"><img src="static/img/teaser/painted_cubes.jpg" alt="Painted cubes"><figcaption>Painted cubes</figcaption></figure>
-    <figure data-task="roboquest_text_search_room" title="Open Search room"><img src="static/img/teaser/kitchen.jpg" alt="RoboQuest kitchen"><figcaption>Search room</figcaption></figure>
-  </div>
+<header class="topnav" id="topnav">
+  <a class="brand" href="#top">RLVB</a>
+  <nav aria-label="Sections">
+    <a href="#problem">Problem</a><a href="#idea">Method</a><a href="#results">Results</a><a href="#why">Analysis</a><a href="#cases">Episodes</a><a href="#benchmarks">Benchmarks</a>
+  </nav>
+  <a class="btn small" href="https://github.com/declare-lab/RLVB" target="_blank" rel="noopener">GitHub &nearr;</a>
 </header>
 
-<main>
-
-<div class="band">
-<section id="cases" class="section wide">
-  <h2>Watch the agents play</h2>
-  <p class="lead">Pick a game and a method, then press play. <kbd>&larr;</kbd> <kbd>&rarr;</kbd> step, <kbd>space</kbd> plays.</p>
-
-  <div class="bench-tabs" id="bench-tabs" role="tablist"></div>
-  <div class="game-strip" id="game-strip"></div>
-
-  <div class="explorer" id="explorer">
-    <aside class="howto" id="howto"></aside>
-    <div class="viewer">
-      <div class="method-chips" id="method-chips"></div>
-      <div class="stage">
-        <div class="frame-box" id="frame-box">
-          <img id="frame-a" class="frm on" alt="">
-          <img id="frame-b" class="frm" alt="">
-          <div class="board" id="board">
-            <img id="board-img" alt="The whole board">
-            <svg id="fog" preserveAspectRatio="none"></svg>
-            <div class="win" id="win"></div>
-          </div>
-          <figure class="inset" id="inset"><img id="inset-img" alt=""><figcaption>the agent's view</figcaption></figure>
-          <div class="step-badge" id="step-badge"></div>
-          <div class="outcome-badge" id="outcome-badge"></div>
-          <svg class="minimap" id="minimap"></svg>
-          <button class="reveal-board" id="reveal-board" title="Show the whole board">Show the whole board</button>
-        </div>
-        <div class="step-panel" id="step-panel"></div>
-      </div>
-      <div class="controls">
-        <button class="ctl" id="btn-first" title="First step">&#x23EE;</button>
-        <button class="ctl" id="btn-prev" title="Previous step (&larr;)">&#x25C0;</button>
-        <button class="ctl play" id="btn-play" title="Play (space)">&#x25B6;</button>
-        <button class="ctl" id="btn-next" title="Next step (&rarr;)">&#x25B6;&#xFE0E;</button>
-        <button class="ctl" id="btn-last" title="Last step">&#x23ED;</button>
-        <input type="range" id="slider" min="0" max="0" value="0" aria-label="Step">
-        <div class="speed" id="speed" role="group" aria-label="Speed">
-          <button data-ms="1500">0.5&times;</button><button data-ms="800" class="on">1&times;</button><button data-ms="380">2&times;</button>
-        </div>
-        <span class="step-count" id="step-count"></span>
-      </div>
-    </div>
+<section class="hero" id="top">
+  <p class="kicker">Reinforcement Learning with Verifiable Beliefs</p>
+  <h1>Lazy Agents Answer Against Their Own Beliefs</h1>
+  <p class="hero-sub">RLVB teaches them to act on what they believe</p>
+  <p class="authors">
+    <a href="https://richmondsin.vercel.app/" target="_blank" rel="noopener">Richmond Sin Jing Xuan</a><sup>1*</sup>
+    <a href="https://peilin-ff.github.io/" target="_blank" rel="noopener">Peilin Feng</a><sup>1*</sup>
+    <a href="https://wenbinwang12.github.io/" target="_blank" rel="noopener">Wenbin Wang</a><sup>2</sup>
+    <a href="https://soujanyaporia.github.io/" target="_blank" rel="noopener">Soujanya Poria</a><sup>1</sup>
+  </p>
+  <p class="affil"><sup>1</sup><a href="https://declare-lab.github.io/" target="_blank" rel="noopener">DeCLaRe Lab</a>, Nanyang Technological University &nbsp;&middot;&nbsp; <sup>2</sup>Independent &nbsp;&middot;&nbsp; <sup>*</sup>Equal contribution</p>
+  <div class="buttons">
+    <span class="btn off">Paper soon</span>
+    <a class="btn solid" href="https://github.com/declare-lab/RLVB" target="_blank" rel="noopener">Code &nearr;</a>
+    <a class="btn" href="https://huggingface.co/collections/richmondsin/rlvb" target="_blank" rel="noopener">Models &nearr;</a>
+    <a class="btn" href="#cases">Episodes</a>
   </div>
-
-  <h3 class="sub">All eight methods, side by side</h3>
-  <div class="filmstrips" id="filmstrips"></div>
-</section>
-</div>
-
-<section id="method" class="section">
-  <h2>How it works</h2>
-  <figure class="fig">
-    <img src="static/img/fig2_credit.png" alt="How GRPO, PPO with a judge and RLVB assign credit on the cups game" loading="lazy">
-    <figcaption>GRPO rewards whole episodes, PPO asks an LLM judge, and RLVB scores each step against the exact posterior.</figcaption>
+  <figure class="film" id="film" aria-label="Animation: a lazy agent guesses, the simulator computes the exact posterior, RLVB rewards each action from it, and the trained agent commits once the evidence is sufficient">
+    <div id="film-canvas"></div>
+    <div class="film-foot">
+      <button class="ctl play" id="film-play" aria-label="Pause"></button>
+      <p id="film-cap"></p>
+    </div>
+    <div class="film-ch" id="film-ch"></div>
   </figure>
 </section>
 
-<section id="bibtex" class="section narrow">
-  <h2>BibTeX</h2>
-  <pre class="bib"><code>@article{rlvb2026,
-  title   = {RLVB: Turning Agents from Lazy Guessers into Evidence Seekers
-             with Verifiable Beliefs as Process Rewards},
-  author  = {Richmond Sin Jing Xuan and Peilin Feng and Wenbin Wang and Soujanya Poria},
-  journal = {arXiv preprint},
-  year    = {2026}
+<main id="main">
+
+<section class="col intro">
+  <p class="tldr">Agents on long tasks often stop too soon. They commit to an answer while their own stated belief still
+    names several possible answers. During training, the simulator can compute the exact posterior over the hidden answer
+    after every step. <b>RLVB</b> takes this posterior as the belief supported by the evidence, and rewards the agent for
+    taking further steps while several answers remain and for committing once the evidence is sufficient.</p>
+  <dl class="nums" data-rv>
+    <div><dt>9 / 9</dt><dd>settings where RLVB improves the base model</dd></div>
+    <div><dt>+17.1</dt><dd>points over the base model on average</dd></div>
+    <div><dt>+9.3</dt><dd>points over PPO with an LLM judge</dd></div>
+    <div><dt>1.6&times;</dt><dd>fewer GPU-hours than that baseline</dd></div>
+  </dl>
+</section>
+
+<section id="problem" class="section">
+  <div class="col">
+    <h2>The problem</h2>
+    <p>We ask each model to write a belief line before every action, such as <code>Possible: cups 2, 4</code>. The base
+      models often write that several answers remain and still commit in the same turn.</p>
+  </div>
+
+  <div class="col">
+    <p>On turns with insufficient evidence where the belief line still names several answers,
+      Base (w/ belief) commits in 3 to 68% of cases. After RLVB, the same models commit in 0.1 to 2.2% of cases.</p>
+  </div>
+
+  <figure class="fig mid" data-rv>
+    <h3>Commits while the belief line still names several answers</h3>
+    <div class="legend"><span><i class="dot base"></i>Base (w/ belief)</span><span><i class="dot ours"></i>RLVB</span></div>
+    <div class="dumb" id="commit-chart"></div>
+    <figcaption>Share of turns with insufficient evidence where the agent commits (%).</figcaption>
+  </figure>
+
+  <div class="col">
+    <p>An outcome reward does not fix this, because it pays a lucky guess as much as an answer backed by evidence. GRPO
+      and PPO with the outcome reward lose 1.0 and 5.1 points on average. For the base models, a check in the harness that rejects the
+      first answer and asks the agent to look at its evidence again changes accuracy by at most 1.9 points on HiddenGames
+      and Pro-Worlds, because the harness cannot read the observations.</p>
+  </div>
+</section>
+
+<section id="idea" class="section">
+  <div class="col">
+    <h2>The method</h2>
+    <p>RL with verifiable rewards checks the final answer. The simulator knows more than that, since it knows the rules
+      linking the hidden answer to the evidence. It can therefore verify the belief supported by the evidence at every
+      step, and this belief shows whether the agent should take a further step or answer.</p>
+  </div>
+
+  <figure class="fig wide" data-rv>
+    <div class="credit" id="credit">
+      <div class="ways" role="tablist" aria-label="Reward">
+        <button class="way" role="tab" data-ch="0">
+          <span class="way-sub">GRPO, PPO</span>
+          <span class="way-h">Outcome reward</span>
+          <span class="way-p">The agent gets one reward after the final answer, and a lucky guess is rewarded in full.</span>
+          <span class="way-bar"></span>
+        </button>
+        <button class="way" role="tab" data-ch="1">
+          <span class="way-sub">PPO with an LLM judge</span>
+          <span class="way-h">Judged process reward</span>
+          <span class="way-p">A judge that sees the hidden answer scores each belief.</span>
+          <span class="way-bar"></span>
+        </button>
+        <button class="way ours" role="tab" data-ch="2">
+          <span class="way-sub">RLVB (ours)</span>
+          <span class="way-h">Posterior process reward</span>
+          <span class="way-p">Every turn is rewarded from the exact posterior, with no judge, critic or reward model.</span>
+          <span class="way-bar"></span>
+        </button>
+      </div>
+      <div class="cr-stage">
+        <div class="cr-scroll"><div class="cr-canvas" id="cr-canvas"></div></div>
+        <div class="cr-foot">
+          <button class="ctl play" id="cr-play" aria-label="Pause"></button>
+          <p class="cr-cap" id="cr-cap" aria-live="off"></p>
+          <input type="range" id="cr-seek" min="0" max="1000" value="0" aria-label="Position in this chapter">
+        </div>
+      </div>
+    </div>
+  </figure>
+
+  <div class="col">
+    <ol class="steps">
+      <li><b>The turn.</b> The agent writes its reasoning, then a belief line with the answers it still sees as possible,
+        and an action line that takes a further step or gives the answer.</li>
+      <li><b>The teacher.</b> The simulator updates the exact posterior after each observation. A teacher looks ahead on
+        this posterior and chooses the next action.</li>
+      <li><b>The reward.</b> The reward compares the agent's action with the teacher's action. It does not read the belief
+        line, and a guess receives a low reward.</li>
+      <li><b>The update.</b> At each history the agent samples several turns, and the turns with a higher reward become
+        more likely. The update trains the whole turn, including the belief line.</li>
+    </ol>
+  </div>
+
+  <figure class="fig mid" data-rv>
+    <div class="turnlab" id="turnlab">
+      <div class="turn-pick">
+        <h3>Score a turn yourself</h3>
+        <p class="p">The agent has lifted cups 1 and 3, and the red cylinder is under cup 2 or cup 4. Pick what the agent
+          writes next.</p>
+        <div class="turn-opts" id="turn-opts" role="radiogroup" aria-label="Turn"></div>
+      </div>
+      <div class="turn-scores" id="turn-scores" aria-live="polite"></div>
+    </div>
+  </figure>
+</section>
+
+<section id="results" class="section">
+  <div class="col">
+    <h2>Results</h2>
+    <p>We train three vision-language models on HiddenGames and test them on unseen games of HiddenGames and on Pro-Worlds
+      and RoboQuest, which are never seen in training. RLVB improves the base model in all nine settings, by up to 15.1
+      points on Pro-Worlds and up to 32.8 points on RoboQuest. In the charts, PPO (belief + action) is PPO with a process
+      reward from an LLM judge, RLVB (EM) uses expectation maximization as the learner, and RLVB without the belief line
+      outputs only an action.</p>
+  </div>
+
+  <figure class="fig wide" data-rv>
+    <div class="model-bar">
+      <div class="seg" id="model-seg" role="group" aria-label="Model">
+        <button data-k="vl8">Qwen3-VL-8B-Thinking</button><button data-k="vl4" class="on">Qwen3-VL-4B-Thinking</button><button data-k="q35">Qwen3.5-4B</button>
+      </div>
+    </div>
+    <div class="charts" id="acc-charts"></div>
+    <figcaption>Accuracy (%), mean of three sampling seeds. The dashed line marks the base model.</figcaption>
+    <details class="fulltable">
+      <summary>Full table, all models</summary>
+      <div class="table-scroll" id="full-table"></div>
+    </details>
+  </figure>
+
+  <div class="col">
+    <p>RLVB also changes how the episodes end. It gives more right answers with enough evidence and far fewer wrong
+      answers that come too early, and it takes more evidence-gathering steps than every baseline.</p>
+  </div>
+
+  <div class="pair">
+    <figure class="fig" data-rv>
+      <h3>How the episodes end</h3>
+      <div class="legend" id="end-legend"></div>
+      <div class="endings" id="endings"></div>
+      <figcaption>Percent of all episodes of the three benchmarks. An answer has enough evidence once the exact posterior
+        of the top answer reaches 0.95, or in RoboQuest once every requirement of the task is met.</figcaption>
+    </figure>
+    <figure class="fig" data-rv>
+      <h3>Answers given too early</h3>
+      <div class="table-scroll" id="process"></div>
+      <figcaption>Share of answers given before the evidence is sufficient, and steps per episode.</figcaption>
+    </figure>
+  </div>
+
+  <div class="pair">
+    <figure class="fig" data-rv>
+      <h3>Training cost</h3>
+      <div class="cost" id="cost"></div>
+      <figcaption>GPU-hours of one training run of Qwen3.5-4B on A100 GPUs. PPO (belief + action) also makes about
+        12,600 calls to an LLM judge.</figcaption>
+    </figure>
+    <figure class="fig" data-rv>
+      <h3>The action term carries the gain</h3>
+      <div class="table-scroll">
+        <table class="tbl num abl">
+          <thead><tr><th>Reward</th><th>HiddenGames</th><th>Pro-Worlds</th><th>RoboQuest</th></tr></thead>
+          <tbody>
+            <tr><th>Base (w/ belief)</th><td>24.5</td><td>18.2</td><td>34.0</td></tr>
+            <tr class="ours main"><th>RLVB, action term</th><td class="best">36.2</td><td class="best">28.7</td><td class="best">61.2</td></tr>
+            <tr><th>&ensp;small sample set</th><td>35.3</td><td>23.9</td><td>55.5</td></tr>
+            <tr><th>&ensp;&ensp;with the belief term</th><td>35.9</td><td>21.7</td><td>45.8</td></tr>
+            <tr><th>&ensp;&ensp;belief term only</th><td>24.6</td><td>14.6</td><td>19.7</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption>Accuracy (%) on Qwen3-VL-4B-Thinking. A reward on the belief line alone does not raise accuracy.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="why" class="section">
+  <div class="col">
+    <h2>Why it works</h2>
+    <p>To find where the gain comes from, we replay every test episode and group the answers by the evidence the agent has
+      when it answers. For every method, 66 to 92% of the answers given with sufficient
+      evidence are correct. RLVB reaches this level of evidence far more often than the base model.</p>
+  </div>
+
+  <figure class="fig wide" data-rv>
+    <h3>Episodes answered with sufficient evidence</h3>
+    <div class="suff" id="suff"></div>
+  </figure>
+
+  <div class="col">
+    <p>The gain over the base model splits into a part from answering at higher levels of evidence and a part from
+      accuracy at the same level of evidence. Almost all of the gain comes from the first part.</p>
+  </div>
+
+  <figure class="fig mid" data-rv>
+    <h3>Where the gain comes from</h3>
+    <div class="legend"><span><i class="sw more"></i>from more evidence</span><span><i class="sw same"></i>at the same evidence</span></div>
+    <div class="splitbars" id="splitbars"></div>
+    <figcaption>Points of accuracy over the base model, all three models.</figcaption>
+  </figure>
+
+  <div class="col">
+    <p>Training does not make the belief line consistently more exact. Over all turns it is exact less often on Pro-Worlds,
+      by 4.9 to 7.8 points, and more often on RoboQuest for two of the three models. The steps are also not more informative, since about 21% of the
+      actions of both agents add evidence on RoboQuest at the same state. When either agent commits after a single-answer
+      line, it gives the answer named by the line in at least 97% of cases.</p>
+    <p>Training mainly links the decision to commit to the agent's own belief. Because the trained agent acts on its
+      belief, we expect a better reading of the evidence to translate into better answers.</p>
+  </div>
+</section>
+
+<section id="cases" class="section">
+  <div class="col">
+    <h2>Episodes</h2>
+    <p>One test game of every task, played by eight methods on Qwen3-VL-4B. Pick a game and a method, then press play.
+      <kbd>&larr;</kbd> <kbd>&rarr;</kbd> step through the turns and <kbd>space</kbd> plays.</p>
+  </div>
+
+  <div class="fig wide">
+    <div class="bench-tabs" id="bench-tabs" role="tablist"></div>
+    <div class="game-strip" id="game-strip"></div>
+
+    <div class="explorer" id="explorer">
+      <aside class="howto" id="howto"></aside>
+      <div class="viewer">
+        <div class="method-chips" id="method-chips"></div>
+        <div class="stage">
+          <div class="frame-box" id="frame-box">
+            <img id="frame-a" class="frm on" alt="">
+            <img id="frame-b" class="frm" alt="">
+            <div class="board" id="board">
+              <img id="board-img" alt="The whole board">
+              <svg id="fog" preserveAspectRatio="none"></svg>
+              <div class="win" id="win"></div>
+            </div>
+            <div class="step-badge" id="step-badge"></div>
+            <div class="outcome-badge" id="outcome-badge"></div>
+            <svg class="minimap" id="minimap"></svg>
+            <button class="reveal-board" id="reveal-board" title="Show the whole board">Show the whole board</button>
+          </div>
+          <div class="step-panel" id="step-panel"></div>
+        </div>
+        <div class="controls">
+          <button class="ctl" id="btn-first" title="First step" aria-label="First step"><svg viewBox="0 0 24 24"><path d="M6 5v14M19 5l-9 7 9 7z"/></svg></button>
+          <button class="ctl" id="btn-prev" title="Previous step (&larr;)" aria-label="Previous step"><svg viewBox="0 0 24 24"><path d="M16 5l-9 7 9 7z"/></svg></button>
+          <button class="ctl play" id="btn-play" title="Play (space)" aria-label="Play"></button>
+          <button class="ctl" id="btn-next" title="Next step (&rarr;)" aria-label="Next step"><svg viewBox="0 0 24 24"><path d="M8 5l9 7-9 7z"/></svg></button>
+          <button class="ctl" id="btn-last" title="Last step" aria-label="Last step"><svg viewBox="0 0 24 24"><path d="M18 5v14M5 5l9 7-9 7z"/></svg></button>
+          <input type="range" id="slider" min="0" max="0" value="0" aria-label="Step">
+          <div class="speed seg" id="speed" role="group" aria-label="Speed">
+            <button data-ms="1500">0.5&times;</button><button data-ms="800" class="on">1&times;</button><button data-ms="380">2&times;</button>
+          </div>
+          <span class="step-count" id="step-count"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="film-head">
+      <h3>All methods on this game</h3>
+      <p class="legend"><span><i class="lg"></i>a step</span><span><i class="lg ok"></i>ends right</span><span><i class="lg bad"></i>ends wrong</span><span><i class="lg void"></i>a step without effect</span>
+        <span><i class="lg dot"></i>from here the evidence identifies the answer</span></p>
+    </div>
+    <div class="filmstrips" id="filmstrips"></div>
+    <div class="film-tip" id="film-tip" role="tooltip"></div>
+  </div>
+</section>
+
+<section id="benchmarks" class="section">
+  <div class="col">
+    <h2>Benchmarks</h2>
+    <p>In every game the answer is hidden. The agent must take actions to collect evidence and decide when it has seen
+      enough to answer. Pro-Worlds is a new benchmark in which the agent views a large world through a small window and moves
+      the window to gather visual evidence.</p>
+  </div>
+  <div class="fig wide bench-cards" id="bench-cards" data-rv></div>
+</section>
+
+<section id="models" class="section">
+  <div class="col">
+    <h2>Models</h2>
+    <p>The full models, with the adapter merged into the base model, are in the Hugging Face collection
+      <a href="https://huggingface.co/collections/richmondsin/rlvb" target="_blank" rel="noopener">richmondsin/rlvb</a>.</p>
+  </div>
+  <div class="fig mid table-scroll">
+    <table class="tbl models">
+      <thead><tr><th>Learner</th><th>Qwen3-VL-8B-Thinking</th><th>Qwen3-VL-4B-Thinking</th><th>Qwen3.5-4B</th></tr></thead>
+      <tbody>
+        <tr><th>RLVB (EM)</th>
+          <td><a href="https://huggingface.co/richmondsin/pl-qwen3-vl-8b-thinking" target="_blank" rel="noopener">pl-qwen3-vl-8b-thinking</a></td>
+          <td><a href="https://huggingface.co/richmondsin/pl-qwen3-vl-4b-thinking" target="_blank" rel="noopener">pl-qwen3-vl-4b-thinking</a></td>
+          <td><a href="https://huggingface.co/richmondsin/pl-qwen3.5-4b" target="_blank" rel="noopener">pl-qwen3.5-4b</a></td></tr>
+        <tr><th>RLVB (GRPO)</th>
+          <td><a href="https://huggingface.co/richmondsin/grpo-posterior-qwen3-vl-8b-thinking" target="_blank" rel="noopener">grpo-posterior-qwen3-vl-8b-thinking</a></td>
+          <td><a href="https://huggingface.co/richmondsin/grpo-posterior-qwen3-vl-4b-thinking" target="_blank" rel="noopener">grpo-posterior-qwen3-vl-4b-thinking</a></td>
+          <td><a href="https://huggingface.co/richmondsin/grpo-posterior-qwen3.5-4b" target="_blank" rel="noopener">grpo-posterior-qwen3.5-4b</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="bibtex" class="section">
+  <div class="col">
+    <h2>Citation</h2>
+    <div class="bib">
+      <button class="btn small" id="copy-bib">Copy</button>
+<pre><code id="bib-code">@misc{rlvb2026,
+  title  = {Lazy Agents Answer Against Their Own Beliefs: Reinforcement Learning
+            with Verifiable Beliefs Teaches Them to Act on What They Believe},
+  author = {{Richmond Sin Jing Xuan} and Peilin Feng and Wenbin Wang and Soujanya Poria},
+  year   = {2026},
+  howpublished = {\url{https://github.com/declare-lab/RLVB}}
 }</code></pre>
+    </div>
+  </div>
 </section>
 
 </main>
 
 <footer class="footer">
-  <p>DeCLaRe Lab, Nanyang Technological University &middot; test episodes of Qwen3-VL-4B, seed 0</p>
+  <p><a href="https://declare-lab.github.io/" target="_blank" rel="noopener">DeCLaRe Lab</a>, Nanyang Technological University</p>
+  <p><a href="https://github.com/declare-lab/RLVB" target="_blank" rel="noopener">Code</a> &middot;
+     <a href="https://huggingface.co/collections/richmondsin/rlvb" target="_blank" rel="noopener">Models</a> &middot;
+     <a href="https://declare-lab.github.io/RoboQuest/" target="_blank" rel="noopener">RoboQuest</a></p>
 </footer>
 
-<script src="static/explorer.js?v=4"></script>
+<script src="static/explorer.js?v=91"></script>
+<script src="static/page.js?v=91"></script>
+<script src="static/credit.js?v=91"></script>
 </body>
 </html>
