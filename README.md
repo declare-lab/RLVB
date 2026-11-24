@@ -43,8 +43,8 @@ the decision to look again or to answer, against the posterior.
 - 📈 **Results of the paper**: on 3 vision-language models x 3 benchmarks (2 not seen in training), RLVB improves on the base
   model in all 9 settings: +17.1 points on average with GRPO as the learner, +10.4 points with EM. GRPO and PPO with the
   outcome reward lose accuracy on average. RLVB is also better than PPO with an LLM-judge process reward, with 1.6x fewer
-  GPU-hours (GRPO) and 4x fewer GPU-hours (EM). Before the evidence is sufficient, the trained agent answers on 3-6 % of turns;
-  the base model answers on 8-16 % of turns.
+  GPU-hours (GRPO) and 4x fewer GPU-hours (EM). On turns with insufficient evidence where the belief line still names
+  several answers, Base (w/ belief) commits in 3 to 68 % of cases. After RLVB, the same models commit in 0.1 to 2.2 % of cases.
 
 ## 🧩 Benchmarks
 
