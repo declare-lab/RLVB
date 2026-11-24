@@ -1,28 +1,27 @@
 <div align="center">
-<h1>RLVB: Reinforcement Learning with Verifiable Belief</h1>
+<h1>RLVB: Reinforcement Learning with Verifiable Beliefs</h1>
 
 <a href="assets/rlvb_vs_base_grpo.mp4"><img src="assets/rlvb_vs_base_grpo.gif" alt="Base, GRPO with the outcome reward and RLVB (GRPO) play the same test games" width="100%"></a>
 </div>
 
 <div align="center">
-<h2>RLVB: Turning Agents from Lazy Guessers into Evidence Seekers with Verifiable Beliefs as Process Reward</h2>
+<h2>Lazy Agents Answer Against Their Own Beliefs: Reinforcement Learning with Verifiable Beliefs Teaches Them to Act on What They Believe</h2>
 </div>
 <div align="center">
 
-[Richmond Sin Jing Xuan](https://richmondsin.vercel.app/)<sup>1</sup>,
-[Peilin Feng](https://peilin-ff.github.io/)<sup>1</sup>,
+[Richmond Sin Jing Xuan](https://richmondsin.vercel.app/)<sup>1*</sup>,
+[Peilin Feng](https://peilin-ff.github.io/)<sup>1*</sup>,
 [Wenbin Wang](https://wenbinwang12.github.io/)<sup>2</sup>,
 [Soujanya Poria](https://soujanyaporia.github.io/)<sup>1</sup>
 
-<sup>1</sup>[DeCLaRe Lab](https://declare-lab.github.io/), Nanyang Technological University &nbsp;&nbsp; <sup>2</sup>Independent
+<sup>1</sup>[DeCLaRe Lab](https://declare-lab.github.io/), Nanyang Technological University &nbsp;&nbsp; <sup>2</sup>Independent &nbsp;&nbsp; <sup>*</sup>Equal contribution
 
 ![Paper](https://img.shields.io/badge/Paper-coming%20soon-lightgrey)
 [![Models](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Models-yellow)](https://huggingface.co/collections/richmondsin/rlvb)
 
 </div>
 
-This repository contains the official implementation and evaluation code of **RLVB: Turning Agents from Lazy Guessers into
-Evidence Seekers with Verifiable Beliefs as Process Reward**.
+This repository contains the official implementation and evaluation code of **Lazy Agents Answer Against Their Own Beliefs: Reinforcement Learning with Verifiable Beliefs Teaches Them to Act on What They Believe**.
 
 Agents on long horizons answer too early. An end-of-episode reward cannot show which step was wrong. In many
 evidence-seeking tasks, the simulator knows the rules that link the hidden answer to the evidence, so it can compute the
@@ -410,7 +409,7 @@ docs/                    install, evaluation, training, environments
 
 ```bibtex
 @misc{rlvb2026,
-  title  = {RLVB: Turning Agents from Lazy Guessers into Evidence Seekers with Verifiable Beliefs as Process Reward},
+  title  = {Lazy Agents Answer Against Their Own Beliefs: Reinforcement Learning with Verifiable Beliefs Teaches Them to Act on What They Believe},
   author = {{Richmond Sin Jing Xuan} and Peilin Feng and Wenbin Wang and Soujanya Poria},
   year   = {2026},
   howpublished = {\url{https://github.com/declare-lab/RLVB}}

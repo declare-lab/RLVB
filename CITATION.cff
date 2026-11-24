@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 type: software
-title: "RLVB: Turning Agents from Lazy Guessers into Evidence Seekers with Verifiable Beliefs as Process Reward"
+title: "Lazy Agents Answer Against Their Own Beliefs: Reinforcement Learning with Verifiable Beliefs Teaches Them to Act on What They Believe"
 authors:
   - given-names: "Richmond Sin Jing Xuan"
   - given-names: "Peilin"
