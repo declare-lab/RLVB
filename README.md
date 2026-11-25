@@ -78,6 +78,10 @@ Pro-Worlds 35): `PL_TEST_MOVES=0` gives those limits back. The Pro-Worlds long b
 - **The update**: the trainer samples the agent's own turns at each history. RLVB (EM) weights the turns by their scores
   (the E-step) and fits the weighted turns (the M-step). RLVB (GRPO) uses the same samples and scores. It gives each turn its
   group-relative advantage over the other turns of the same history, with a PPO clip against the phase prior.
+- **At test time**: the trained agent acts alone, from its history of actions and observations. The simulator, the exact
+  posterior and the teacher are used only to compute the reward in training. No test benchmark gives the agent a
+  posterior. On RoboQuest, the possible states cannot be listed. The belief is open-ended free text, and no exact posterior
+  exists, even for the analysis.
 
 The equations, the algorithm and the code map are in [plearn/method/README.md](plearn/method/README.md).
 

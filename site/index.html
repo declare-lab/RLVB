@@ -144,6 +144,9 @@
         line, and a guess receives a low reward.</li>
       <li><b>The update.</b> At each history the agent samples several turns, and the turns with a higher reward become
         more likely. The update trains the whole turn, including the belief line.</li>
+      <li><b>At test time.</b> The trained agent acts alone, from its history of actions and observations. It needs no
+        simulator, posterior or teacher. It also runs on RoboQuest, where the possible states cannot be listed, the
+        belief is open-ended free text, and no exact posterior exists.</li>
     </ol>
   </div>
 
