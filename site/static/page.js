@@ -297,7 +297,7 @@
         b.classList.toggle("on", t >= a0 && t < a1); b.firstChild.style.transform = `scaleX(${cl((t - a0) / (a1 - a0)).toFixed(4)})`; });
       btn.innerHTML = playing ? PAUSE : PLAY; btn.setAttribute("aria-label", playing ? "Pause" : "Play");
     }
-    function step(now) { const dt = Math.min(.25, (now - last) / 1000); last = now; if (playing && inView) { t += dt; if (t >= DUR) { t = 0; draw(); } else draw(dt); } }
+    function step(now) { const dt = Math.max(0, Math.min(.25, (now - last) / 1000)); last = now; if (playing && inView) { t += dt; if (t >= DUR) { t = 0; draw(); } else draw(dt); } }
     function frame(now) { step(now); requestAnimationFrame(frame); }
     chs.forEach((b, k) => b.onclick = () => { t = still ? [8.5, 15.5, 21, DUR - 1.3][k] : CH[k][0]; playing = !still; draw(); });
     btn.onclick = () => { playing = !playing; draw(); };
