@@ -17,7 +17,7 @@
 <sup>1</sup>[DeCLaRe Lab](https://declare-lab.github.io/), Nanyang Technological University &nbsp;&nbsp; <sup>2</sup>Independent &nbsp;&nbsp; <sup>*</sup>Equal contribution
 
 [![Website](https://img.shields.io/badge/Website-RLVB-blue)](https://declare-lab.github.io/RLVB/)
-![Paper](https://img.shields.io/badge/Paper-coming%20soon-lightgrey)
+[![arXiv](https://img.shields.io/badge/arXiv-2611.32884-b31b1b)](https://arxiv.org/abs/2611.32884)
 [![Models](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Models-yellow)](https://huggingface.co/collections/richmondsin/rlvb)
 
 </div>
@@ -255,7 +255,10 @@ docs/                    install, evaluation, training, environments
   title  = {Lazy Agents Answer Against Their Own Beliefs: Reinforcement Learning with Verifiable Beliefs Teaches Them to Act on What They Believe},
   author = {{Richmond Sin Jing Xuan} and Peilin Feng and Wenbin Wang and Soujanya Poria},
   year   = {2026},
-  howpublished = {\url{https://github.com/declare-lab/RLVB}}
+  eprint = {2611.32884},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.AI},
+  url    = {https://arxiv.org/abs/2611.32884}
 }
 ```
 

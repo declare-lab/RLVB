@@ -15,3 +15,22 @@ date-released: "2026-11-15"
 license: MIT
 repository-code: "https://github.com/declare-lab/RLVB"
 url: "https://github.com/declare-lab/RLVB"
+identifiers:
+  - type: doi
+    value: "10.48550/arXiv.2611.32884"
+    description: "The arXiv paper"
+preferred-citation:
+  type: article
+  title: "Lazy Agents Answer Against Their Own Beliefs: Reinforcement Learning with Verifiable Beliefs Teaches Them to Act on What They Believe"
+  authors:
+    - given-names: "Richmond Sin Jing Xuan"
+    - given-names: "Peilin"
+      family-names: "Feng"
+    - given-names: "Wenbin"
+      family-names: "Wang"
+    - given-names: "Soujanya"
+      family-names: "Poria"
+  year: 2026
+  journal: "arXiv preprint arXiv:2611.32884"
+  doi: "10.48550/arXiv.2611.32884"
+  url: "https://arxiv.org/abs/2611.32884"
