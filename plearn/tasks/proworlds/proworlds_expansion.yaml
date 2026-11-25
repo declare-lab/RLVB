@@ -1,5 +1,5 @@
 # Pro-Worlds, normal board (expansion_env.py): the 15 visual games of the frozen expansion v6.1 set x 20 test plays = 300 games,
-# budget 35. In TEST-ORDER.txt order. test_suite/proworlds holds this group.
+# 150 moves (35 with PL_TEST_MOVES=0). In TEST-ORDER.txt order. test_suite/proworlds holds this group.
 group: proworlds_expansion
 task:
   - proworlds_expansion_face

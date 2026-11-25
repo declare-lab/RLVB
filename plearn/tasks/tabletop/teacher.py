@@ -206,19 +206,19 @@ def rules_text(e):
                 f"{n} red push buttons, {', '.join(LETTERS[:n])} from the left. Each button lights one lamp; every mapping of the buttons "
                 f"to the lamps is equally likely. PRESS and a button (for example PRESS A) lights the lamp of that button, and the "
                 f"lamp stays lit; each button can be pressed once. You see two pictures of the table, from the left and from the right. Find the whole mapping and answer "
-                f"with SUBMIT and each button with its lamp, for example SUBMIT {perm_str(tuple(range(n)))}. You may press at most {n} times.")
+                f"with SUBMIT and each button with its lamp, for example SUBMIT {perm_str(tuple(range(n)))}. You may press at most {e.budget} times.")
     if e.fam == "cups":
         shape, colour = e.target
         return (f"On the table stand {n} upside-down cups in a row, numbered 1 to {n} from the left as the cameras see them. The "
                 f"{colour} {SHAPES[shape]} is under one of them; every cup is equally likely. The other cups hide something that "
                 f"looks alike (another colour or another shape) or nothing. LIFT and a cup (for example LIFT 2) raises that cup and "
                 f"leaves it up; each cup can be lifted once. You see two pictures of the table, from the left and from the right. Find the cup of the {colour} "
-                f"{SHAPES[shape]} and answer with SUBMIT and its number, for example SUBMIT 3. You may lift at most {n} cups.")
+                f"{SHAPES[shape]} and answer with SUBMIT and its number, for example SUBMIT 3. You may lift at most " + (f"{n} cups." if e.budget == n else f"{e.budget} times."))
     return (f"On the table stand {n} blocks in a row, numbered 1 to {n} from the left as the cameras see them, on lines drawn "
             f"across the table 3 cm apart. One block stands on a slippery base; every block is equally likely. PUSH and a block (for "
             f"example PUSH 2) pushes that block away from the cameras: it moves 3 cm, or 9 cm when it is the slippery one, and stays "
             f"there; each block can be pushed once. You see two pictures of the table, from the left and from the right. Find the slippery block and answer with "
-            f"SUBMIT and its number, for example SUBMIT 1. You may push at most {n} times.")
+            f"SUBMIT and its number, for example SUBMIT 1. You may push at most {e.budget} times.")
 
 
 SYSTEM = {
@@ -250,14 +250,20 @@ class Domain:
     def __init__(self, levels=None, split="test", render=True, **_):
         self.levels = list(dict.fromkeys(levels or FAMILIES)); assert all(l in FAMILIES for l in self.levels), self.levels
         self.split, self.render = split, bool(render)
-        self.T = max(max(NS[l]) for l in self.levels); self.turns = self.T + 2; self.lam = self.T * math.log(1 / MOVE_COST)
+        self.T = max(max(NS[l]) for l in self.levels); self.turns = self.T + 2
+        if split == "test" and _tasks.TEST_MOVES: self.T, self.turns = _tasks.TEST_MOVES, _tasks.TEST_TURNS   # plearn/tasks/__init__.py
+        self.lam = self.T * math.log(1 / MOVE_COST)
         self.families = [f"tabletop-{l}" for l in self.levels]
 
     def sample(self, rng): return (rng.choice(self.families), rng.randrange(10 ** 6, 2 ** 31), "train")
     def eval_specs(self, n):
         base = {"test": 20000}.get(self.split, 10000)
         return [(f, base + i, self.split) for f in self.families for i in range(n)]
-    def start(self, specs): return [Ep(tuple(s), self.render) for s in specs]
+    def start(self, specs):
+        eps = [Ep(tuple(s), self.render) for s in specs]
+        if self.split == "test" and _tasks.TEST_MOVES:
+            for e in eps: e.budget = _tasks.TEST_MOVES      # each helper still acts once (look_strings)
+        return eps
     def close(self, eps): pass
     def family_of(self, e): return e.spec[0]
 

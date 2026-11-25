@@ -11,7 +11,7 @@ VAGEN's Sokoban with the target square hidden: find the target and push the box 
 | Evidence action | the game's moves: `UP`, `DOWN`, `LEFT`, `RIGHT`; a step into the box pushes it when the cell behind it is free |
 | Answer | none: the box on the target wins |
 | Observation | the game's pictures (96 × 96, 16 px a cell, as VAGEN gives it) of the room at the start and after each action, in order, so the cells already checked are in the prompt; the target shows once the player is on it or next to it (not diagonally) |
-| Budget | 15 actions, one each turn (VAGEN's evaluation: 5 turns of up to 3 actions) |
+| Budget | 15 actions, one each turn (VAGEN's evaluation: 5 turns of up to 3 actions); the test split: 150 actions in 152 turns (`PL_TEST_MOVES=0`: the task's own) |
 | Splits | test: seeds 20000 to 20127 (VAGEN's evaluation seeds, no map partition, 128 episodes); validation: seeds 10000 + i (VAGEN's `eval` partition); training: seeds from 10^6 (VAGEN's `train` partition). All rooms have VAGEN's solution band of 1 to 5 actions. Training and validation never use a test room (without this rule, 8.9% of the training rooms are test rooms). |
 | Teacher | the exact belief: the candidate cells that no view has excluded, all equally likely. π*: with the target known, an exact search over (player, box); before that, the best of pushing toward a likely target and walking to see more cells. Move cost 0.98. |
 | Belief line | `Possible: target at B3, D4`, `Possible: any` at the start |

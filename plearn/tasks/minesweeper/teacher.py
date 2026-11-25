@@ -53,19 +53,21 @@ def tables(n, m):
 
 
 @lru_cache(maxsize=None)
-def game(level):
+def game(level, limit=None):
+    """limit: the engine's own action limit (max_episode_length, set before jax.jit); None: the engine's 2 n^2."""
     from popgym_arcade.environments.minesweeper import MineSweeperEasy, MineSweeperMedium, MineSweeperHard
     import jax
     env = {"easy": MineSweeperEasy, "medium": MineSweeperMedium, "hard": MineSweeperHard}[level](partial_obs=False, obs_size=256)
+    if limit: env.max_episode_length = int(limit)
     return env, jax.jit(env.reset), jax.jit(env.step)
 
 
-def rules_text(n, m):
+def rules_text(n, m, budget=None):
     return (f"You are playing Minesweeper on a board of {n} x {n} cells with {m} mines; every set of {m} cells is equally likely. "
             f"The columns are A to {chr(64 + n)} from the left, the rows 1 to {n} from the top. The orange cell is the cursor. "
             "MOVE UP, MOVE DOWN, MOVE LEFT and MOVE RIGHT move the cursor by one cell; FIRE reveals the cell under it. A revealed mine "
             "ends the game. A revealed safe cell shows the number of mines among its eight neighbours. The game is won when every "
-            f"safe cell is revealed; it ends when a mine is revealed, after {n * n // 2} fires on revealed cells, or after {2 * n * n} "
+            f"safe cell is revealed; it ends when a mine is revealed, after {n * n // 2} fires on revealed cells, or after {budget or 2 * n * n} "
             "actions. You may answer at any time with the mine cells: SUBMIT and the cells, for example SUBMIT B2 D5.")
 
 
@@ -265,6 +267,8 @@ class Domain:
         self.levels = list(dict.fromkeys(levels or [level])); assert all(l in LEVELS for l in self.levels), self.levels
         self.split = split; self.teacher = bool(teacher) and "hard" not in self.levels
         self.T = max(2 * LEVELS[l][0] ** 2 for l in self.levels); self.turns = self.T + 1
+        self.budget = (_tasks.TEST_MOVES or None) if split == "test" else None   # None: each board's 2 n^2 (plearn/tasks/__init__.py)
+        if self.budget: self.T, self.turns = _tasks.TEST_MOVES, _tasks.TEST_TURNS
         self.lam = self.T * math.log(1 / MOVE_COST)                    # c(t) = MOVE_COST ** t: lam / T is the same at every level
         self.families = [f"minesweeper-{l}" for l in self.levels]
 
@@ -277,9 +281,10 @@ class Domain:
         import jax
         out = []
         for s in specs:
-            level = s[0].split("-", 1)[1]; env, reset, _ = game(level)
+            level = s[0].split("-", 1)[1]; env, reset, _ = game(level, self.budget)
             obs, st = reset(jax.random.PRNGKey(int(s[1])), env.default_params)
             e = Ep(tuple(s), level, st, np.array(obs)); e.prng = jax.random.PRNGKey(int(s[1]) + 1)   # not e.key: the trainer's scene key
+            e.budget = self.budget or 2 * e.n * e.n
             if self.teacher: e.A = tables(e.n, e.m)[0]
             out.append(e)
         return out
@@ -291,14 +296,14 @@ class Domain:
     def user_content(self, e, note=None):
         from PIL import Image
         done = ", ".join(e.log) if e.log else "none yet"
-        text = (f"{rules_text(e.n, e.m)}\nYour actions so far: {done}.\nThe board now: ")
-        tail = carried(note) + f"\nActions used: {e.t} of {2 * e.n * e.n}. Decide now."
+        text = (f"{rules_text(e.n, e.m, e.budget)}\nYour actions so far: {done}.\nThe board now: ")
+        tail = carried(note) + f"\nActions used: {e.t} of {e.budget}. Decide now."
         return [{"type": "text", "text": text}, {"type": "image"}, {"type": "text", "text": tail}], [Image.fromarray(e.pictures[-1])]
     def _history(self, e): raise NotImplementedError("the game's observations are pictures")
 
     # actions
     def look_strings(self, e):
-        if e.done or e.t >= 2 * e.n * e.n: return {}
+        if e.done or e.t >= e.budget: return {}
         x, y = int(e.state.action_x), int(e.state.action_y); out = {}
         for a in (UP, DOWN, LEFT, RIGHT):
             if 0 <= x + STEP[a][0] < e.n and 0 <= y + STEP[a][1] < e.n: out[a] = f"ACTION: {ACTIONS[a]}"
@@ -336,7 +341,7 @@ class Domain:
         return ("invalid", None)
     def do_look(self, e, a):
         import jax
-        env, _, step = game(e.level); x, y = int(e.state.action_x), int(e.state.action_y)
+        env, _, step = game(e.level, self.budget); x, y = int(e.state.action_x), int(e.state.action_y)
         e.prng, k = jax.random.split(e.prng); obs, st, r, done, info = step(k, e.state, int(a), env.default_params)
         e.state = st; e.pictures.append(np.array(obs)); e.log.append(ACTIONS[int(a)].lower())
         if a == FIRE:

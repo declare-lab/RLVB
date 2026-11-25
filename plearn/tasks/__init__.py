@@ -10,3 +10,9 @@ SK_GUESS_VALUE = False
 # action limit, as every run before the fix did; False (the default) such a plan is not valued (plearn/tasks/minigrid/teacher.py,
 # plearn/tasks/minesweeper/teacher.py; the trainer's module text).
 PLAN_PAST_LIMIT = False
+# TEST_MOVES, TEST_TURNS (25 Nov 2026): every test episode has 150 moves (actions, evidence actions or engine moves) and 152
+# turns, in every task (RoboQuest, Pro-Worlds, HiddenGames), so that no agent hits the move limit. The training and validation
+# splits keep each task's own limit (the limits of the paper's training). The paper's test tables used each task's own limit:
+# PL_TEST_MOVES=0 gives that back (each task's own moves and turns in the test split too, as in the paper).
+import os as _os
+TEST_MOVES = int(_os.environ.get("PL_TEST_MOVES", "150")); TEST_TURNS = TEST_MOVES + 2 if TEST_MOVES else 0

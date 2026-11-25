@@ -11,7 +11,7 @@ the 7 HiddenGames test tasks: `train_suite` plays its train split, `test_suite/h
 | Evidence action | the game's own: `MOVE UP`, `MOVE DOWN`, `MOVE LEFT`, `MOVE RIGHT` (the cursor) and `FIRE` (reveal the cell under the cursor). A revealed mine ends the game. |
 | Answer | `ACTION: SUBMIT <cells>`: the mine cells; right when it names exactly the mines; it ends the game. Every safe cell revealed also wins. |
 | Observation | the game's picture |
-| Budget | the game's: 2 n² actions (32 easy, 72 medium, 128 hard) |
+| Budget | the game's: 2 n² actions (32 easy, 72 medium, 128 hard); the test split: 150 actions in 152 turns (`PL_TEST_MOVES=0`: the task's own) |
 | Splits | test: seeds 20000 + i (100 episodes); validation: seeds 10000 + i; training: seeds from 10^6 |
 | Teacher | the exact belief: the mine sets that agree with every revealed cell (a 64-bit mask each). π*: FIRE is worth its outcomes, two reveals ahead while at most 50,000 sets remain; a move is worth the best FIRE that its shortest cursor path reaches. Move cost 0.95. |
 | Belief line | `Possible: mines at B2, D5; safe at C3` (the cells that the evidence decides), `Possible: any` when it decides none |

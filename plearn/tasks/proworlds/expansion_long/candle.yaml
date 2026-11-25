@@ -1,4 +1,4 @@
 include: _expansion_long.yaml
 task: proworlds_expansion_long_candle
-description: "Pro-Worlds, candle (game 12 of TEST-ORDER.txt): 20 test plays, seeds 50211300 + 0..19, LONG board, budget 65."
+description: "Pro-Worlds, candle (game 12 of TEST-ORDER.txt): 20 test plays, seeds 50211300 + 0..19, LONG board, 150 moves (65 with PL_TEST_MOVES=0)."
 env_args: {game: candle}

@@ -1,5 +1,5 @@
 include: _default.yaml
 task: minigrid_keycorridor
-description: "MiniGrid KeyCorridor S4R3: three rows of 4 x 4 rooms; the key is in one of the three left rooms (12 places); 64 actions."
+description: "MiniGrid KeyCorridor S4R3: three rows of 4 x 4 rooms; the key is in one of the three left rooms (12 places); 150 actions (64 with PL_TEST_MOVES=0)."
 env_args: {domain: plearn.tasks.minigrid.teacher, domain_args: {levels: [S4R3]}}
 teacher_args: {levels: [S4R3]}

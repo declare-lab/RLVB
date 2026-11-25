@@ -1,4 +1,4 @@
 include: _expansion_long.yaml
 task: proworlds_expansion_long_face
-description: "Pro-Worlds, face (game 1 of TEST-ORDER.txt): 20 test plays, seeds 50101300 + 0..19, LONG board, budget 65."
+description: "Pro-Worlds, face (game 1 of TEST-ORDER.txt): 20 test plays, seeds 50101300 + 0..19, LONG board, 150 moves (65 with PL_TEST_MOVES=0)."
 env_args: {game: face}

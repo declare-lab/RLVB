@@ -8,8 +8,8 @@ for the test only: Pro-Worlds has no training task and no teacher.
 
 | Group | Tasks | Board | Games |
 |---|---|---|---|
-| `proworlds_expansion` (in `test_suite/proworlds`, `test_suite`) | `expansion/<game>.yaml`: 15 games x 20 plays | normal: budget 35 moves | 300 |
-| `proworlds_expansion_long` (in `test_suite/proworlds_long`, `test_suite_long`) | `expansion_long/<game>.yaml`: the same 15 games and 20 plays | long: budget 65 moves | 300 |
+| `proworlds_expansion` (in `test_suite/proworlds`, `test_suite`) | `expansion/<game>.yaml`: 15 games x 20 plays | normal: 150 moves (35 with `PL_TEST_MOVES=0`) | 300 |
+| `proworlds_expansion_long` (in `test_suite/proworlds_long`, `test_suite_long`) | `expansion_long/<game>.yaml`: the same 15 games and 20 plays | long: 150 moves (65 with `PL_TEST_MOVES=0`) | 300 |
 
 - Game k is line k of `TEST-ORDER.txt`. Its 20 test plays use the seeds 50,101,300 + 10,000 (k - 1) + j, j = 0 .. 19. The
   long board uses the same seeds.
@@ -17,7 +17,7 @@ for the test only: Pro-Worlds has no training task and no teacher.
   (Node.js 22 or later: `NODE_BIN`, else `node` on `PATH`).
 - The window shows one site of the board (one 16 x 16 tile, drawn 16 times larger). A move goes to the next site. At the
   edge the window stays, and the move still counts, as the engine does. The answer is one member name.
-- The turn limit is the budget + 8. A line that cannot be read uses up the turn. A move with no moves left ends the game
+- The engine budget is 150 moves and the turn limit 152 (`PL_TEST_MOVES=0`: the board's own budget, 35 or 65, and the turn limit the budget + 8). A line that cannot be read uses up the turn. A move with no moves left ends the game
   without an answer (wrong).
 - Score: `success` (the answer is the member of the world); `premature` (the engine's exact belief of that member was below
   0.95 at the answer); `submitted`, `moves`, `turns`, `unreadable_turns`, `thought_cut`.

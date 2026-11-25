@@ -53,12 +53,12 @@ privileged gates. The posterior and the score come from the evidence actions and
 
 | Setting | Benchmark | Here |
 |---|---|---|
-| Budget | 200 decisions (API agents) | T evidence actions per task (below), then at most T + 2 decisions; a line the helpers cannot do also uses one |
+| Budget | 200 decisions (API agents) | test split: 150 evidence actions, then at most 152 decisions (`PL_TEST_MOVES=0`: T of each task (below), T + 2 decisions); a line the helpers cannot do also uses one |
 | Agent turn | the benchmark's prompt and tools | the trainer's turn: reasoning, belief line, action; thinking cap 8,192 tokens; the task's sampling: temperature 0.6, top-p 0.95, top-k 20 (`PL_TEST_T` sets the test temperature; the run scripts use 1.0) |
 | Memory | the pictures of the newest two observations; all text, with the agent's own earlier messages (`roboquest/harness/agent.py`) | each earlier action with its status and its reading (text version); not its earlier reasoning or belief lines (`carry: false` in `_bench.yaml`) |
 | Text version | none | each action's pictures replaced by one sentence |
 
-The evidence-action budget T of each task:
+The evidence-action budget T of each task (the test split with `PL_TEST_MOVES=0`, and the dev split):
 
 | Task | T | | Task | T |
 |---|---|---|---|---|

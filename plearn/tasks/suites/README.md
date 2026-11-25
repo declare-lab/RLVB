@@ -7,8 +7,8 @@ Each file is one group. A group lists tasks or other groups; `python -m plearn s
 | `train_suite` | `train_suite.yaml` | 8 training tasks: the 7 HiddenGames test tasks and 1 training-only task (see `plearn/tasks/suites/train_suite.yaml`) | 8 | |
 | `test_suite` | `test_suite.yaml` | `test_suite/proworlds`, `test_suite/hidden_games`, `test_suite/roboquest` | 32 | 1,556 |
 | `test_suite_long` | `test_suite_long.yaml` | `test_suite/proworlds_long`, `test_suite/hidden_games`, `test_suite/roboquest` | 32 | 1,556 |
-| `test_suite/proworlds` | `test_suite/proworlds.yaml` | `proworlds_expansion`: Pro-Worlds, 15 games x 20 plays, normal board (budget 35) | 15 | 300 |
-| `test_suite/proworlds_long` | `test_suite/proworlds_long.yaml` | `proworlds_expansion_long`: the same games and plays, long board (budget 65) | 15 | 300 |
+| `test_suite/proworlds` | `test_suite/proworlds.yaml` | `proworlds_expansion`: Pro-Worlds, 15 games x 20 plays, normal board (150 moves; 35 with `PL_TEST_MOVES=0`) | 15 | 300 |
+| `test_suite/proworlds_long` | `test_suite/proworlds_long.yaml` | `proworlds_expansion_long`: the same games and plays, long board (150 moves; 65 with `PL_TEST_MOVES=0`) | 15 | 300 |
 | `test_suite/hidden_games` | `test_suite/hidden_games.yaml` | the 7 HiddenGames tasks: `minesweeper_easy`, `minigrid_keycorridor`, `frozenlake_hidden_goal`, `sokoban_hidden_target`, `tabletop` (lamps, cups, blocks): 100 games each, `frozenlake_hidden_goal` and `sokoban_hidden_target` 128 each | 7 | 756 |
 | `test_suite/roboquest` | `test_suite/roboquest.yaml` | `roboquest_text`: RoboQuest, 10 tasks x 50 eval50 instances, text version | 10 | 500 |
 

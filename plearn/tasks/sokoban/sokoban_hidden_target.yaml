@@ -1,3 +1,3 @@
 include: _default.yaml
 task: sokoban_hidden_target
-description: "Sokoban 6 x 6 with one box and the target hidden until the player is on it or next to it: find the target and push the box onto it in 15 actions."
+description: "Sokoban 6 x 6 with one box and the target hidden until the player is on it or next to it: find the target and push the box onto it in 150 actions (15 with PL_TEST_MOVES=0)."

@@ -13,7 +13,7 @@ split, `test_suite/hidden_games` their test split.
 | Evidence action | the helpers: `PRESS <button>` (the button's lamp lights and stays lit), `LIFT <cup>` (the cup goes up and stays up), `PUSH <block>` (the block moves 3 cm away from the cameras, or 9 cm when it is the slippery one). Each helper can be used once. |
 | Answer | `ACTION: SUBMIT A2 B1 C4 D3` (the whole mapping) or `ACTION: SUBMIT <number>`; one chance |
 | Observation | two pictures (the left and the right camera, 512 × 512) at the start and after each action, the newest 8 pairs; the text names the actions, never what they showed |
-| Budget | N actions (N − 1 always suffice) in N + 2 turns |
+| Budget | N actions (N − 1 always suffice) in N + 2 turns; the test split: 150 actions in 152 turns (`PL_TEST_MOVES=0`: the task's own); each helper still acts once |
 | Splits | test: seeds 20000 + i (100 episodes a task), with colours that training never shows (purple, orange, cyan, pink and black for the named object and the look-alikes; other colours for the cups and the blocks); validation: seeds 10000 + i; training: seeds from 10^6 |
 | Teacher | the exact belief: the hypotheses that agree with every picture so far, all equally likely. π*: the shared lookahead (`estimator.lookahead_Q`) over the helpers not used yet and their outcomes (what the pictures would show). Move cost 0.98. |
 | Belief line | `Possible: A 2; B 1 or 3; C 1 or 3`, `Possible: cups 2, 4`, `Possible: blocks 1, 3`; `Possible: all` before any evidence |

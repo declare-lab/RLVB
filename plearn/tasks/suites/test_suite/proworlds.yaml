@@ -1,4 +1,4 @@
-# Pro-Worlds, normal board (plearn/tasks/proworlds): the 15 visual games x 20 test plays = 300 games, budget 35.
+# Pro-Worlds, normal board (plearn/tasks/proworlds): the 15 visual games x 20 test plays = 300 games, 150 moves (35 with PL_TEST_MOVES=0).
 group: test_suite/proworlds
 task:
   - proworlds_expansion

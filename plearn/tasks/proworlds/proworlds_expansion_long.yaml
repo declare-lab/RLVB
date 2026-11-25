@@ -1,4 +1,4 @@
-# Pro-Worlds, LONG board (expansion_env.py, board long, budget 65): the 15 visual games of the frozen expansion v6.1 set x the same
+# Pro-Worlds, LONG board (expansion_env.py, board long, 150 moves; 65 with PL_TEST_MOVES=0): the 15 visual games of the frozen expansion v6.1 set x the same
 # 20 test plays as the normal board = 300 games. In TEST-ORDER.txt order. test_suite/proworlds_long holds this group.
 group: proworlds_expansion_long
 task:

@@ -292,7 +292,9 @@ class Domain:
 
     def __init__(self, split="test", scale=1, band=BAND, view=VIEW, actions=T_ACTIONS, **_):
         self.split, self.scale, self.T = split, int(scale), int(actions); self.band = tuple(band) if band else None
-        self.view = view; self.turns = self.T; self.lam = self.T * math.log(1 / MOVE_COST)
+        self.view = view; self.turns = self.T
+        if split == "test" and _tasks.TEST_MOVES: self.T, self.turns = _tasks.TEST_MOVES, _tasks.TEST_TURNS   # plearn/tasks/__init__.py
+        self.lam = self.T * math.log(1 / MOVE_COST)
         self.families = ["sokoban-hidden-target"]
 
     def sample(self, rng): return (self.families[0], rng.randrange(10 ** 6, 2 ** 31), "train")

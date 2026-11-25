@@ -66,6 +66,7 @@ class Episode:
     # without a SUBMIT gets one more turn, whose prompt says that only SUBMIT is left (last_call). Without a SUBMIT in that turn
     # the episode ends as before (no_answer). Nothing changes for an episode that submits within T + 2 decisions.
     final_submit, last_call = False, False
+    limit = None                                                       # the decision limit: None = T + 2 (bench_env: 152 in the test split)
 
     def __init__(self, task, iid, sid, bridge, rep=0, ep_dir=None):
         self.task, self.iid, self.sid, self.bridge, self.rep, self.ep_dir = task, iid, sid, bridge, rep, ep_dir
@@ -126,11 +127,12 @@ class Episode:
                 self.log.append(dict(action=body, status=f"The helpers cannot do this ({r['invalid']}).", reading="", images=None))
             else:
                 self.log.append(dict(action=body, status=r["status"], reading=r["reading"], images=decode(r["images"])))
-        if self.decisions >= self.T + 2:
+        limit = self.limit or self.T + 2
+        if self.decisions >= limit:
             if self.final_submit and not self.last_call:
                 self.last_call = True; return False                    # one more turn, for the SUBMIT alone
             self.result = dict(self.bridge.call(op="finish", sid=self.sid), outcome="no_answer",
-                               errors=["no SUBMIT within T + 2 decisions"])
+                               errors=[f"no SUBMIT within {limit} decisions"])
             return True
         return False
 

@@ -11,7 +11,7 @@ tasks: `train_suite` plays its train split, `test_suite/hidden_games` its test s
 | Evidence action | MiniGrid's own: `TURN LEFT`, `TURN RIGHT`, `FORWARD`, `TOGGLE` (open the closed door in front) |
 | Answer | `ACTION: SUBMIT <row>`: the left room in that row (1 = the top); it ends the game. The game's own mission is not the task. |
 | Observation | MiniGrid's 7 × 7 view in front of the agent (224 px; the newest 32 views); walls and closed doors hide what is behind them |
-| Budget | 64 actions |
+| Budget | 64 actions; the test split: 150 actions in 152 turns (`PL_TEST_MOVES=0`: the task's own) |
 | Splits | test: seeds 20000 + i (100 episodes); validation: seeds 10000 + i; training: seeds from 10^6 |
 | Teacher | the exact belief: the places that no view has shown empty. π*: the best view that a shortest plan of turns, steps and door openings reaches. A place of the key counts as free until it is seen, so a plan does not use the true place. Move cost 0.98. |
 | Belief line | `Possible: rows 1, 3`, `Possible: all` before any evidence |

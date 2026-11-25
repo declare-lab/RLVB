@@ -60,7 +60,10 @@ its own belief. The project page is [declare-lab.github.io/RLVB](https://declare
 | HiddenGames (`test_suite/hidden_games`) | 7: MineSweeper (easy), MiniGrid KeyCorridor, FrozenLake (hidden goal), Sokoban (hidden target), Tabletop lamps / cups / blocks; 756 test games | the mine cells; the room of the key; the goal cell and the holes that are not next to the agent; the target square; which button lights which lamp, which cup hides the object, which block stands on a slippery base | test (test split) |
 
 `test_suite` is the three test rows together: 32 tasks, 1,556 test games. Thinking is capped at 8,192 tokens in every test
-task. The Pro-Worlds long board (65 moves) is `test_suite_long`. The sources of each environment and our changes are in
+task. Every test game allows 150 moves (actions, evidence actions or engine moves) in at most 152 turns, so that no
+agent reaches the move limit; the training and validation splits keep each task's own limit. The result tables below used each
+task's own limit in the test split too (Sokoban 15, FrozenLake 25, MiniGrid 64, MineSweeper 32, Tabletop N, RoboQuest 8 to 32,
+Pro-Worlds 35): `PL_TEST_MOVES=0` gives those limits back. The Pro-Worlds long board is `test_suite_long`. The sources of each environment and our changes are in
 [docs/environments.md](docs/environments.md).
 
 ## 🧠 Method

@@ -1,4 +1,4 @@
-# Pro-Worlds, long board (plearn/tasks/proworlds): the 15 visual games x the same 20 test plays = 300 games, budget 65.
+# Pro-Worlds, long board (plearn/tasks/proworlds): the 15 visual games x the same 20 test plays = 300 games, 150 moves (65 with PL_TEST_MOVES=0).
 # Not in test_suite; test_suite_long uses it.
 group: test_suite/proworlds_long
 task:

@@ -45,6 +45,8 @@ def _own_gl_first():
 _own_gl_first()
 
 SESS = {}                     # sid -> adapter
+HORIZON = None if os.environ.get("PL_TEST_MOVES") == "0" else 10 ** 6   # the robosuite horizon of every scene (as rq_sim.py): the task's BUDGET_TICKS (12,000 to 26,000
+                              # ticks) ends a 150-move episode early (timed_out, then every later step fails)
 
 
 def png64(arr):
@@ -60,7 +62,8 @@ def handle(req):
     if op == "open":
         task, render = req["task"], bool(req.get("render"))
         inst = registry.load_instance(f"{ROOT / 'suite' / 'v1' / task / req.get('src', 'registry')}#{req['iid']}")
-        env = make_env(task_class(task), inst, image_size=SIZE, gpu=EGL["egl_index"], render=render, camera_obs=False)
+        env = make_env(task_class(task), inst, image_size=SIZE, gpu=EGL["egl_index"], render=render, camera_obs=False,
+                       horizon=HORIZON)
         env.reset()
         a = adapter(task)(env, render); SESS[req["sid"]] = a
         if req.get("ep_dir"):

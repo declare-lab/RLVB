@@ -34,8 +34,8 @@ shows one site of the board; a move goes to the next site; the answer is one mem
 
 | Board | Budget | Tasks | Group |
 |---|---|---|---|
-| normal | 35 moves | `proworlds_expansion_<game>` | `proworlds_expansion` = `test_suite/proworlds` |
-| long | 65 moves | `proworlds_expansion_long_<game>` | `proworlds_expansion_long` = `test_suite/proworlds_long` |
+| normal | 150 moves (35 with `PL_TEST_MOVES=0`) | `proworlds_expansion_<game>` | `proworlds_expansion` = `test_suite/proworlds` |
+| long | 150 moves (65 with `PL_TEST_MOVES=0`) | `proworlds_expansion_long_<game>` | `proworlds_expansion_long` = `test_suite/proworlds_long` |
 
 The games (kind): face (relative), jigsaw (assemble), kaleido (symmetry), bird (assemble), fish (assemble), recipe (join),
 turtle (relative), balloon (assemble), rocket (relative), bell (relative), bee (relative), candle (relative), sailboat

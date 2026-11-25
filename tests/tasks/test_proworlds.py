@@ -57,10 +57,11 @@ class OneLineTurnTests(unittest.TestCase):
 @unittest.skipUnless(node(), "needs Node.js 22 (NODE_BIN, else node on PATH)")
 class EpisodeTests(unittest.TestCase):
     def test_the_episode(self):
-        """face, seed 50101300: the start site is column 9, row 3; the turn limit is the budget + 8; a move and an answer end it."""
+        """face, seed 50101300: the start site is column 9, row 3; the engine budget is 150 moves and the turn limit 152 (TEST_MOVES;
+        0: the board's own budget + 8); a move and an answer end it."""
         t = Task.load("proworlds_expansion_face", registry()); ep = t.episode(t.specs()[0])
         try:
-            self.assertEqual(ep.obs["site"], {"column": 9, "row": 3}); self.assertEqual(ep.limit, 35 + 8)
+            self.assertEqual(ep.obs["site"], {"column": 9, "row": 3}); self.assertEqual((ep.task["budget"], ep.limit), (150, 152))
             system, parts, images = ep.messages(True)
             self.assertEqual(sum(p.get("type") == "image" for p in parts), len(images)); self.assertEqual(images[0].size, (256, 256))
             ep.step("Possible: all", "ACTION: MOVE LEFT", {}); self.assertEqual(ep.obs["site"], {"column": 8, "row": 3})
@@ -68,8 +69,13 @@ class EpisodeTests(unittest.TestCase):
             self.assertTrue(ep.done); self.assertEqual((row["answer"], row["moves"], row["turns"], row["end"]), ("happy", 1, 2, "answer"))
         finally: ep.close()
         t = Task.load("proworlds_expansion_long_face", registry()); ep = t.episode(t.specs()[0])
-        try: self.assertEqual(ep.limit, 65 + 8)
+        try: self.assertEqual((ep.task["budget"], ep.limit), (150, 152))
         finally: ep.close()
+        for name, own in (("proworlds_expansion_face", 35), ("proworlds_expansion_long_face", 65)):
+            with mock.patch("plearn.tasks.TEST_MOVES", 0), mock.patch("plearn.tasks.TEST_TURNS", 0):
+                t = Task.load(name, registry()); ep = t.episode(t.specs()[0])
+                try: self.assertEqual((ep.task["budget"], ep.limit), (own, own + 8))
+                finally: ep.close()
 
     def test_the_one_line_episode(self):
         """With one_line: the one-line system text, and the agent's last line is not carried."""

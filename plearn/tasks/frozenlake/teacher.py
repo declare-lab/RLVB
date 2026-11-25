@@ -99,12 +99,12 @@ def walks(start, cell):
     return _walks(start)[cell]
 
 
-def rules_text():
+def rules_text(actions=T_ACTIONS):
     return ("You are on a frozen lake of 4 x 4 cells (columns A to D from the left, rows 1 to 4 from the top). The goal is hidden in "
             "one of the cells. Holes are in the ice: each cell other than the start and the goal is a hole with chance 0.2, and a path "
             "from the start to the goal always exists. You see the cells you have been on and the four cells next to you; fog covers the "
             "rest. LEFT, DOWN, RIGHT and UP move you one cell. Stepping into a hole ends the game; reaching the goal wins it. You have "
-            f"{T_ACTIONS} actions.")
+            f"{actions} actions.")
 
 
 SYSTEM = ("You search a frozen lake for a hidden goal. Each turn, think, then reply with exactly two lines.\n"
@@ -297,7 +297,9 @@ class Domain:
     value_modes = ("accuracy", "log")
 
     def __init__(self, split="test", **_):
-        self.split, self.T = split, T_ACTIONS; self.turns = self.T; self.lam = self.T * math.log(1 / MOVE_COST)
+        self.split, self.T = split, T_ACTIONS; self.turns = self.T
+        if split == "test" and _tasks.TEST_MOVES: self.T, self.turns = _tasks.TEST_MOVES, _tasks.TEST_TURNS   # plearn/tasks/__init__.py
+        self.lam = self.T * math.log(1 / MOVE_COST)
         self.families = ["frozenlake-hidden-goal"]
 
     # specs: training seeds from 10^6 up; validation 10000 + i; test 20000 + i (VAGEN's evaluation seeds are 20000 to 20127)
@@ -312,7 +314,7 @@ class Domain:
     def system_text(self, e): return SYSTEM
     def user_content(self, e, note=None):
         done = ", ".join(e.log) if e.log else "none yet"
-        parts = [{"type": "text", "text": f"{rules_text()}\nYour actions so far: {done}.\nThe lake now: "}, {"type": "image"},
+        parts = [{"type": "text", "text": f"{rules_text(self.T)}\nYour actions so far: {done}.\nThe lake now: "}, {"type": "image"},
                  {"type": "text", "text": carried(note) + f"\nActions used: {e.t} of {self.T}. Decide now."}]
         return parts, [e.picture()]
     def _history(self, e): raise NotImplementedError("the game's observations are pictures")

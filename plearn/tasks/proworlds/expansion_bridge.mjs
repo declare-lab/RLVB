@@ -19,7 +19,7 @@ for await (const line of readline.createInterface({input: process.stdin})) {
     const a = JSON.parse(line);
     if (a.op === 'close') break;
     if (a.op === 'palette') out({ok: true, result: {colors: COLORS, version: E.VERSION}});
-    else if (a.op === 'new') { e = new E.Episode(a.id, a.seed, {geometry: a.geometry || 'normal'}); out({ok: true, result: {task: e.publicTask(), observation: e.observe()}}); }
+    else if (a.op === 'new') { e = new E.Episode(a.id, a.seed, {geometry: a.geometry || 'normal', budget: a.budget ?? undefined}); out({ok: true, result: {task: e.publicTask(), observation: e.observe()}}); }
     else if (a.op === 'move') out({ok: true, result: {observation: e.move(a.direction)}});
     else if (a.op === 'commit') out({ok: true, result: {metrics: e.commit(a.name)}});
     else if (a.op === 'worlds') { const w = E.worldsOf(a.id, a.geometry || 'normal'); out({ok: true, result: {members: [...E.GAMES[a.id].members], cols: w.cols, rows: w.rows, budget: w.budget, worlds: w.worlds.map(x => ({m: x.member, w: x.w, pub: x.pub, s: Array.from(x.sites)}))}}); }

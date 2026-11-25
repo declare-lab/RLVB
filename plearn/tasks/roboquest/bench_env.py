@@ -26,6 +26,7 @@ from __future__ import annotations
 import json, os, threading
 from pathlib import Path
 from plearn.api.episode import carried
+import plearn.tasks as _tasks                                        # TEST_MOVES, TEST_TURNS
 
 SUITE = Path(__file__).resolve().parents[3] / "benchmarks" / "roboquest" / "suite" / "v1"
 _POOL, _LOCK, _SID = [], threading.Lock(), [0]
@@ -90,6 +91,9 @@ class Episode:
         self.e.final_submit = bool(final_submit)                    # one more turn for the SUBMIT alone (bench_eval.Episode; off by default)
         self.prefill = str(final_submit) == "prefill"               # ... without a new thought: the reply is started as 'ACTION: SUBMIT'
         self.e.open(version == "sim")
+        if spec[0] == "test" and _tasks.TEST_MOVES:                                    # plearn/tasks/__init__.py: 150 evidence actions, 152 decisions
+            if int(self.e.T) > _tasks.TEST_MOVES: raise RuntimeError(f"RoboQuest {task}: T {self.e.T} > {_tasks.TEST_MOVES}")
+            self.e.T0, self.e.T, self.e.limit = int(self.e.T), _tasks.TEST_MOVES, _tasks.TEST_TURNS
         self.replayed, self.replay_mismatch = 0, []
         if replay: self._replay(_logged(replay, task, iid))
 

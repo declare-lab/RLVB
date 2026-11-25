@@ -1,4 +1,4 @@
-# Pro-Worlds (expansion_env.py): one of the 15 visual games of the frozen expansion v6.1 set, normal board (budget 35), 20 test
+# Pro-Worlds (expansion_env.py): one of the 15 visual games of the frozen expansion v6.1 set, normal board (150 moves; 35 with PL_TEST_MOVES=0), 20 test
 # plays. Test only: no teacher. Thinking is capped at 8,192 tokens.
 dataset: proworlds
 env: expansion_env:Episode

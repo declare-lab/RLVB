@@ -229,7 +229,9 @@ class Domain:
 
     def __init__(self, levels=None, split="test", T=64, **_):
         self.levels = list(dict.fromkeys(levels or ["S4R3"])); assert all(l in LAYOUTS for l in self.levels), self.levels
-        self.split, self.T = split, int(T); self.turns = self.T + 1; self.lam = self.T * math.log(1 / MOVE_COST)
+        self.split, self.T = split, int(T); self.turns = self.T + 1
+        if split == "test" and _tasks.TEST_MOVES: self.T, self.turns = _tasks.TEST_MOVES, _tasks.TEST_TURNS   # plearn/tasks/__init__.py
+        self.lam = self.T * math.log(1 / MOVE_COST)
         self.families = [f"keycorridor-{l}" for l in self.levels]
 
     def sample(self, rng): return (rng.choice(self.families), rng.randrange(10 ** 6, 2 ** 31), "train")

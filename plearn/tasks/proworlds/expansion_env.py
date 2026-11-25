@@ -4,7 +4,8 @@ the evaluator (plearn/api/episode.py). Test only: no teacher.
 The engine is the set's own (engine.js, through expansion_bridge.mjs beside this file, one process per episode). A game is one
 board of sites; the window shows one site (one 16 x 16 tile, drawn here 16 times larger); a move goes
 to the next site (up, down, left or right; at the edge the window stays and the move still counts, as the engine does). The
-answer is one member name. The board is 'normal' (budget 35 moves) or 'long' (budget 65 moves; env_args board: long).
+answer is one member name. The board is 'normal' or 'long' (env_args board: long).
+The engine budget is 150 moves (plearn/tasks/__init__.py TEST_MOVES; PL_TEST_MOVES=0: the board's own, 35 normal, 65 long).
 
 The test set: game k of TEST-ORDER.txt (ORDER below) plays the seeds
 50,101,300 + 10,000 (k - 1) + j, j = 0 .. 19 (20 plays a game, 300 in all).
@@ -13,7 +14,7 @@ The agent's turn is the trainer's format (format.py): the public rules of the ga
 budget), the answers as numbers ('1 = <name>'), the picture of the start site and of the site after every move, the agent's belief
 line of its last turn, the moves used and the turns used. The belief line is 'Possible: <answer numbers>'; the action line is
 'ACTION: MOVE UP|DOWN|LEFT|RIGHT' or 'ACTION: SUBMIT <answer number or name>'. A line that cannot be read uses up the turn; a move
-with no moves left ends the game without an answer (wrong); the turn limit is the budget + 8. Score:
+with no moves left ends the game without an answer (wrong); the turn limit is 152 (PL_TEST_MOVES=0: the budget + 8). Score:
 correct when the answer is the member of the world; premature: the engine's exact belief of that member was below 0.95 at the
 answer.
 
@@ -25,6 +26,7 @@ from __future__ import annotations
 import json, os, subprocess
 
 from plearn.api.episode import carried
+import plearn.tasks as _tasks                                        # TEST_MOVES
 from plearn.tasks.proworlds import format as F
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -95,15 +97,18 @@ class Episode:
         if split != "test": raise ValueError(f"Pro-Worlds {game}: only the test split (not {split!r})")
         return [[split, s] for s in seeds(game, n)]
 
-    def __init__(self, spec, game, board="normal", max_turns_extra=8, one_line=False, **_):    # **_: the env_args of the other proworlds tasks
+    def __init__(self, spec, game, board="normal", max_turns_extra=None, budget=None, one_line=False, **_):    # **_: the env_args of the other proworlds tasks
         _, seed = spec
         self.game, self.board, self.seed, self.one_line = game, board, int(seed), bool(one_line)
+        if budget is None: budget = _tasks.TEST_MOVES                 # 150 (plearn/tasks/__init__.py); 0: the board's own budget
         self.b = Bridge(); self.colors = self.b(op="palette")["colors"]
-        r = self.b(op="new", id=game, seed=self.seed, geometry=board)
+        r = self.b(op="new", id=game, seed=self.seed, geometry=board, budget=int(budget) if budget else None)
         self.task, self.obs = r["task"], r["observation"]
+        if budget and self.task["budget"] != int(budget): raise RuntimeError(f"Pro-Worlds {game}: engine budget {self.task['budget']} != {budget}")
         self.members = self.task["members"]; self.keys = F.label_keys(self.members)
         self.pics, self.moves_log, self.sites = [picture(self.obs["window"], self.colors)], [], [self.obs["site"]]
         self.turns, self.note, self.done, self.correct, self.answer, self.metrics, self.end = [], None, False, False, None, {}, None
+        if max_turns_extra is None: max_turns_extra = _tasks.TEST_TURNS - _tasks.TEST_MOVES if budget else 8   # 152 turns; the board's own: + 8
         self.limit = self.task["budget"] + max_turns_extra
 
     def messages(self, carry):

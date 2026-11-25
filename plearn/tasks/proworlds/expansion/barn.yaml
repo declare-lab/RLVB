@@ -1,4 +1,4 @@
 include: _expansion.yaml
 task: proworlds_expansion_barn
-description: "Pro-Worlds, barn (game 14 of TEST-ORDER.txt): 20 test plays, seeds 50231300 + 0..19, normal board, budget 35."
+description: "Pro-Worlds, barn (game 14 of TEST-ORDER.txt): 20 test plays, seeds 50231300 + 0..19, normal board, 150 moves (35 with PL_TEST_MOVES=0)."
 env_args: {game: barn}
