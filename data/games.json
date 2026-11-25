@@ -413,7 +413,7 @@
    }
   },
   "proworlds_expansion_balloon": {
-   "title": "Hot-air balloon",
+   "title": "Balloon",
    "short": "Which hot-air balloon is it?",
    "members": [
     "aurora",
@@ -877,7 +877,7 @@
    }
   },
   "proworlds_expansion_jigsaw": {
-   "title": "Jigsaw scene",
+   "title": "Jigsaw",
    "short": "Which place does the picture show?",
    "members": [
     "harbour",
