@@ -126,7 +126,7 @@ function setStep(i) {
   box.classList.toggle("pixel", !!g.pixel);
   box.classList.toggle("final-ok", last && r.ok);
   box.classList.toggle("final-bad", last && !r.ok);
-  box.classList.toggle("has-board", !!board);
+  box.classList.toggle("has-board", !!board); box.parentElement.classList.toggle("has-board", !!board);   // the inset sits under the board, beside the controls
   if (board) showBoard(board, r, st.f, url); else showFrame(url, `${NAME[S.method]}, step ${S.step + 1}`);
   const ob = $("outcome-badge");
   ob.className = "outcome-badge" + (last ? (r.ok ? " ok" : " bad") : "");
