@@ -1,7 +1,7 @@
 <div align="center">
 <h1>RLVB: Reinforcement Learning with Verifiable Beliefs</h1>
 
-<a href="assets/rlvb_vs_base_grpo.mp4"><img src="assets/rlvb_vs_base_grpo.gif" alt="Base, GRPO with the outcome reward and RLVB (GRPO) play the same test games" width="100%"></a>
+<a href="https://declare-lab.github.io/RLVB/"><img src="assets/rlvb_cover.gif" alt="A lazy agent answers while two cups are still possible. The simulator computes the exact posterior, RLVB rewards each action from it, and after training the agent commits once the evidence identifies the answer." width="100%"></a>
 </div>
 
 <div align="center">
@@ -16,6 +16,7 @@
 
 <sup>1</sup>[DeCLaRe Lab](https://declare-lab.github.io/), Nanyang Technological University &nbsp;&nbsp; <sup>2</sup>Independent &nbsp;&nbsp; <sup>*</sup>Equal contribution
 
+[![Website](https://img.shields.io/badge/Website-RLVB-blue)](https://declare-lab.github.io/RLVB/)
 ![Paper](https://img.shields.io/badge/Paper-coming%20soon-lightgrey)
 [![Models](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Models-yellow)](https://huggingface.co/collections/richmondsin/rlvb)
 
@@ -23,18 +24,21 @@
 
 This repository contains the official implementation and evaluation code of **Lazy Agents Answer Against Their Own Beliefs: Reinforcement Learning with Verifiable Beliefs Teaches Them to Act on What They Believe**.
 
-Agents on long horizons answer too early. An end-of-episode reward cannot show which step was wrong. In many
-evidence-seeking tasks, the simulator knows the rules that link the hidden answer to the evidence, so it can compute the
-exact posterior after every step. Reinforcement Learning with Verifiable Beliefs (RLVB) uses this posterior to reward every
-step. The agent states its belief (the set of answers that it still thinks are possible). The reward checks the belief, and
-the decision to look again or to answer, against the posterior.
+Agents on long tasks often answer before they have enough evidence, even while their own belief still names several
+answers. An end-of-episode reward cannot show which step was wrong. In many evidence-seeking tasks, the simulator knows the
+rules that link the hidden answer to the evidence, so it can compute the exact posterior after every step. Reinforcement
+Learning with Verifiable Beliefs (RLVB) uses this posterior to reward every action: a further step while several answers
+remain, and an answer once the evidence identifies one. The agent writes its belief (the answers that it still thinks are
+possible) before each action, and the update trains this line together with the action. After training, the agent acts on
+its own belief. The project page is [declare-lab.github.io/RLVB](https://declare-lab.github.io/RLVB/).
 
 ## ✨ Highlights
 
 - 🎯 **A process reward at every turn**: the simulator computes the exact posterior after each step, and RLVB rewards each
   turn with it. An end-of-episode reward cannot show which step was wrong.
-- 🔍 **A verifiable belief**: the agent writes a belief line (the answers that are still possible). The reward checks the
-  belief line, and the decision to look again or to answer, against the exact posterior.
+- 🔍 **A verifiable belief**: the exact posterior is the belief that the evidence supports. The reward scores each action
+  against a teacher that acts on this posterior. The agent also writes a belief line (the answers that are still
+  possible), and it learns to act on this line.
 - 🚫 **No judge, no critic, no reward model**: the reward comes from the simulator's rules. It never pays for a lucky guess.
 - 🧠 **Two learners**: RLVB (EM) (expectation maximization) and RLVB (GRPO) use the same teacher scores with a different
   update.
@@ -65,8 +69,9 @@ task. The Pro-Worlds long board (65 moves) is `test_suite_long`. The sources of 
   that are still possible. The action line (`ACTION: ...`) looks for more evidence or gives the answer.
 - **The teacher**: each training task has an exact teacher. The teacher does the Bayes update of the hidden state after each
   observation. It gives the correct belief line and a teacher policy for the next action (look again or answer).
-- **The reward**: the teacher scores each turn: the belief line against the exact posterior, and the action against the
-  teacher policy.
+- **The reward**: the teacher scores the action of each turn against the teacher policy, which acts on the exact posterior.
+  A variant also scores the belief line against the exact posterior (the belief term). The reported RLVB (GRPO) uses the
+  action score alone.
 - **The update**: the trainer samples the agent's own turns at each history. RLVB (EM) weights the turns by their scores
   (the E-step) and fits the weighted turns (the M-step). RLVB (GRPO) uses the same samples and scores. It gives each turn its
   group-relative advantage over the other turns of the same history, with a PPO clip against the phase prior.
