@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="static/style.css?v=91">
+<link rel="stylesheet" href="static/style.css?v=102">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -268,56 +268,45 @@
 <section id="cases" class="section">
   <div class="col">
     <h2>Episodes</h2>
-    <p>One test game of every task, played by eight methods on Qwen3-VL-4B. Pick a game and a method, then press play.
-      <kbd>&larr;</kbd> <kbd>&rarr;</kbd> step through the turns and <kbd>space</kbd> plays.</p>
+    <p>One test game of every task, played by eight methods on Qwen3-VL-4B. Pick a game, then click a method to watch
+      its turns.</p>
   </div>
 
-  <div class="fig wide">
-    <div class="bench-tabs" id="bench-tabs" role="tablist"></div>
-    <div class="game-strip" id="game-strip"></div>
-
-    <div class="explorer" id="explorer">
-      <aside class="howto" id="howto"></aside>
-      <div class="viewer">
-        <div class="method-chips" id="method-chips"></div>
-        <div class="stage">
-          <div class="frame-box" id="frame-box">
-            <img id="frame-a" class="frm on" alt="">
-            <img id="frame-b" class="frm" alt="">
-            <div class="board" id="board">
-              <img id="board-img" alt="The whole board">
-              <svg id="fog" preserveAspectRatio="none"></svg>
-              <div class="win" id="win"></div>
-            </div>
-            <div class="step-badge" id="step-badge"></div>
-            <div class="outcome-badge" id="outcome-badge"></div>
-            <svg class="minimap" id="minimap"></svg>
-            <button class="reveal-board" id="reveal-board" title="Show the whole board">Show the whole board</button>
+  <div class="fig wide ep" id="explorer">
+    <div class="ep-top">
+      <label class="ep-pick"><span>Game</span><select id="game-select" aria-label="Game"></select></label>
+      <p class="ep-task" id="ep-task"></p>
+    </div>
+    <div class="ep-main">
+      <div class="ep-view">
+        <div class="frame-box" id="frame-box">
+          <img id="frame-a" class="frm on" alt="">
+          <img id="frame-b" class="frm" alt="">
+          <div class="board" id="board">
+            <img id="board-img" alt="The whole board">
+            <svg id="fog" preserveAspectRatio="none"></svg>
+            <div class="win" id="win"></div>
           </div>
-          <div class="step-panel" id="step-panel"></div>
+          <figure class="inset"><img id="inset-img" alt="The site in the window"><figcaption>what the agent sees</figcaption></figure>
+          <div class="outcome-badge" id="outcome-badge"></div>
+          <button class="reveal-board" id="reveal-board">Show the whole board</button>
         </div>
-        <div class="controls">
-          <button class="ctl" id="btn-first" title="First step" aria-label="First step"><svg viewBox="0 0 24 24"><path d="M6 5v14M19 5l-9 7 9 7z"/></svg></button>
+        <div class="ep-ctl">
           <button class="ctl" id="btn-prev" title="Previous step (&larr;)" aria-label="Previous step"><svg viewBox="0 0 24 24"><path d="M16 5l-9 7 9 7z"/></svg></button>
           <button class="ctl play" id="btn-play" title="Play (space)" aria-label="Play"></button>
           <button class="ctl" id="btn-next" title="Next step (&rarr;)" aria-label="Next step"><svg viewBox="0 0 24 24"><path d="M8 5l9 7-9 7z"/></svg></button>
-          <button class="ctl" id="btn-last" title="Last step" aria-label="Last step"><svg viewBox="0 0 24 24"><path d="M18 5v14M5 5l9 7-9 7z"/></svg></button>
-          <input type="range" id="slider" min="0" max="0" value="0" aria-label="Step">
-          <div class="speed seg" id="speed" role="group" aria-label="Speed">
-            <button data-ms="1500">0.5&times;</button><button data-ms="800" class="on">1&times;</button><button data-ms="380">2&times;</button>
-          </div>
           <span class="step-count" id="step-count"></span>
         </div>
+        <div class="turn" id="step-panel" aria-live="polite"></div>
+      </div>
+      <div class="ep-side">
+        <h3>What each method did on this game</h3>
+        <div class="filmstrips" id="filmstrips"></div>
+        <p class="legend"><span><i class="lg"></i>a step</span><span><i class="lg ok"></i>right answer</span><span><i class="lg bad"></i>wrong answer</span>
+          <span><i class="lg dot"></i>the evidence identifies the answer from here</span></p>
+        <details class="ep-rules" id="howto"></details>
       </div>
     </div>
-
-    <div class="film-head">
-      <h3>All methods on this game</h3>
-      <p class="legend"><span><i class="lg"></i>a step</span><span><i class="lg ok"></i>ends right</span><span><i class="lg bad"></i>ends wrong</span><span><i class="lg void"></i>a step without effect</span>
-        <span><i class="lg dot"></i>from here the evidence identifies the answer</span></p>
-    </div>
-    <div class="filmstrips" id="filmstrips"></div>
-    <div class="film-tip" id="film-tip" role="tooltip"></div>
   </div>
 </section>
 
@@ -379,8 +368,8 @@
      <a href="https://declare-lab.github.io/RoboQuest/" target="_blank" rel="noopener">RoboQuest</a></p>
 </footer>
 
-<script src="static/explorer.js?v=91"></script>
-<script src="static/page.js?v=91"></script>
-<script src="static/credit.js?v=91"></script>
+<script src="static/explorer.js?v=102"></script>
+<script src="static/page.js?v=102"></script>
+<script src="static/credit.js?v=102"></script>
 </body>
 </html>
