@@ -57,7 +57,42 @@
   // gain of RLVB over Base in points: from more evidence, at the same evidence
   const SPLIT = [["HiddenGames", 26.7, -8.5], ["Pro-Worlds", 15.8, -2.8], ["RoboQuest", 31.8, 0.3]];
 
-  let model = "vl4";
+  // ---------- 150 moves on every task
+  // accuracy (%): with the standard limits (the table above) and with 150 moves (mean over the test seeds); HiddenGames, Pro-Worlds, RoboQuest
+  const MB = {
+    vl4: [["Base (w/ belief)", "", [24.5, 18.2, 34.0], [27.1, 19.0, 34.4]],
+          ["PPO (belief + action)", "", [25.9, 15.1, 38.7], [28.0, 13.7, 39.7]],
+          ["RLVB", "ours main", [36.2, 28.7, 61.2], [39.7, 46.2, 64.5]]],
+    vl8: [["Base (w/ belief)", "", [23.9, 20.5, 39.8], [27.6, 17.5, 38.6]],
+          ["PPO (belief + action)", "", [26.4, 16.9, 51.4], [31.2, 14.5, 51.2]],
+          ["RLVB", "ours main", [31.1, 29.9, 62.7], [35.3, 53.2, 65.0]]],
+    q35: [["Base (w/ belief)", "", [38.1, 23.9, 41.3], [43.9, 27.0, 43.8]],
+          ["PPO (belief + action)", "", [40.5, 29.1, 57.1], [45.2, 39.8, 58.7]],
+          ["RLVB", "ours main", [48.5, 32.1, 54.0], [52.6, 44.0, 58.8]],
+          ["RLVB with the rules", "ours", [45.0, 22.7, 56.8], [51.3, 53.7, 63.5]]],
+  };
+  const MB_SUB = ["each task's limit, then 150", "35 moves, then 150", "each task's limit, then 150"];
+  // Pro-Worlds at 35 and 150 moves: steps, plays with sufficient evidence (%), right among those / the others at 150 (%), posterior at the answer
+  const PW = {
+    vl4: [["Base (w/ belief)", "", [10.0, 9.8], [0.0, 0.0], null, 18.0, [0.21, 0.20]],
+          ["PPO (belief + action)", "", [3.8, 3.6], [0.0, 0.0], null, 13.7, [0.16, 0.16]],
+          ["RLVB", "ours main", [31.7, 69.3], [9.7, 43.3], 75.4, 21.8, [0.38, 0.64]]],
+    vl8: [["Base (w/ belief)", "", [10.6, 10.1], [0.0, 0.0], null, 17.0, [0.21, 0.20]],
+          ["PPO (belief + action)", "", [10.1, 7.6], [1.0, 0.7], null, 16.1, [0.22, 0.20]],
+          ["RLVB", "ours main", [34.3, 86.7], [7.3, 51.0], 83.7, 27.9, [0.38, 0.70]]],
+    q35: [["Base (w/ belief)", "", [17.7, 20.1], [4.7, 5.3], 81.3, 23.6, [0.31, 0.33]],
+          ["PPO (belief + action)", "", [24.5, 31.8], [9.0, 25.7], 83.1, 26.5, [0.36, 0.49]],
+          ["RLVB", "ours main", [29.2, 52.2], [13.7, 35.3], 76.4, 26.3, [0.43, 0.60]],
+          ["RLVB with the rules", "ours", [32.9, 74.3], [12.0, 52.3], 71.3, 29.4, [0.47, 0.74]]],
+  };
+  // with 150 moves: share of the turns with several answers open (%) on which the agent answers: PPO (belief + action), RLVB
+  const OPEN = [
+    ["Tabletop", [["Qwen3.5-4B", 7.9, 2.3], ["Qwen3-VL-4B", 85.4, 2.3], ["Qwen3-VL-8B", 29.7, 0.2]]],
+    ["Pro-Worlds", [["Qwen3.5-4B", 1.7, 0.1], ["Qwen3-VL-4B", 18.7, 0.2], ["Qwen3-VL-8B", 12.6, 0.2]]],
+    ["RoboQuest", [["Qwen3.5-4B", 3.2, 1.9], ["Qwen3-VL-4B", 9.6, 1.4], ["Qwen3-VL-8B", 5.5, 0.5]]],
+  ];
+
+  let model = "vl4", mbModel = "vl4";
   const sign = d => (d >= 0 ? "+" : "−") + Math.abs(d).toFixed(1);
 
   function accCharts() {
@@ -141,12 +176,58 @@
       </div></div>`).join("");
   }
 
+  function mbCharts() {
+    // one row per agent: an open dot at the standard limit, a filled dot at 150 moves, and the two values on the right
+    const max = 70, x = v => (v / max * 100).toFixed(2), rows = MB[mbModel];
+    const names = `<div class="chart names" aria-hidden="true"><div class="chart-head"></div>${rows.map(([n, cls]) =>
+      `<div class="mb-row ${cls}"><span class="bar-name">${h(n)}</span></div>`).join("")}<div class="mb-axis"></div></div>`;
+    q("mb-charts").innerHTML = names + BENCH.map(([name], bi) => {
+      const body = rows.map(([n, cls, a, b]) => {
+        const s = a[bi], e = b[bi], lo = Math.min(s, e);
+        return `<div class="mb-row ${cls}" role="img" aria-label="${h(n)}: ${s.toFixed(1)} with the standard limit, ${e.toFixed(1)} with 150 moves">
+          <span class="bar-name">${h(n)}</span><span class="mb-track">
+          <span class="mb-line" style="left:${x(lo)}%;width:${x(Math.abs(e - s))}%"></span>
+          <span class="mb-dot std" style="left:${x(s)}%"></span><span class="mb-dot now" style="left:${x(e)}%;--from:${x(s)}%"></span></span>
+          <span class="mb-val">${s.toFixed(1)} &rarr; <b>${e.toFixed(1)}</b></span></div>`;
+      }).join("");
+      const axis = `<div class="mb-axis"><span class="bar-name"></span><div>${[0, 20, 40, 60].map(t => `<i style="left:${x(t)}%">${t}</i>`).join("")}</div><span></span></div>`;
+      return `<div class="chart"><div class="chart-head"><h3>${name}</h3><span>${MB_SUB[bi]}</span></div>${body}${axis}</div>`;
+    }).join("");
+  }
+
+  function mbTable() {
+    const f = (v, d = 1) => v === null ? "–" : v.toFixed(d);
+    const head = `<tr><th rowspan="2">Agent</th><th colspan="2" class="grp">Steps</th><th colspan="2" class="grp">Sufficient</th>
+      <th colspan="2" class="grp">Right, 150 moves</th><th colspan="2" class="grp">Posterior</th></tr>
+      <tr><th class="first">35</th><th>150</th><th class="first">35</th><th>150</th><th class="first">if sufficient</th><th>otherwise</th><th class="first">35</th><th>150</th></tr>`;
+    const body = PW[mbModel].map(([n, cls, st, su, rs, rn, po]) => `<tr class="${cls}"><th>${h(n)}</th>
+      <td class="first">${f(st[0])}</td><td>${f(st[1])}</td><td class="first">${f(su[0])}</td><td>${f(su[1])}</td>
+      <td class="first">${f(rs)}</td><td>${f(rn)}</td><td class="first">${f(po[0], 2)}</td><td>${f(po[1], 2)}</td></tr>`).join("");
+    q("mb-table").innerHTML = `<table class="tbl num mbt"><thead>${head}</thead><tbody>${body}</tbody></table>`;
+  }
+
+  function openChart() {
+    const max = 90, x = v => (v / max * 100).toFixed(2);
+    const axis = `<div class="dumb-axis"><span></span><div>${[0, 20, 40, 60, 80].map(t => `<i style="left:${x(t)}%">${t}%</i>`).join("")}</div></div>`;
+    q("open-chart").innerHTML = axis + OPEN.map(([grp, rows]) => `<div class="dumb-grp">${h(grp)}</div>` + rows.map(([m, p, r]) =>
+      `<div class="dumb-row"><span class="dumb-name">${h(m)}</span><div class="dumb-track">
+        <span class="dumb-line" style="left:${x(r)}%;width:${x(p - r)}%"></span>
+        <span class="dumb-dot ours" style="left:${x(r)}%"></span><span class="dumb-dot base" style="left:${x(p)}%"></span>
+        <span class="dumb-val" style="left:${x(p)}%">${p.toFixed(1)} <em>&rarr; ${r.toFixed(1)}</em></span></div></div>`).join("")).join("");
+  }
+
   function results() {
     accCharts(); endings(); process(); cost(); fullTable(); commitChart(); suff(); splitBars();
+    mbCharts(); mbTable(); openChart();
     q("model-seg").querySelectorAll("button").forEach(b => b.onclick = () => {
       model = b.dataset.k;
       q("model-seg").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
       accCharts(); endings(); process();
+    });
+    q("mb-seg").querySelectorAll("button").forEach(b => b.onclick = () => {
+      mbModel = b.dataset.k;
+      q("mb-seg").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+      mbCharts(); mbTable();
     });
   }
 
