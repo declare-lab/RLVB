@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="static/style.css?v=105">
+<link rel="stylesheet" href="static/style.css?v=106">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -19,7 +19,7 @@
 <header class="topnav" id="topnav">
   <a class="brand" href="#top">RLVB</a>
   <nav aria-label="Sections">
-    <a href="#problem">Problem</a><a href="#idea">Method</a><a href="#results">Results</a><a href="#why">Analysis</a><a href="#budget">150 moves</a><a href="#cases">Episodes</a><a href="#benchmarks">Benchmarks</a>
+    <a href="#problem">Problem</a><a href="#idea">Method</a><a href="#results">Results</a><a href="#why">Analysis</a><a href="#cases">Episodes</a><a href="#benchmarks">Benchmarks</a>
   </nav>
   <a class="btn small" href="https://github.com/declare-lab/RLVB" target="_blank" rel="noopener">GitHub &nearr;</a>
 </header>
@@ -268,78 +268,6 @@
   </div>
 </section>
 
-<section id="budget" class="section">
-  <div class="col">
-    <h2>With 150 moves</h2>
-    <p>The move limits of the benchmarks can hide why an agent stops. It may decide that the evidence is enough, or it may
-      have no moves left. We test the trained agents again with 150 moves and 152 turns on every task. The models and all
-      other test settings stay the same.</p>
-  </div>
-
-  <figure class="fig wide" data-rv>
-    <div class="model-bar">
-      <div class="seg" id="mb-seg" role="group" aria-label="Model">
-        <button data-k="vl8">Qwen3-VL-8B-Thinking</button><button data-k="vl4" class="on">Qwen3-VL-4B-Thinking</button><button data-k="q35">Qwen3.5-4B</button>
-      </div>
-    </div>
-    <div class="legend"><span><i class="mb-key"></i>standard move limits</span><span><i class="mb-key now"></i>150 moves</span></div>
-    <div class="mb-charts" id="mb-charts"></div>
-    <figcaption>Accuracy (%), mean over the test seeds. For Qwen3.5-4B, RLVB with the rules is a second training run with
-      three more reward rules against steps that bring no evidence, tested after 50 updates.</figcaption>
-  </figure>
-
-  <div class="col">
-    <p>RLVB gains the most on Pro-Worlds, where 35 moves are few. Its accuracy rises from 28.7 to 46.2% on Qwen3-VL-4B and
-      from 29.9 to 53.2% on Qwen3-VL-8B, while the baselines stay between 14 and 21% at both limits. On the same games,
-      RLVB is ahead of PPO (belief + action) and of Base (w/ belief) on all three benchmarks for both Qwen3-VL models, and
-      so is RLVB with the rules on Qwen3.5-4B. All 18 of these differences are significant in a paired test over the games
-      (p &le; 0.007 after Holm correction). The Qwen3.5-4B run of the main table is ahead of PPO (belief + action) on
-      HiddenGames and level with it on Pro-Worlds and RoboQuest.</p>
-    <p>The baselines do not use the extra moves. On Pro-Worlds with the two Qwen3-VL models, they take 4 to 11 steps per
-      play at either limit and reach sufficient evidence in at most 1% of their plays. RLVB takes 69 to 87 steps, and 43
-      to 51% of its plays reach sufficient evidence, against 7 to 10% with 35 moves.</p>
-  </div>
-
-  <figure class="fig mid" data-rv>
-    <h3>Pro-Worlds with 35 and with 150 moves</h3>
-    <div class="table-scroll" id="mb-table"></div>
-    <figcaption>Steps: moves per play. Sufficient: share of plays (%) in which the evidence becomes sufficient. Right:
-      share of correct plays (%) with 150 moves, among the plays that reach sufficient evidence and among the others.
-      Posterior: mean exact posterior of the top answer at the agent's answer. The model is chosen above.</figcaption>
-  </figure>
-
-  <div class="col">
-    <p>The extra moves help only through the evidence they gather. With 150 moves, a play that reaches sufficient evidence
-      is correct in 71 to 84% of cases, for every agent that gets there, and the other plays in 14 to 29%. Accuracy
-      therefore follows the share of plays that reach sufficient evidence. With 35 moves, this share is at most 14% for
-      every agent, so most Pro-Worlds answers are guesses.</p>
-    <p>Both trained agents write beliefs that leave answers open. PPO (belief + action) writes claims such as &ldquo;It is
-      possible the orange ball is under cup 1&rdquo;, and RLVB writes lines such as <code>Possible: cups 3, 4</code>. We
-      read every belief as settling one answer, leaving several answers open, or saying nothing about the answer. PPO
-      (belief + action) leaves several answers open on 64 to 94% of its turns, and RLVB on 70 to 97%. The two agents differ
-      in what they do next.</p>
-  </div>
-
-  <figure class="fig mid" data-rv>
-    <h3>Answers while several answers are still open</h3>
-    <div class="legend"><span><i class="dot base"></i>PPO (belief + action)</span><span><i class="dot ours"></i>RLVB</span></div>
-    <div class="dumb" id="open-chart"></div>
-    <figcaption>Share of the turns with several answers open (%) on which the agent answers, with 150 moves. Belief lines on
-      Tabletop and Pro-Worlds are read exactly. The other beliefs are read by a language model, and two readers agree on
-      92.8% of them.</figcaption>
-  </figure>
-
-  <div class="col">
-    <p>The judge of PPO (belief + action) scores the belief, but not whether the action follows it. The action term of
-      RLVB scores the action against the exact posterior, so an answer given while several answers remain costs reward.</p>
-    <p>Where RLVB still fails, its belief line misreads the evidence. On Qwen3-VL-8B, its accuracy on the Pro-Worlds game
-      Face stays at 25%, and 12 of its 16 own answers there come before the evidence is sufficient. On Tabletop Blocks, the
-      Qwen3-VL models sometimes keep two blocks in the line after every block has been pushed, and with 150 turns they
-      repeat a push that the game rejects. Acting on the belief and reading the evidence are two separate skills, and RLVB
-      improves the first one.</p>
-  </div>
-</section>
-
 <section id="cases" class="section">
   <div class="col">
     <h2>Episodes</h2>
@@ -446,8 +374,8 @@
      <a href="https://declare-lab.github.io/RoboQuest/" target="_blank" rel="noopener">RoboQuest</a></p>
 </footer>
 
-<script src="static/explorer.js?v=105"></script>
-<script src="static/page.js?v=105"></script>
-<script src="static/credit.js?v=105"></script>
+<script src="static/explorer.js?v=106"></script>
+<script src="static/page.js?v=106"></script>
+<script src="static/credit.js?v=106"></script>
 </body>
 </html>

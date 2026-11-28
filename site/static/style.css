@@ -171,38 +171,6 @@ figcaption { margin-top: 14px; font-size: 13.5px; line-height: 1.5; color: var(-
 .dumb-dot.base { background: #9d9fa8; } .dumb-dot.ours { background: var(--accent); z-index: 1; }
 .dumb-val { position: absolute; top: 4px; margin-left: 14px; font: 500 12.5px var(--mono); color: var(--ink-2); white-space: nowrap; }
 .dumb-val em { font-style: normal; color: var(--accent); }
-#open-chart .dumb-track { background: repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 22.2222%); }
-
-/* ---------- 150 moves: accuracy at the standard limit (open dot) and with 150 moves (filled dot) */
-.mb-charts { display: grid; grid-template-columns: 190px repeat(3, minmax(0, 1fr)); gap: 0 28px; }
-.mb-row, .mb-axis { display: grid; grid-template-columns: minmax(0, 1fr) 96px; gap: 10px; align-items: center; }
-.mb-row { height: 32px; }
-.chart.names .mb-row { grid-template-columns: 1fr; }
-.mb-charts .chart:not(.names) .bar-name { display: none; }
-.mb-row .bar-name { white-space: nowrap; }
-.mb-row.ours .bar-name { color: var(--ink); font-weight: 500; }
-.mb-row.ours.main .bar-name { color: var(--accent); font-weight: 600; }
-.mb-track { position: relative; height: 32px; background: repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 28.5714%); }
-.mb-line { position: absolute; top: 15px; height: 2px; background: var(--line-2); transition: width .9s cubic-bezier(.2, .7, .2, 1) .2s; }
-.mb-dot { position: absolute; top: 10px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; }
-.mb-dot.std { background: #fff; border: 2px solid #9d9fa8; }
-.mb-dot.now { background: #9d9fa8; box-shadow: 0 0 0 2px #fff; z-index: 1; transition: left .9s cubic-bezier(.2, .7, .2, 1) .2s; }
-.mb-row.ours .mb-dot.std { border-color: #a9b6fb; } .mb-row.ours .mb-dot.now { background: #a9b6fb; }
-.mb-row.ours.main .mb-dot.std { border-color: var(--accent); } .mb-row.ours.main .mb-dot.now { background: var(--accent); }
-.mb-row.ours.main .mb-line { background: #a9b6fb; }
-.mb-val { font: 500 12.5px var(--mono); color: var(--ink-3); white-space: nowrap; text-align: right; }
-.mb-val b { font-weight: 600; color: var(--ink); }
-.mb-row.ours.main .mb-val b { color: var(--accent); }
-.mb-axis { height: 20px; }
-.mb-axis > div { position: relative; height: 100%; }
-.mb-axis i { position: absolute; top: 3px; transform: translateX(-50%); font: 500 11px var(--mono); font-style: normal; color: var(--ink-3); }
-.mb-axis .bar-name { padding: 0; }
-.mb-key { display: inline-block; width: 11px; height: 11px; border-radius: 50%; border: 2px solid #9d9fa8; background: #fff; }
-.mb-key.now { background: #9d9fa8; }
-.tbl.mbt th, .tbl.mbt td { padding: 9px 8px; }
-.tbl.mbt thead th { letter-spacing: 0; }
-.rv:not(.in) .mb-line { width: 0 !important; }
-.rv:not(.in) .mb-dot.now { left: var(--from) !important; }
 
 /* ---------- the three rewards */
 .ways { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-bottom: 1px solid var(--line); }
@@ -471,10 +439,6 @@ details.prompt pre { margin: 10px 0 0; max-height: 260px; overflow: auto; white-
   .charts .chart:not(.names) .bar-name { display: block; white-space: normal; }
   .chart-head { min-height: 0; }
   .charts .bar-row { height: auto; min-height: 30px; }
-  .mb-charts { grid-template-columns: 1fr; gap: 40px; }
-  .mb-charts .chart.names { display: none; }
-  .mb-charts .chart:not(.names) .bar-name { display: block; }
-  .mb-row, .mb-axis { grid-template-columns: 150px minmax(0, 1fr) 96px; }
 
 
   .charts, .suff, .bench-cards { gap: 40px; }
@@ -516,10 +480,6 @@ details.prompt pre { margin: 10px 0 0; max-height: 260px; overflow: auto; white-
   .bar-row, .charts .chart:not(.names) .bar-row { grid-template-columns: 112px minmax(0, 1fr); }
   .bar-track { margin-right: 80px; }
   .dumb-axis, .dumb-row { grid-template-columns: 92px minmax(0, 1fr); }
-  .mb-row, .mb-axis { grid-template-columns: 104px minmax(0, 1fr) 84px; gap: 8px; }
-  .mb-row .bar-name { white-space: normal; }
-  .mb-row { height: auto; min-height: 34px; }
-  .mb-val { font-size: 11.5px; }
   .dumb-axis > div, .dumb-track { margin-right: 92px; }
   .end-row { grid-template-columns: 112px minmax(0, 1fr); }
   .suff-big b { font-size: 56px; }
